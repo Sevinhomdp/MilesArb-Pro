@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilesArb Pro</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════ DESIGN SYSTEM — THEME VARIABLES ═══════════════════════ */
+:root {
+  --font-ui:'Syne',sans-serif; --font-mono:'DM Mono',monospace;
+  --sidebar-w:230px; --radius:8px; --radius-lg:14px; --radius-xl:20px;
+  --transition:.18s cubic-bezier(.4,0,.2,1);
+}
+html.dark {
+  --bg0:#070912; --bg1:#0b0e1c; --bg2:#101422; --bg3:#161c30; --bghov:#1a213a;
+  --border:rgba(255,255,255,.06); --bordermd:rgba(255,255,255,.1); --borderhi:rgba(255,255,255,.16);
+  --txt0:#edf0f7; --txt1:#a8b3cc; --txt2:#5a6680; --txt3:#2e3650;
+  --cyan:#00e5ff; --cyandim:rgba(0,229,255,.1); --cyanglow:rgba(0,229,255,.25);
+  --grn:#00e676; --grndim:rgba(0,230,118,.09); --grnbdr:rgba(0,230,118,.25);
+  --yel:#ffd740; --yeldim:rgba(255,215,64,.1);
+  --red:#ff4d6d; --reddim:rgba(255,77,109,.1); --redbdr:rgba(255,77,109,.25);
+  --gold:#f5c542; --golddim:rgba(245,197,66,.1); --goldglow:rgba(245,197,66,.3);
+  --purple:#a78bfa;
+  --shadow:0 4px 24px rgba(0,0,0,.5);
+  --card-bg:var(--bg2);
+}
+html.light {
+  --bg0:#f0f3fb; --bg1:#ffffff; --bg2:#eaeff9; --bg3:#dde4f4; --bghov:#d6ddf0;
+  --border:rgba(0,0,0,.08); --bordermd:rgba(0,0,0,.13); --borderhi:rgba(0,0,0,.2);
+  --txt0:#0e1525; --txt1:#2d3a55; --txt2:#6b7a9a; --txt3:#9ba8c4;
+  --cyan:#0087c8; --cyandim:rgba(0,135,200,.1); --cyanglow:rgba(0,135,200,.2);
+  --grn:#00875a; --grndim:rgba(0,135,90,.1); --grnbdr:rgba(0,135,90,.25);
+  --yel:#b07a00; --yeldim:rgba(176,122,0,.1);
+  --red:#c8003d; --reddim:rgba(200,0,61,.1); --redbdr:rgba(200,0,61,.25);
+  --gold:#a06800; --golddim:rgba(160,104,0,.1); --goldglow:rgba(160,104,0,.25);
+  --purple:#6d28d9;
+  --shadow:0 4px 16px rgba(0,0,0,.12);
+  --card-bg:#ffffff;
+}
+/* ═══════ RESET & BASE ════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font-ui);background:var(--bg0);color:var(--txt0);display:flex;flex-direction:column}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:99px}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=number]{-moz-appearance:textfield}
+input,select,textarea{font-family:var(--font-mono);font-size:13px;background:var(--bg1);border:1px solid var(--bordermd);border-radius:var(--radius);color:var(--txt0);outline:none;transition:border-color var(--transition),box-shadow var(--transition);width:100%;padding:9px 36px 9px 12px}
+input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyandim)}
+input::placeholder{color:var(--txt3)}
+textarea{resize:vertical;padding:9px 12px}
+button{cursor:pointer;font-family:var(--font-ui);border:none;outline:none;transition:all var(--transition)}
+/* ═══════ LAYOUT ══════════════════════════════════════════════════ */
+#layout{display:flex;height:100%;overflow:hidden}
+#sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);height:100%;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;position:relative;z-index:10;flex-shrink:0}
+#content{flex:1;height:100%;overflow-y:auto;background:var(--bg0)}
+/* ═══════ SIDEBAR ═════════════════════════════════════════════════ */
+.logo-area{padding:18px 16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:11px}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),#8a5500);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;box-shadow:0 0 16px var(--goldglow)}
+.logo-nm{font-size:15px;font-weight:800;color:var(--gold);letter-spacing:-.02em}
+.logo-sub{font-size:9px;color:var(--txt3);letter-spacing:.1em;text-transform:uppercase}
+.nav-sec{padding:14px 12px 4px}
+.nav-sec-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3);font-weight:600;padding:0 8px;margin-bottom:5px}
+.nv{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius);color:var(--txt2);font-size:12px;font-weight:600;cursor:pointer;transition:all var(--transition);border:none;background:none;width:100%;text-align:left}
+.nv:hover{background:var(--bg2);color:var(--txt1)}
+.nv.active{background:var(--cyandim);color:var(--cyan);border:1px solid rgba(0,229,255,.15)}
+html.light .nv.active{border-color:rgba(0,135,200,.2)}
+.nv-ic{width:18px;font-size:13px;text-align:center;flex-shrink:0}
+.nv-badge{margin-left:auto;background:var(--cyan);color:var(--bg0);font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;font-family:var(--font-mono)}
+.sidebar-foot{margin-top:auto;padding:12px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--txt3);line-height:1.7}
+/* ═══════ PAGE STRUCTURE ══════════════════════════════════════════ */
+.pg{display:none}
+.pg.active{display:block}
+.ph{padding:22px 28px 16px;border-bottom:1px solid var(--border);background:rgba(7,9,18,.7);backdrop-filter:blur(12px);position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center}
+html.light .ph{background:rgba(240,243,251,.85)}
+.ph-left{}
+.ptitle{font-size:20px;font-weight:800;letter-spacing:-.03em}
+.psub{font-size:11px;color:var(--txt2);margin-top:2px}
+.pb{padding:22px 28px 40px}
+/* ═══════ CARDS & METRICS ══════════════════════════════════════════ */
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color var(--transition)}
+.card:hover{border-color:var(--bordermd)}
+.sec{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);font-weight:700;margin-bottom:13px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--golddim),transparent)}
+.kgrid{display:grid;gap:13px}
+.k4{grid-template-columns:repeat(4,1fr)}
+.k3{grid-template-columns:repeat(3,1fr)}
+.k2{grid-template-columns:repeat(2,1fr)}
+.kcard{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden;transition:all var(--transition)}
+.kcard:hover{border-color:var(--bordermd);transform:translateY(-1px);box-shadow:var(--shadow)}
+.kcard::after{content:'';position:absolute;top:-10px;right:-10px;width:60px;height:60px;border-radius:50%;opacity:.07;filter:blur(16px)}
+.kcard.ac::after{background:var(--cyan)}
+.kcard.ag::after{background:var(--grn)}
+.kcard.ao::after{background:var(--gold)}
+.kcard.ar::after{background:var(--red)}
+.kcard.ap::after{background:var(--purple)}
+.kl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt2);font-weight:600}
+.kv{font-family:var(--font-mono);font-size:21px;font-weight:500;letter-spacing:-.02em;line-height:1.1}
+.ks{font-size:11px;color:var(--txt2)}
+.ki{position:absolute;top:14px;right:14px;font-size:17px;opacity:.4}
+.mbox{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.mbox.acc{border-color:rgba(245,197,66,.2);background:rgba(245,197,66,.04)}
+html.light .mbox.acc{background:rgba(160,104,0,.04)}
+.ml{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt2);font-weight:600}
+.mv{font-family:var(--font-mono);font-size:14px;font-weight:500}
+.ms{font-size:10px;color:var(--txt2)}
+.mgrid{display:grid;gap:9px}
+/* ═══════ FORM ELEMENTS ═══════════════════════════════════════════ */
+.frow{display:grid;gap:13px;margin-bottom:13px}
+.fr2{grid-template-columns:1fr 1fr}
+.fr3{grid-template-columns:1fr 1fr 1fr}
+.fgrp{display:flex;flex-direction:column;gap:5px}
+.flbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt2);font-weight:600}
+.iwrap{position:relative}
+.isuf{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--txt3);font-family:var(--font-mono);pointer-events:none}
+/* Program buttons */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pbtn{padding:8px 10px;border-radius:var(--radius);background:var(--bg1);border:1px solid var(--border);color:var(--txt2);font-size:11px;font-weight:600;text-align:left;display:flex;align-items:center;gap:7px;transition:all var(--transition)}
+.pbtn:hover{background:var(--bg2);color:var(--txt1)}
+.pbtn.active{color:var(--txt0)}
+.pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+/* Trip type */
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.tbtn{padding:9px;border-radius:var(--radius);background:var(--bg1);border:1px solid var(--border);color:var(--txt2);font-size:11px;font-weight:600;text-align:center;transition:all var(--transition)}
+.tbtn.active{background:var(--golddim);border-color:rgba(245,197,66,.3);color:var(--gold)}
+html.light .tbtn.active{border-color:rgba(160,104,0,.3)}
+/* ═══════ BUTTONS ════════════════════════════════════════════════ */
+.bprimary{background:linear-gradient(135deg,var(--gold),#8a5500);color:#0a0800;font-weight:700;font-size:13px;padding:10px 20px;border-radius:var(--radius);letter-spacing:.02em;box-shadow:0 2px 14px var(--golddim)}
+.bprimary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.bsecond{background:var(--bg2);border:1px solid var(--bordermd);color:var(--txt1);font-size:12px;padding:8px 15px;border-radius:var(--radius)}
+.bsecond:hover{background:var(--bghov);color:var(--txt0)}
+.bghst{background:none;color:var(--txt2);font-size:12px;padding:7px 12px;border-radius:var(--radius)}
+.bghst:hover{background:var(--bg2);color:var(--txt1)}
+.bdanger{background:var(--reddim);border:1px solid var(--redbdr);color:var(--red);font-size:12px;padding:7px 13px;border-radius:var(--radius)}
+.bsuccess{background:var(--grndim);border:1px solid var(--grnbdr);color:var(--grn);font-size:12px;font-weight:600;padding:7px 13px;border-radius:var(--radius)}
+/* ═══════ INDICATOR BADGE ════════════════════════════════════════ */
+.indbadge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--radius);font-weight:700;font-size:14px}
+.indbadge.green{background:var(--grndim);border:1px solid var(--grnbdr);color:var(--grn)}
+.indbadge.yellow{background:var(--yeldim);border:1px solid rgba(255,215,64,.3);color:var(--yel)}
+html.light .indbadge.yellow{border-color:rgba(176,122,0,.3)}
+.indbadge.red{background:var(--reddim);border:1px solid var(--redbdr);color:var(--red)}
+/* Tags */
+.tag{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:.05em}
+.tg{background:var(--grndim);color:var(--grn);border:1px solid var(--grnbdr)}
+.ty{background:var(--yeldim);color:var(--yel);border:1px solid rgba(255,215,64,.25)}
+html.light .ty{border-color:rgba(176,122,0,.25)}
+.tr{background:var(--reddim);color:var(--red);border:1px solid var(--redbdr)}
+.tc{background:var(--cyandim);color:var(--cyan);border:1px solid var(--cyanglow)}
+.to{background:var(--golddim);color:var(--gold);border:1px solid var(--goldglow)}
+.tgr{background:var(--bg3);color:var(--txt2);border:1px solid var(--border)}
+/* ═══════ TABLE ══════════════════════════════════════════════════ */
+.dtbl{width:100%;border-collapse:collapse}
+.dtbl th{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);font-weight:600;padding:7px 11px;text-align:left;border-bottom:1px solid var(--border);font-family:var(--font-ui)}
+.dtbl td{padding:10px 11px;font-size:12px;color:var(--txt1);border-bottom:1px solid var(--border);font-family:var(--font-mono)}
+.dtbl tbody tr:hover td{background:var(--bghov)}
+.dtbl tbody tr:last-child td{border-bottom:none}
+/* ═══════ RULE ROW ════════════════════════════════════════════════ */
+.rrw{display:flex;align-items:center;gap:11px;padding:9px 13px;border-radius:var(--radius);border:1px solid transparent;margin-bottom:6px}
+.rrw.ok{background:var(--grndim);border-color:var(--grnbdr)}
+.rrw.fail{background:var(--reddim);border-color:var(--redbdr)}
+.rrw.ok .ri{color:var(--grn)}
+.rrw.fail .ri{color:var(--red)}
+.ri{font-size:13px;font-weight:700;min-width:16px}
+.rt{font-size:12px}
+.rrw.ok .rt{color:var(--txt1)}
+.rrw.fail .rt{color:var(--txt2)}
+/* ═══════ SCENARIO TABLE ══════════════════════════════════════════ */
+.srow{display:grid;grid-template-columns:110px 1fr 1fr 1fr 1fr;gap:8px;align-items:center;padding:11px 15px;border-radius:var(--radius);background:var(--bg3);border-left:3px solid transparent;margin-bottom:5px}
+.srow.base{background:var(--golddim);border-left-color:var(--gold)}
+.shdr{display:grid;grid-template-columns:110px 1fr 1fr 1fr 1fr;gap:8px;padding:5px 15px 8px}
+.shd{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);font-weight:600}
+/* ═══════ ALERT ROW ══════════════════════════════════════════════ */
+.alrw{display:flex;gap:11px;align-items:flex-start;padding:10px 13px;border-radius:var(--radius);border:1px solid transparent;margin-bottom:7px}
+.alrw.ok{background:var(--grndim);border-color:var(--grnbdr)}
+.alrw.fail{background:var(--reddim);border-color:var(--redbdr)}
+.alrw.ok .atipo{color:var(--grn)}
+.alrw.fail .atipo{color:var(--red)}
+.atipo{font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:2px}
+.amsg{font-size:11px;color:var(--txt2)}
+/* ═══════ PROGRESS BAR ════════════════════════════════════════════ */
+.pbar{background:var(--bg1);border-radius:99px;height:5px;overflow:hidden}
+.pfill{height:100%;border-radius:99px;transition:width .5s ease}
+/* ═══════ INFO ROW ════════════════════════════════════════════════ */
+.irw{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;background:var(--bg3);border-radius:var(--radius);margin-bottom:5px}
+.ilbl{font-size:12px;color:var(--txt2)}
+.ival{font-family:var(--font-mono);font-size:13px;font-weight:500}
+/* ═══════ COMPARE CARDS ══════════════════════════════════════════ */
+.cmpcard{background:var(--bg3);border:2px solid var(--border);border-radius:var(--radius-lg);padding:18px;transition:all var(--transition)}
+.cmpcard.winner{border-color:var(--grn);background:var(--grndim)}
+.cmpcard.winner-b{border-color:var(--cyan);background:var(--cyandim)}
+/* ═══════ PERF BARS ══════════════════════════════════════════════ */
+.perfbars{display:flex;gap:3px;align-items:flex-end;height:70px}
+.perfbar{flex:1;min-width:5px;border-radius:3px 3px 0 0;opacity:.75;cursor:default;transition:opacity var(--transition)}
+.perfbar:hover{opacity:1}
+/* ═══════ MODAL ══════════════════════════════════════════════════ */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center}
+.moverlay.open{display:flex}
+.mdl{background:var(--bg2);border:1px solid var(--bordermd);border-radius:var(--radius-xl);padding:26px;width:480px;max-width:95vw;box-shadow:var(--shadow);animation:mdin .2s ease}
+@keyframes mdin{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.mtitle{font-size:15px;font-weight:700}
+.mclose{background:none;border:none;color:var(--txt2);font-size:18px;cursor:pointer;padding:3px;border-radius:4px}
+.mclose:hover{color:var(--txt0)}
+/* ═══════ FILTER BAR ══════════════════════════════════════════════ */
+.filtbar{display:flex;align-items:center;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+.filtbar select{width:auto;padding:7px 28px 7px 11px;font-size:12px}
+/* ═══════ THEME TOGGLE ════════════════════════════════════════════ */
+.theme-toggle{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:4px 12px;cursor:pointer;font-size:11px;color:var(--txt1);font-weight:600;transition:all var(--transition)}
+.theme-toggle:hover{border-color:var(--bordermd)}
+/* ═══════ DRE TABLE ══════════════════════════════════════════════ */
+.dre-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:var(--radius);margin-bottom:4px}
+.dre-row.header{background:var(--bg3);font-weight:700;color:var(--txt0)}
+.dre-row.sub{background:transparent;padding:8px 14px}
+.dre-row.total{background:var(--golddim);border:1px solid var(--goldglow);font-weight:700}
+.dre-row.profit{font-size:15px}
+.dre-lbl{font-size:12px;color:var(--txt1)}
+.dre-val{font-family:var(--font-mono);font-size:13px;font-weight:500}
+.dre-row.header .dre-lbl,.dre-row.header .dre-val{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt2)}
+/* ═══════ NOTIFICATION ════════════════════════════════════════════ */
+#notif{position:fixed;bottom:22px;right:22px;background:var(--bg2);border:1px solid var(--bordermd);border-radius:var(--radius-lg);padding:13px 17px;font-size:13px;box-shadow:var(--shadow);z-index:999;display:none;animation:nfin .25s ease;max-width:280px}
+#notif.show{display:block}
+#notif.ok{border-color:var(--grnbdr)}
+#notif.er{border-color:var(--redbdr)}
+@keyframes nfin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* ═══════ LOGIN SCREEN ════════════════════════════════════════════ */
+#login{position:fixed;inset:0;background:var(--bg0);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column}
+#login.hidden{display:none}
+#login::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,var(--cyandim) 0%,transparent 60%),radial-gradient(ellipse at 50% 100%,var(--golddim) 0%,transparent 60%);pointer-events:none}
+.login-box{background:var(--bg2);border:1px solid var(--bordermd);border-radius:var(--radius-xl);padding:36px;width:380px;max-width:92vw;text-align:center;box-shadow:var(--shadow)}
+.login-gem{width:56px;height:56px;background:linear-gradient(135deg,var(--gold),#8a5500);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 18px;box-shadow:0 0 24px var(--goldglow)}
+.login-title{font-size:22px;font-weight:800;color:var(--txt0);margin-bottom:5px;letter-spacing:-.03em}
+.login-sub{font-size:12px;color:var(--txt2);margin-bottom:26px}
+.login-err{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
+/* ═══════ CLOUD STATUS ═══════════════════════════════════════════ */
+#cloud-status{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 13px;border-radius:99px;font-size:11px;font-weight:600;
+  border:1px solid transparent;transition:all .4s ease;cursor:default;
+  position:fixed;bottom:20px;right:20px;z-index:500;
+  box-shadow:0 2px 12px rgba(0,0,0,.35);backdrop-filter:blur(8px);
+}
+#cloud-status.idle{background:var(--bg2);border-color:var(--border);color:var(--txt2);}
+#cloud-status.syncing{background:rgba(255,215,64,.12);border-color:rgba(255,215,64,.4);color:var(--yel);animation:pulse-sync .9s infinite alternate;}
+#cloud-status.ok{background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.35);color:var(--grn);}
+#cloud-status.error{background:rgba(255,77,109,.1);border-color:rgba(255,77,109,.35);color:var(--red);}
+#cloud-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:background .4s;}
+#cloud-status.idle   #cloud-dot{background:var(--txt3);}
+#cloud-status.syncing #cloud-dot{background:var(--yel);}
+#cloud-status.ok      #cloud-dot{background:var(--grn);}
+#cloud-status.error   #cloud-dot{background:var(--red);}
+@keyframes pulse-sync{from{opacity:.7}to{opacity:1}}
+
+/* ═══════ EMPTY STATE ════════════════════════════════════════════ */
+.empty{text-align:center;padding:50px 20px;color:var(--txt2)}
+.empty-ic{font-size:38px;margin-bottom:12px;opacity:.5}
+.empty-t{font-size:14px;color:var(--txt2);margin-bottom:5px}
+.empty-s{font-size:12px;color:var(--txt3)}
+/* ═══════ LAYOUT HELPERS ═════════════════════════════════════════ */
+.twocol{display:grid;grid-template-columns:360px 1fr;gap:20px;align-items:start}
+.gap16{display:flex;flex-direction:column;gap:16px}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+</style>
+</head>
+<body>
+
+<!-- ══════ LOGIN SCREEN ══════════════════════════════════════════ -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-gem">✈</div>
+    <div class="login-title">MilesArb Pro</div>
+    <div class="login-sub">Sistema Profissional de Arbitragem de Milhas</div>
+    <div class="fgrp" style="text-align:left;margin-bottom:10px;">
+      <div class="flbl">Senha de Acesso</div>
+      <div class="iwrap">
+        <input type="password" id="login-pw" placeholder="Digite sua senha" style="padding:11px 14px;">
+      </div>
+    </div>
+    <button class="bprimary" style="width:100%;padding:12px;" id="btn-login">Entrar no Sistema</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ══════ MAIN LAYOUT ═══════════════════════════════════════════ -->
+<div id="layout" style="display:none;">
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="logo-area">
+    <div class="logo-gem">◆</div>
+    <div><div class="logo-nm">MilesArb Pro</div><div class="logo-sub">Arbitragem de Milhas</div></div>
+  </div>
+
+  <div class="nav-sec">
+    <div class="nav-sec-lbl">Geral</div>
+    <button class="nv active" data-pg="dashboard"><span class="nv-ic">◉</span>Dashboard</button>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-sec-lbl">Arbitragem</div>
+    <button class="nv" data-pg="calc"><span class="nv-ic">⟳</span>Calculadora</button>
+    <button class="nv" data-pg="strat"><span class="nv-ic">⚖</span>Estratégias</button>
+    <button class="nv" data-pg="sim"><span class="nv-ic">◈</span>Simulador</button>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-sec-lbl">Operações</div>
+    <button class="nv" data-pg="compra"><span class="nv-ic">↓</span>Comprar Milhas</button>
+    <button class="nv" data-pg="venda"><span class="nv-ic">↑</span>Vender Milhas</button>
+    <button class="nv" data-pg="transf"><span class="nv-ic">⇄</span>Transferir Pontos</button>
+    <button class="nv" data-pg="emissao"><span class="nv-ic">✦</span>Registrar Emissão</button>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-sec-lbl">Inteligência</div>
+    <button class="nv" data-pg="mercado"><span class="nv-ic">📊</span>Mercado <span class="nv-badge" id="badge-mkt" style="display:none;background:var(--grn);">!</span></button>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-sec-lbl">Controle</div>
+    <button class="nv" data-pg="estoque"><span class="nv-ic">▦</span>Estoque de Milhas</button>
+    <button class="nv" data-pg="hist"><span class="nv-ic">≡</span>Histórico <span class="nv-badge" id="badge-hist">0</span></button>
+    <button class="nv" data-pg="dre"><span class="nv-ic">📊</span>DRE Mensal</button>
+    <button class="nv" data-pg="caixa"><span class="nv-ic">💳</span>Projeção de Caixa</button>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-sec-lbl">Sistema</div>
+    <button class="nv" data-pg="config"><span class="nv-ic">⚙</span>Configurações</button>
+  </div>
+
+  <div class="sidebar-foot">MilesArb Pro v5.0<br>📊 + Mercado & Gemini</div>
+</nav>
+
+<!-- CONTENT -->
+<main id="content">
+
+<!-- ════ DASHBOARD ════════════════════════════════════════════ -->
+<div class="pg active" id="pg-dashboard">
+  <div class="ph">
+    <div class="ph-left"><div class="ptitle">Dashboard</div><div class="psub">Visão consolidada de todas suas operações</div></div>
+    <button class="theme-toggle" id="theme-btn">🌙 Modo Escuro</button>
+  </div>
+  <div class="pb">
+    <div class="kgrid k4" id="dash-kpis" style="margin-bottom:20px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card"><div class="sec">📈 Lucro por Programa</div><canvas id="chart-prog" height="140"></canvas></div>
+      <div class="card"><div class="sec">📊 Desempenho Emissões</div><div class="perfbars" id="perf-bars"></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:10px;color:var(--txt3);"><span>← Mais antigas</span><span>Mais recentes →</span></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card"><div class="sec">✦ Estoque por Programa</div><div id="dash-estoque"></div></div>
+      <div class="card"><div class="sec">≡ Últimas Emissões</div><div id="dash-recent"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CALCULADORA ═════════════════════════════════════════ -->
+<div class="pg" id="pg-calc">
+  <div class="ph"><div><div class="ptitle">Calculadora de Arbitragem</div><div class="psub">Análise de lucratividade em tempo real</div></div></div>
+  <div class="pb">
+    <div class="twocol">
+      <div class="card">
+        <div class="sec">Dados da Emissão</div>
+        <div class="fgrp" style="margin-bottom:14px;">
+          <div class="flbl">Programa de Milhas</div>
+          <div class="pgrid" id="calc-prog-btns" style="grid-template-columns:1fr 1fr 1fr;"></div>
+        </div>
+        <div class="fgrp" style="margin-bottom:14px;">
+          <div class="flbl">Tipo de Viagem</div>
+          <div class="tgrid" id="calc-trip-btns">
+            <button class="tbtn active" data-trip="ida">✈ Só Ida</button>
+            <button class="tbtn" data-trip="ida_volta">✈✈ Ida e Volta</button>
+          </div>
+        </div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Pontos Necessários</div><div class="iwrap"><input type="number" id="f-pontos" placeholder="30000"><span class="isuf">pts</span></div></div>
+          <div class="fgrp"><div class="flbl">Taxas da Emissão</div><div class="iwrap"><input type="number" id="f-taxas" placeholder="280,00"><span class="isuf">R$</span></div></div>
+        </div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Custo por Milheiro</div><div class="iwrap"><input type="number" id="f-cpm" placeholder="28,00"><span class="isuf">R$/mil</span></div></div>
+          <div class="fgrp"><div class="flbl">Preço Mercado Conv.</div><div class="iwrap"><input type="number" id="f-mercado" placeholder="1800,00"><span class="isuf">R$</span></div></div>
+        </div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Lucro Desejado</div><div class="iwrap"><input type="number" id="f-lucro-des" value="30"><span class="isuf">%</span></div></div>
+          <div class="fgrp"><div class="flbl">Desconto ao Comprador</div><div class="iwrap"><input type="number" id="f-desconto" value="35"><span class="isuf">%</span></div></div>
+        </div>
+        <div style="display:flex;gap:9px;margin-top:4px;">
+          <button class="bprimary" style="flex:1;" id="btn-save-calc">💾 Salvar Emissão</button>
+          <button class="bsecond" id="btn-clear-calc">Limpar</button>
+        </div>
+      </div>
+      <div class="gap16">
+        <div class="card" id="calc-ind"></div>
+        <div class="card">
+          <div class="sec">Resultado da Emissão</div>
+          <div class="mgrid" style="grid-template-columns:repeat(4,1fr);" id="calc-m1"></div>
+          <div class="mgrid" style="grid-template-columns:repeat(4,1fr);margin-top:9px;" id="calc-m2"></div>
+        </div>
+        <div class="card">
+          <div class="sec">Precificação Estratégica</div>
+          <div class="mgrid" style="grid-template-columns:repeat(4,1fr);margin-bottom:13px;" id="calc-pricing"></div>
+          <div class="pbar"><div class="pfill" id="calc-pbar" style="width:0%;background:var(--grn);"></div></div>
+          <div style="text-align:center;font-size:11px;color:var(--txt2);margin-top:5px;" id="calc-pct"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ESTRATÉGIA ══════════════════════════════════════════ -->
+<div class="pg" id="pg-strat">
+  <div class="ph"><div><div class="ptitle">Análise Estratégica</div><div class="psub">Compare cenários e valide as regras de arbitragem</div></div></div>
+  <div class="pb">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div class="gap16">
+        <div class="card"><div class="sec">Vender Milhas vs. Emitir Passagem</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px;" id="strat-cmp"></div><div id="strat-diff" style="padding:12px;background:var(--bg3);border-radius:var(--radius);font-size:13px;"></div></div>
+        <div class="card"><div class="sec">Métricas de Compra Estratégica</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px;" id="strat-met"></div><div id="strat-tip" style="padding:12px;background:var(--cyandim);border:1px solid var(--cyanglow);border-radius:var(--radius);"></div></div>
+      </div>
+      <div class="gap16">
+        <div class="card"><div class="sec">Checklist — 7 Regras de Arbitragem</div><div id="strat-chk"></div></div>
+        <div class="card"><div class="sec">Resumo Financeiro</div><div id="strat-sum"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SIMULADOR ═══════════════════════════════════════════ -->
+<div class="pg" id="pg-sim">
+  <div class="ph"><div><div class="ptitle">Simulador de Cenários</div><div class="psub">Impacto de variações no preço de mercado</div></div></div>
+  <div class="pb">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="sec">Cenários de Mercado</div>
+      <div class="shdr"><div class="shd">Cenário</div><div class="shd">Preço Mercado</div><div class="shd">Você Cobra</div><div class="shd">Lucro Líquido</div><div class="shd">Margem</div></div>
+      <div id="sim-table"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card"><div class="sec">Alertas Automáticos</div><div id="sim-alerts"></div></div>
+      <div class="card"><div class="sec">Recomendações</div><div id="sim-recs"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ COMPRAR MILHAS ══════════════════════════════════════ -->
+<div class="pg" id="pg-compra">
+  <div class="ph"><div><div class="ptitle">Comprar Milhas</div><div class="psub">Registre aquisições e atualize estoque automaticamente</div></div></div>
+  <div class="pb">
+    <div style="max-width:700px;">
+      <div class="card">
+        <div class="sec">Nova Compra de Milhas</div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Programa</div><select id="cp-prog"></select></div>
+          <div class="fgrp"><div class="flbl">Data da Compra</div><input type="date" id="cp-data" style="padding:9px 12px;"></div>
+        </div>
+        <div class="frow fr3">
+          <div class="fgrp"><div class="flbl">Quantidade de Pontos</div><div class="iwrap"><input type="number" id="cp-pontos" placeholder="50000"><span class="isuf">pts</span></div></div>
+          <div class="fgrp"><div class="flbl">Custo por Milheiro</div><div class="iwrap"><input type="number" id="cp-cpm" placeholder="28,50"><span class="isuf">R$/mil</span></div></div>
+          <div class="fgrp"><div class="flbl">Valor Total</div><div class="iwrap"><input type="number" id="cp-total" placeholder="Auto"><span class="isuf">R$</span></div></div>
+        </div>
+        <div class="frow fr3">
+          <div class="fgrp"><div class="flbl">Nº de Parcelas</div><div class="iwrap"><input type="number" id="cp-parcelas" value="1" min="1"><span class="isuf">x</span></div></div>
+          <div class="fgrp"><div class="flbl">Parcelas Pagas</div><div class="iwrap"><input type="number" id="cp-pgpagas" value="0" min="0"><span class="isuf">x</span></div></div>
+          <div class="fgrp"><div class="flbl">Categoria</div><select id="cp-cat"><option>Cartão de Crédito</option><option>Débito</option><option>Boleto</option><option>Transferência</option><option>Outro</option></select></div>
+        </div>
+        <div class="fgrp" style="margin-bottom:13px;"><div class="flbl">Observações</div><input type="text" id="cp-obs" placeholder="ex: Compra promoção Amex Double" style="padding:9px 12px;"></div>
+        <div style="display:flex;gap:9px;">
+          <button class="bprimary" style="flex:1;" id="btn-save-compra">↓ Registrar Compra</button>
+          <button class="bsecond" id="btn-clear-compra">Limpar</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="sec">Histórico de Compras</div>
+        <div id="compras-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ VENDER MILHAS ═══════════════════════════════════════ -->
+<div class="pg" id="pg-venda">
+  <div class="ph"><div><div class="ptitle">Vender Milhas</div><div class="psub">Registre vendas e controle recebimentos</div></div></div>
+  <div class="pb">
+    <div style="max-width:700px;">
+      <div class="card">
+        <div class="sec">Nova Venda de Milhas</div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Programa</div><select id="vd-prog"></select></div>
+          <div class="fgrp"><div class="flbl">Data da Venda</div><input type="date" id="vd-data" style="padding:9px 12px;"></div>
+        </div>
+        <div class="frow fr3">
+          <div class="fgrp"><div class="flbl">Quantidade de Pontos</div><div class="iwrap"><input type="number" id="vd-pontos" placeholder="50000"><span class="isuf">pts</span></div></div>
+          <div class="fgrp"><div class="flbl">Valor por Milheiro</div><div class="iwrap"><input type="number" id="vd-vpm" placeholder="25,00"><span class="isuf">R$/mil</span></div></div>
+          <div class="fgrp"><div class="flbl">Valor Total</div><div class="iwrap"><input type="number" id="vd-total" placeholder="Auto"><span class="isuf">R$</span></div></div>
+        </div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Status do Pagamento</div><select id="vd-status"><option value="pendente">⏳ Aguardando Recebimento</option><option value="recebido">✅ Recebido</option></select></div>
+          <div class="fgrp"><div class="flbl">Plataforma / Canal</div><input type="text" id="vd-canal" placeholder="ex: Passaredo, WhatsApp" style="padding:9px 12px;"></div>
+        </div>
+        <div class="fgrp" style="margin-bottom:13px;"><div class="flbl">Observações</div><input type="text" id="vd-obs" placeholder="ex: Cliente João, pagamento PIX" style="padding:9px 12px;"></div>
+        <button class="bprimary" style="width:100%;padding:12px;" id="btn-save-venda">↑ Registrar Venda</button>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="sec">Histórico de Vendas</div>
+        <div id="vendas-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TRANSFERIR PONTOS ═══════════════════════════════════ -->
+<div class="pg" id="pg-transf">
+  <div class="ph"><div><div class="ptitle">Transferir Pontos</div><div class="psub">Movimentação entre programas de milhas</div></div></div>
+  <div class="pb">
+    <div style="max-width:640px;">
+      <div class="card">
+        <div class="sec">Nova Transferência</div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Programa de Origem</div><select id="tf-orig"></select></div>
+          <div class="fgrp"><div class="flbl">Programa de Destino</div><select id="tf-dest"></select></div>
+        </div>
+        <div class="frow fr3">
+          <div class="fgrp"><div class="flbl">Pontos Origem</div><div class="iwrap"><input type="number" id="tf-orig-pts" placeholder="10000"><span class="isuf">pts</span></div></div>
+          <div class="fgrp"><div class="flbl">Pontos Destino</div><div class="iwrap"><input type="number" id="tf-dest-pts" placeholder="10000"><span class="isuf">pts</span></div></div>
+          <div class="fgrp"><div class="flbl">Taxa da Transferência</div><div class="iwrap"><input type="number" id="tf-taxa" placeholder="0,00"><span class="isuf">R$</span></div></div>
+        </div>
+        <div class="fgrp" style="margin-bottom:13px;"><div class="flbl">Observações</div><input type="text" id="tf-obs" placeholder="ex: Transferência Livelo → Smiles" style="padding:9px 12px;"></div>
+        <button class="bprimary" style="width:100%;padding:12px;" id="btn-save-transf">⇄ Registrar Transferência</button>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="sec">Histórico de Transferências</div>
+        <div id="transf-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ REGISTRAR EMISSÃO ═══════════════════════════════════ -->
+<div class="pg" id="pg-emissao">
+  <div class="ph"><div><div class="ptitle">Registrar Emissão</div><div class="psub">Salve emissões realizadas manualmente</div></div></div>
+  <div class="pb">
+    <div style="max-width:680px;">
+      <div class="card">
+        <div class="sec">Dados da Emissão</div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Programa</div><select id="em-prog"></select></div>
+          <div class="fgrp"><div class="flbl">Tipo de Viagem</div><select id="em-tipo"><option value="ida">Só Ida</option><option value="ida_volta">Ida e Volta</option></select></div>
+        </div>
+        <div class="frow fr3">
+          <div class="fgrp"><div class="flbl">Pontos Utilizados</div><div class="iwrap"><input type="number" id="em-pontos" placeholder="30000"><span class="isuf">pts</span></div></div>
+          <div class="fgrp"><div class="flbl">Custo por Milheiro</div><div class="iwrap"><input type="number" id="em-cpm" placeholder="28,00"><span class="isuf">R$/mil</span></div></div>
+          <div class="fgrp"><div class="flbl">Taxas</div><div class="iwrap"><input type="number" id="em-taxas" placeholder="280,00"><span class="isuf">R$</span></div></div>
+        </div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Valor Cobrado do Cliente</div><div class="iwrap"><input type="number" id="em-cobrado" placeholder="1200,00"><span class="isuf">R$</span></div></div>
+          <div class="fgrp"><div class="flbl">Rota / Observações</div><input type="text" id="em-obs" placeholder="ex: GRU → LIS" style="padding:9px 12px;"></div>
+        </div>
+        <div id="em-preview" style="display:none;margin:12px 0;padding:13px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border);">
+          <div class="flbl" style="margin-bottom:9px;">Pré-visualização</div>
+          <div class="mgrid" style="grid-template-columns:repeat(4,1fr);" id="em-prev-vals"></div>
+        </div>
+        <button class="bprimary" style="width:100%;padding:12px;" id="btn-save-em">✦ Registrar Emissão</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ESTOQUE ═════════════════════════════════════════════ -->
+<div class="pg" id="pg-estoque">
+  <div class="ph"><div><div class="ptitle">Estoque de Milhas</div><div class="psub">Saldo por programa com custo médio ponderado</div></div></div>
+  <div class="pb">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;" id="stock-cards"></div>
+    <div class="card"><div class="sec">Resumo do Portfólio</div><div class="kgrid k4" id="stock-sum"></div></div>
+  </div>
+</div>
+
+<!-- ════ HISTÓRICO ════════════════════════════════════════════ -->
+<div class="pg" id="pg-hist">
+  <div class="ph">
+    <div><div class="ptitle">Histórico de Emissões</div><div class="psub">Todas as operações registradas</div></div>
+    <button class="bsecond" id="btn-export">⤓ Exportar CSV</button>
+  </div>
+  <div class="pb">
+    <div class="filtbar">
+      <select id="filt-prog" style="min-width:160px;"></select>
+      <select id="filt-status"><option value="all">Todos os status</option><option value="green">🟢 Altamente Lucrativo</option><option value="yellow">🟡 Margem Apertada</option><option value="red">🔴 Não Compensou</option></select>
+      <button class="bghst" id="btn-del-all">✕ Limpar tudo</button>
+    </div>
+    <div class="kgrid k4" style="margin-bottom:16px;" id="hist-kpis"></div>
+    <div class="card" style="padding:0;overflow:hidden;"><div id="hist-table"></div></div>
+  </div>
+</div>
+
+<!-- ════ DRE MENSAL ══════════════════════════════════════════ -->
+<div class="pg" id="pg-dre">
+  <div class="ph"><div><div class="ptitle">DRE Mensal</div><div class="psub">Demonstração de Resultado do Exercício</div></div></div>
+  <div class="pb">
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
+      <div class="fgrp"><div class="flbl">Mês</div><select id="dre-mes" style="width:130px;padding:8px 12px;"></select></div>
+      <div class="fgrp"><div class="flbl">Ano</div><select id="dre-ano" style="width:100px;padding:8px 12px;"></select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div class="kgrid k2" id="dre-kpis" style="margin-bottom:16px;"></div>
+        <div class="card"><div class="sec">Demonstrativo Financeiro</div><div id="dre-table"></div></div>
+      </div>
+      <div class="gap16">
+        <div class="card">
+          <div class="sec">Lançar Despesa</div>
+          <div class="frow fr2">
+            <div class="fgrp"><div class="flbl">Descrição</div><input type="text" id="dp-desc" placeholder="ex: Marketing" style="padding:9px 12px;"></div>
+            <div class="fgrp"><div class="flbl">Categoria</div><select id="dp-cat"><option>Marketing</option><option>Ferramentas</option><option>Taxas Bancárias</option><option>Comissões</option><option>Infraestrutura</option><option>Outras</option></select></div>
+          </div>
+          <div class="frow fr2">
+            <div class="fgrp"><div class="flbl">Valor</div><div class="iwrap"><input type="number" id="dp-val" placeholder="0,00"><span class="isuf">R$</span></div></div>
+            <div class="fgrp"><div class="flbl">Mês / Ano</div><div style="display:flex;gap:6px;"><select id="dp-mes" style="width:90px;padding:9px 8px;"></select><select id="dp-ano" style="width:80px;padding:9px 8px;"></select></div></div>
+          </div>
+          <button class="bprimary" style="width:100%;padding:11px;" id="btn-save-desp">+ Lançar Despesa</button>
+        </div>
+        <div class="card">
+          <div class="sec">Despesas do Período</div>
+          <div id="dre-desp-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PROJEÇÃO DE CAIXA ═══════════════════════════════════ -->
+<div class="pg" id="pg-caixa">
+  <div class="ph"><div><div class="ptitle">Projeção de Caixa</div><div class="psub">Recebíveis, pagáveis e projeção mensal</div></div></div>
+  <div class="pb">
+    <div class="kgrid k3" id="caixa-kpis" style="margin-bottom:20px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="sec">💰 Vendas a Receber</div>
+        <div id="caixa-receber"></div>
+      </div>
+      <div class="card">
+        <div class="sec">💳 Compras a Pagar</div>
+        <div id="caixa-pagar"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div class="sec">📅 Projeção dos Próximos 3 Meses</div>
+      <div id="caixa-proj"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CONFIGURAÇÕES ════════════════════════════════════════ -->
+<div class="pg" id="pg-config">
+  <div class="ph"><div><div class="ptitle">Configurações</div><div class="psub">Integrações e preferências do sistema</div></div></div>
+  <div class="pb">
+    <div style="max-width:640px;display:flex;flex-direction:column;gap:16px;">
+      <div class="card">
+        <div class="sec">Aparência</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border-radius:var(--radius);">
+          <div><div style="font-size:13px;font-weight:600;">Modo de Cor</div><div style="font-size:11px;color:var(--txt2);margin-top:2px;">Escolha entre dark e light mode</div></div>
+          <button class="theme-toggle" id="theme-btn2">🌙 Modo Escuro</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec">Integração Google Planilhas</div>
+        <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;background:var(--bg3);border-radius:var(--radius);margin-bottom:14px;">
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:700;color:var(--txt0);margin-bottom:2px;">Google Apps Script</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--txt2);word-break:break-all;">AKfycbzTg7Gb...nz/exec</div>
+          </div>
+          <button class="bsecond" id="btn-test-sheets" style="white-space:nowrap;flex-shrink:0;">🔌 Testar</button>
+        </div>
+        <div id="sheets-status" style="font-size:12px;min-height:16px;margin-bottom:12px;"></div>
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:16px;">
+          <div class="flbl" style="margin-bottom:10px;">📋 Como configurar o Google Apps Script:</div>
+          <div style="font-size:12px;color:var(--txt1);line-height:1.85;">
+            1. Abra <strong style="color:var(--gold);">script.google.com</strong> e crie um novo projeto<br>
+            2. Cole o código abaixo no editor<br>
+            3. Clique em <strong>Implantar → Nova implantação → App da Web</strong><br>
+            4. Acesso: <em>"Qualquer pessoa"</em> — copie a URL gerada<br>
+            5. Cole a URL acima e salve
+          </div>
+          <div style="margin-top:12px;background:var(--bg0);border-radius:var(--radius);padding:12px;font-family:var(--font-mono);font-size:11px;color:var(--cyan);white-space:pre;overflow-x:auto;">function doPost(e){
+  try{
+    var body=e.postData.contents;
+    var d=JSON.parse(body);
+    if(d.tipo==='_teste'){
+      return ContentService.createTextOutput(JSON.stringify({status:'ok',msg:'Conexão estabelecida!'})).setMimeType(ContentService.MimeType.JSON);
+    }
+    var ss=SpreadsheetApp.getActiveSpreadsheet();
+    var sh=ss.getSheetByName(d.tipo)||ss.insertSheet(d.tipo);
+    var dados=d.dados||{};
+    dados.timestamp=d.ts||new Date().toISOString();
+    if(sh.getLastRow()===0)sh.appendRow(Object.keys(dados));
+    sh.appendRow(Object.values(dados));
+    return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }catch(err){
+    return ContentService.createTextOutput(JSON.stringify({status:'error',msg:err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec">Dados do Sistema</div>
+        <div style="display:flex;gap:10px;">
+          <button class="bdanger" id="btn-backup">⤓ Exportar Backup</button>
+          <button class="bsecond" id="btn-restore" onclick="document.getElementById('restore-file').click()">⤒ Importar Backup</button>
+          <input type="file" id="restore-file" accept=".json" style="display:none;">
+        </div>
+        <div style="margin-top:12px;">
+          <button class="bdanger" id="btn-logout">⎋ Sair / Fazer Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ MERCADO ══════════════════════════════════════════════ -->
+<div class="pg" id="pg-mercado">
+  <div class="ph">
+    <div><div class="ptitle">📊 Mercado</div><div class="psub">Central de Inteligência — Cotações em tempo real e Promoções</div></div>
+    <div style="display:flex;gap:9px;">
+      <button class="bsecond" id="btn-atualizar-prom" onclick="App.fetchPromocoes()">🔥 Atualizar Promoções</button>
+    </div>
+  </div>
+  <div class="pb">
+
+    <!-- Resumo do Mercado -->
+    <div class="kgrid k4" id="mkt-summary" style="margin-bottom:20px;"></div>
+
+    <!-- Cotação + Preços Atuais -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="sec">📥 Inserir Cotação — CotaMilhas</div>
+        <div class="fgrp" style="margin-bottom:11px;">
+          <div class="flbl">Tipo da Cotação</div>
+          <div style="display:flex;gap:7px;">
+            <button class="tbtn" id="cot-tipo-ab" onclick="App.setCotTipo('abertura')" style="flex:1;">🌅 Abertura</button>
+            <button class="tbtn active" id="cot-tipo-fe" onclick="App.setCotTipo('fechamento')" style="flex:1;">🌙 Fechamento</button>
+          </div>
+        </div>
+        <div class="fgrp" style="margin-bottom:11px;">
+          <div class="flbl">Cole a mensagem do Telegram aqui</div>
+          <textarea id="cot-input" rows="9" placeholder="Cole aqui a mensagem do grupo CotaMilhas...&#10;&#10;Ex:&#10;💰 COTAÇÃO - FIM DO DIA 💰&#10;📊 AZUL - TUDO AZUL&#10;🟢R$ 17.89 HOT (150 dias)&#10;🟡R$ 16.21 MAX (60 dias)&#10;..." style="font-size:12px;line-height:1.6;"></textarea>
+        </div>
+        <button class="bprimary" style="width:100%;padding:12px;" id="btn-parse-cotacao" onclick="App.parseCotacao()">⚡ Processar Cotação</button>
+        <div id="cot-status" style="margin-top:9px;font-size:12px;color:var(--txt2);text-align:center;min-height:18px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="sec" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>💰 Preços Atuais do Milheiro</span>
+          <button class="bghst" style="font-size:11px;" onclick="App.limparHistoricoMkt()">✕ Limpar histórico</button>
+        </div>
+        <div id="mkt-precos-atuais" style="max-height:320px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- Histórico Gráfico -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="sec">📈 Histórico de Cotações</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+        <select id="mkt-filt-prog" style="width:auto;padding:7px 28px 7px 11px;font-size:12px;"></select>
+        <select id="mkt-filt-cat" style="width:auto;padding:7px 28px 7px 11px;font-size:12px;">
+          <option value="HOT">HOT</option>
+          <option value="MAX">MAX</option>
+          <option value="ASAP">ASAP</option>
+          <option value="MAIS">MAIS</option>
+          <option value="BANK">BANK</option>
+          <option value="all">Todas Categorias</option>
+        </select>
+        <select id="mkt-filt-periodo" style="width:auto;padding:7px 28px 7px 11px;font-size:12px;">
+          <option value="7">Últimos 7 dias</option>
+          <option value="30" selected>Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+          <option value="all">Todo o período</option>
+        </select>
+        <button class="bsecond" onclick="MercadoRender.chart()">Atualizar Gráfico</button>
+      </div>
+      <canvas id="chart-mkt" height="160" style="display:block;"></canvas>
+      <div id="mkt-chart-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px;"></div>
+    </div>
+
+    <!-- Tabela histórico -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="sec">📋 Log de Cotações Inseridas</div>
+      <div id="mkt-hist-list"></div>
+    </div>
+
+    <!-- Promoções -->
+    <div class="card">
+      <div class="sec">🔥 Promoções do Dia</div>
+      <div id="mkt-promocoes"></div>
+    </div>
+
+  </div>
+</div>
+
+</main><!-- #content -->
+</div><!-- #layout -->
+
+<!-- ══════ MODAL: Ajustar Estoque ════════════════════════════════ -->
+<div class="moverlay" id="modal-stock">
+  <div class="mdl">
+    <div class="mhdr"><div class="mtitle" id="mst-title">Ajustar Estoque</div><button class="mclose" onclick="App.closeModal('modal-stock')">✕</button></div>
+    <input type="hidden" id="mst-prog">
+    <div class="fgrp" style="margin-bottom:13px;">
+      <div class="flbl">Operação</div>
+      <div style="display:flex;gap:7px;">
+        <button class="tbtn active" id="mst-op-add" onclick="App.setStockOp('add')" style="flex:1;">+ Adicionar</button>
+        <button class="tbtn" id="mst-op-rm" onclick="App.setStockOp('remove')" style="flex:1;">− Remover</button>
+      </div>
+    </div>
+    <div class="frow fr2">
+      <div class="fgrp"><div class="flbl">Pontos</div><div class="iwrap"><input type="number" id="mst-pontos" placeholder="50000"><span class="isuf">pts</span></div></div>
+      <div class="fgrp"><div class="flbl">Custo por Milheiro</div><div class="iwrap"><input type="number" id="mst-cpm" placeholder="28,50"><span class="isuf">R$/mil</span></div></div>
+    </div>
+    <div class="fgrp" style="margin-bottom:16px;"><div class="flbl">Observação</div><input type="text" id="mst-obs" placeholder="ex: Transferência Livelo" style="padding:9px 12px;"></div>
+    <div style="display:flex;gap:9px;"><button class="bprimary" style="flex:1;" id="btn-save-stock">Confirmar</button><button class="bsecond" onclick="App.closeModal('modal-stock')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: Marcar Venda como Recebida ═════════════════════ -->
+<div class="moverlay" id="modal-recv">
+  <div class="mdl">
+    <div class="mhdr"><div class="mtitle">Confirmar Recebimento</div><button class="mclose" onclick="App.closeModal('modal-recv')">✕</button></div>
+    <input type="hidden" id="recv-id">
+    <div style="font-size:14px;color:var(--txt1);margin-bottom:20px;">Confirma que o pagamento desta venda foi recebido?</div>
+    <div style="display:flex;gap:9px;"><button class="bsuccess" style="flex:1;" id="btn-confirm-recv">✓ Confirmar Recebimento</button><button class="bsecond" onclick="App.closeModal('modal-recv')">Cancelar</button></div>
+  </div>
+</div>
+
+<div id="notif"></div>
+<div id="cloud-status" class="idle" title="Status da sincronização com Google Planilhas">
+  <span id="cloud-dot"></span>
+  <span id="cloud-label">Nuvem</span>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+const PROGRAMS=[
+  {id:'azul',     name:'Azul Tudo Azul',   short:'Azul',      color:'#2979FF'},
+  {id:'latam',    name:'LATAM Pass',        short:'LATAM',     color:'#E53935'},
+  {id:'smiles',   name:'Smiles (Gol)',      short:'Smiles',    color:'#FF6D00'},
+  {id:'livelo',   name:'Livelo',            short:'Livelo',    color:'#9C27B0'},
+  {id:'esfera',   name:'Esfera',            short:'Esfera',    color:'#00897B'},
+  {id:'tudoazul', name:'TudoAzul',          short:'TudoAzul',  color:'#1565C0'},
+  {id:'multiplus',name:'Multiplus',         short:'Multiplus', color:'#1A237E'},
+  {id:'lifemiles',name:'LifeMiles (Avianca)',short:'LifeMiles', color:'#B71C1C'},
+  {id:'tap',      name:'TAP Miles&Go',      short:'TAP',       color:'#00695C'},
+  {id:'flyingbl', name:'Flying Blue (AF/KL)',short:'FlyingBlue',color:'#01579B'},
+  {id:'outro',    name:'Outro Programa',    short:'Outro',     color:'#546E7A'},
+];
+const SCENARIOS=[{label:'Queda 20%',delta:-20},{label:'Queda 10%',delta:-10},{label:'Atual ★',delta:0},{label:'Alta 10%',delta:10},{label:'Alta 20%',delta:20},{label:'Alta 30%',delta:30}];
+const IND={green:{e:'🟢',l:'Altamente Lucrativo',cls:'green'},yellow:{e:'🟡',l:'Margem Apertada',cls:'yellow'},red:{e:'🔴',l:'Não Compensa Emitir',cls:'red'}};
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const PASSWORD='milhas2025';
+const GEMINI_KEY='AIzaSyDJpp3sJ6J0N4jIe97lXBubydvEVSmM-oo';
+const GEMINI_MODELS=['gemini-1.5-flash-8b','gemini-1.5-flash','gemini-1.5-pro'];
+const GEMINI_BASE='https://generativelanguage.googleapis.com/v1beta/models';
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbzTg7GbIVP-c6qs0r-o8XQRPoDRQz3nlKG_sAemGIbpzK6H1KSDLEHJ0dfKvd_qpHnz/exec';
+const CAT_COLORS={HOT:'var(--grn)',MAX:'var(--yel)',ASAP:'var(--cyan)',MAIS:'var(--purple)',BANK:'var(--red)'};
+const CAT_ORDER=['HOT','MAX','ASAP','MAIS','BANK'];
+
+// ═══════════════════════════════════════════════════════════════
+// FORMATTERS
+// ═══════════════════════════════════════════════════════════════
+const R$=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
+const pct=v=>`${(v||0).toFixed(2)}%`;
+const N=v=>new Intl.NumberFormat('pt-BR').format(Math.round(v||0));
+const progById=id=>PROGRAMS.find(p=>p.id===id)||PROGRAMS[0];
+const today=()=>new Date().toISOString().slice(0,10);
+const mesAno=(d)=>{const dt=new Date(d);return{m:dt.getMonth()+1,a:dt.getFullYear()};};
+
+// ═══════════════════════════════════════════════════════════════
+// ENGINE — pure calculations
+// ═══════════════════════════════════════════════════════════════
+const Engine={
+  calc(f){
+    const p=+f.pontos||0,tx=+f.taxas||0,cpm=+f.cpm||0,
+          mkt=+f.mercado||0,ld=+f.lucroDesejado||0,desc=+f.desconto||0,
+          mil=p/1000,cp=mil*cpm,ct=cp+tx,
+          vc=mkt*(1-desc/100),ll=vc-ct,
+          mg=vc>0?(ll/vc)*100:0,
+          roi=ct>0?(ll/ct)*100:0,
+          vrm=mil>0?vc/mil:0,
+          maxM=mil>0?((vc*(1-ld/100))-tx)/mil:0,
+          beM=mil>0?(vc-tx)/mil:0,
+          vi=mkt*0.55,vm=mil*25,
+          ind=mg>=20?'green':mg>=8?'yellow':'red';
+    return{mil,custoPontos:cp,custoTotal:ct,valorCobrado:vc,lucroLiquido:ll,margemPct:mg,roi,valorRealMil:vrm,maxMilheiro:maxM,breakEvenMil:beM,valorIdeal:vi,venderMilhas:vm,melhorOpcao:ll>vm?'emitir':'vender',indicador:ind,competitivo:vc<mkt&&mkt>0,precoMercado:mkt};
+  },
+  calcEmissao(e){
+    const mil=(e.pontos||0)/1000,custo=mil*(e.cpm||0)+(e.taxas||0),
+          lucro=(e.cobrado||0)-custo,
+          margem=e.cobrado>0?(lucro/e.cobrado)*100:0,
+          roi=custo>0?(lucro/custo)*100:0,
+          ind=margem>=20?'green':margem>=8?'yellow':'red';
+    return{custo,lucro,margem,roi,ind};
+  },
+  dre(emissoes,despesas,mes,ano){
+    const em=emissoes.filter(e=>{const d=e.data||'';const dt=new Date(d);return dt.getMonth()+1==mes&&dt.getFullYear()==ano});
+    const dp=despesas.filter(d=>+d.mes==mes&&+d.ano==ano);
+    const receita=em.reduce((s,e)=>s+(e.cobrado||0),0);
+    const custoMilhas=em.reduce((s,e)=>s+(e.custo||0),0);
+    const lucroBruto=receita-custoMilhas;
+    const totalDesp=dp.reduce((s,d)=>s+(d.valor||0),0);
+    const lucroLiq=lucroBruto-totalDesp;
+    const margemBruta=receita>0?(lucroBruto/receita)*100:0;
+    const margemLiq=receita>0?(lucroLiq/receita)*100:0;
+    return{receita,custoMilhas,lucroBruto,totalDesp,lucroLiq,margemBruta,margemLiq,em,dp};
+  },
+  caixa(vendas,compras){
+    const aReceber=vendas.filter(v=>v.status==='pendente').reduce((s,v)=>s+(v.valorTotal||0),0);
+    const aPagar=compras.reduce((s,c)=>{const rest=(c.parcelas||1)-(c.parcelasPagas||0),vp=(c.valorTotal||0)/(c.parcelas||1);return s+Math.max(0,rest)*vp;},0);
+    return{aReceber,aPagar,saldo:aReceber-aPagar};
+  },
+  dashMetrics(s){
+    const em=s.emissoes;
+    const lucro=em.reduce((a,e)=>a+(e.lucro||0),0);
+    const roiMed=em.length?em.reduce((a,e)=>a+(e.roi||0),0)/em.length:0;
+    const txSucc=em.length?em.filter(e=>e.ind==='green').length/em.length*100:0;
+    const estTot=Object.values(s.estoque).reduce((a,e)=>a+(e.pontos||0),0);
+    const estVal=Object.values(s.estoque).reduce((a,e)=>a+(e.pontos/1000)*(e.custoMedio||0),0);
+    const porProg={};
+    PROGRAMS.forEach(p=>{const es=em.filter(e=>e.programa===p.id);porProg[p.id]={lucro:es.reduce((a,e)=>a+(e.lucro||0),0),count:es.length};});
+    return{lucro,roiMed,txSucc,estTot,estVal,porProg};
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MERCADO ENGINE
+// ═══════════════════════════════════════════════════════════════
+const MercadoEngine={
+  getLatestPrice(progId){
+    const hist=Store.get().mercado?.historico||[];
+    if(!hist.length)return null;
+    const progEntries=hist.filter(h=>h.programaId===progId).sort((a,b)=>new Date(b.data)-new Date(a.data));
+    if(!progEntries.length)return null;
+    const latestDate=progEntries[0].data;
+    const latest=progEntries.filter(h=>h.data===latestDate);
+    const hot150=latest.find(h=>h.categoria==='HOT'&&h.prazo===150);
+    if(hot150)return hot150.valor;
+    const hot=latest.find(h=>h.categoria==='HOT');
+    if(hot)return hot.valor;
+    const max=latest.find(h=>h.categoria==='MAX');
+    if(max)return max.valor;
+    const vals=latest.map(h=>h.valor).filter(v=>v>0);
+    return vals.length?Math.max(...vals):null;
+  },
+  getMarketValue(progId,pontos){
+    const price=this.getLatestPrice(progId)||25;
+    return(pontos/1000)*price;
+  },
+  getSummary(){
+    const hist=Store.get().mercado?.historico||[];
+    if(!hist.length)return null;
+    const dates=[...new Set(hist.map(h=>h.data))].sort().reverse();
+    const latestDate=dates[0];
+    const prevDate=dates[1]||null;
+    const latest=hist.filter(h=>h.data===latestDate&&h.categoria==='HOT');
+    const prev=prevDate?hist.filter(h=>h.data===prevDate&&h.categoria==='HOT'):[];
+    if(!latest.length)return null;
+    const changes=latest.map(l=>{const p=prev.find(x=>x.programaId===l.programaId);const chg=p?((l.valor-p.valor)/p.valor)*100:0;return{...l,change:chg};});
+    const highestChange=changes.reduce((a,b)=>b.change>a.change?b:a,changes[0]);
+    const lowestChange=changes.reduce((a,b)=>b.change<a.change?b:a,changes[0]);
+    const bestSell=changes.reduce((a,b)=>b.valor>a.valor?b:a,changes[0]);
+    const bestBuy=changes.reduce((a,b)=>b.valor<a.valor?b:a,changes[0]);
+    return{highestChange,lowestChange,bestSell,bestBuy,latestDate,count:latest.length};
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+const Store=(()=>{
+  const KEY='milesarb_v4';
+  const defaultEst=()=>{const o={};PROGRAMS.forEach(p=>{o[p.id]={pontos:0,custoMedio:0,totalInvestido:0}});return o;};
+  const def=()=>({emissoes:[],compras:[],vendas:[],transferencias:[],despesas:[],estoque:defaultEst(),calcForm:{programa:'azul',tripType:'ida',pontos:'',taxas:'',cpm:'',mercado:'',lucroDesejado:'30',desconto:'35'},settings:{sheetsUrl:SHEETS_URL,theme:'dark'},mercado:{cotacoes:[],historico:[],promocoes:[]}});
+  let s=def();
+  function load(){try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);s={...def(),...p};if(!s.estoque||Object.keys(s.estoque).length<PROGRAMS.length){const ne=defaultEst();PROGRAMS.forEach(p=>{if(s.estoque[p.id])ne[p.id]=s.estoque[p.id]});s.estoque=ne;}if(!s.mercado)s.mercado={cotacoes:[],historico:[],promocoes:[]};}}catch(e){s=def();}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
+  function get(){return s;}
+  function update(fn){fn(s);save();}
+  load();
+  return{get,update,save};
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// GEMINI API
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// PARSER LOCAL — processa mensagens CotaMilhas sem API
+// ═══════════════════════════════════════════════════════════════
+const LocalParser={
+  PROG_MAP:[
+    {id:'azul',     patterns:['azul','tudo azul','tudoazul']},
+    {id:'smiles',   patterns:['smiles','gol - smiles','gol smiles','gol']},
+    {id:'latam',    patterns:['latam','multiplus','latam pass','latam - multiplus','latam multiplus']},
+    {id:'tap',      patterns:['tap','miles & go','miles&go','tap miles','tap - miles']},
+    {id:'livelo',   patterns:['livelo']},
+    {id:'esfera',   patterns:['esfera']},
+    {id:'lifemiles',patterns:['lifemiles','avianca','life miles']},
+    {id:'flyingbl', patterns:['flying blue','air france','klm','flyingblue']},
+  ],
+  matchProgId(nome){
+    const n=nome.toLowerCase().trim();
+    for(const p of this.PROG_MAP){if(p.patterns.some(pat=>n.includes(pat)))return p.id;}
+    return'outro';
+  },
+  parse(texto,tipo){
+    const hoje=new Date().toISOString().slice(0,10);
+    const linhas=texto.split('\n').map(l=>l.trim()).filter(Boolean);
+    const programas=[];
+    let currentProg=null;
+    let currentProgNome='';
+    let currentSection=null;
+
+    // Regex preco: R$ 17.89 HOT (150 dias) ou R$17,89 (150 dias)
+    const priceRx=/R?\$?\s*([\d]+[.,][\d]+|[\d]+)\s*(HOT|MAX|ASAP|MAIS|BANK)?\s*\(?\s*(\d+)\s*dias?\s*\)?/i;
+    // Variacao: ↑ 0.21 / 1.26% ou ↑ 0.21
+    const varRx=/([↑↓])\s*([\d.,]+)\s*(?:\/\s*([\d.,]+)%?)?/;
+    // Secao secundaria: ➡ HOT ⬅
+    const secRx=/[➡→►]\s*(HOT|MAX|ASAP|MAIS|BANK)\s*[⬅←◄]/i;
+    // Header de programa: linha sem valor monetario, com texto significativo
+    const headerRx=/^[📊⏳]?\s*([A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÜÇ][A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÜÇa-záéíóúàâêîôûãõüç\s&.'()-]{3,}(?:\s*[-–]\s*[A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÜÇa-záéíóúàâêîôûãõüç\s&.'-]+)?)\s*$/;
+
+    for(const linha of linhas){
+      // Secao secundaria
+      const secM=linha.match(secRx);
+      if(secM){currentSection=secM[1].toUpperCase();continue;}
+
+      // Linha de aviso/ignorar
+      if(/recupera|judicial|leitura|entenda|prazos\s+secund/i.test(linha))continue;
+
+      // Verificar se linha tem preco
+      const pm=linha.match(priceRx);
+      if(pm&&currentProg){
+        const valor=parseFloat(pm[1].replace(',','.'));
+        if(isNaN(valor)||valor<=0)continue;
+        let cat=(pm[2]||'').toUpperCase()||currentSection||'HOT';
+        const prazo=parseInt(pm[3])||0;
+        let variacao=0,variacaoPct=0;
+        const vm=linha.match(varRx);
+        if(vm){
+          const sinal=vm[1]==='↑'?1:-1;
+          variacao=sinal*(parseFloat(vm[2].replace(',','.'))||0);
+          variacaoPct=vm[3]?sinal*(parseFloat(vm[3].replace(',','.'))||0):0;
+        }
+        const obsM=linha.match(/[-–]\s*(conv\w*)/i);
+        programas.push({nome:currentProgNome,programaId:currentProg,categoria:cat,valor,prazo,variacao,variacaoPct,observacao:obsM?obsM[1].trim():''});
+        continue;
+      }
+
+      // Verificar se linha parece header (sem R$ e com texto)
+      if(!pm){
+        const clean=linha.replace(/[📊⏳🟢🔴🟡⚫🔵💙⭐✈➡⬅→←►◄💰📋]/gu,'').trim();
+        const hm=clean.match(headerRx);
+        if(hm&&clean.length>2&&!clean.startsWith('R$')&&!/^\d/.test(clean)){
+          const nome=hm[1].trim();
+          const progId=this.matchProgId(nome);
+          if(progId!=='outro'||nome.length>3){
+            currentProgNome=nome;
+            currentProg=progId;
+            // Reset currentSection em novo programa (exceto se veio de bloco ⏳)
+            if(!linha.includes('⏳'))currentSection=null;
+          }
+        }
+      }
+    }
+    if(!programas.length)throw new Error('Nenhum preço encontrado. Verifique o formato da mensagem CotaMilhas.');
+    return{tipo,data:hoje,programas};
+  }
+};
+
+const GeminiAPI={
+  async call(prompt){
+    let lastErr='';
+    for(const model of GEMINI_MODELS){
+      const url=`${GEMINI_BASE}/${model}:generateContent?key=${GEMINI_KEY}`;
+      try{
+        const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:3000}})});
+        if(!res.ok){
+          let errMsg=`HTTP ${res.status}`;
+          try{const ed=await res.json();errMsg=ed?.error?.message||errMsg;}catch(e){}
+          if(res.status===429||res.status===404||errMsg.includes('quota')||errMsg.includes('RESOURCE_EXHAUSTED')){lastErr=`[${model}] ${errMsg}`;continue;}
+          throw new Error(errMsg);
+        }
+        const data=await res.json();
+        const txt=data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if(!txt)throw new Error('Resposta vazia');
+        return txt;
+      }catch(e){
+        if(e.message&&(e.message.includes('quota')||e.message.includes('RESOURCE_EXHAUSTED')||e.message.includes('429')||e.message.includes('404'))){lastErr=`[${model}] ${e.message}`;continue;}
+        throw e;
+      }
+    }
+    throw new Error('QUOTA_EXCEEDED:'+lastErr.slice(0,100));
+  },
+  async parseCotacao(texto,tipo){
+    const hoje=new Date().toISOString().slice(0,10);
+    const prompt=`Analise a seguinte mensagem de cotacao de milhas e extraia TODOS os dados de preco encontrados.\n\nMensagem:\n${texto}\n\nRetorne SOMENTE um JSON valido, sem markdown:\n{\n  "tipo": "${tipo}",\n  "data": "${hoje}",\n  "programas": [\n    {"nome":"","programaId":"azul|latam|smiles|tap|livelo|esfera|multiplus|lifemiles|flyingbl|outro","categoria":"HOT|MAX|ASAP|MAIS|BANK","valor":17.89,"prazo":150,"variacao":0,"variacaoPct":0,"observacao":""}\n  ]\n}\nMapeamento: AZUL->azul, GOL/SMILES->smiles, LATAM/MULTIPLUS->latam, TAP->tap. Inclua TODOS os precos. Apenas JSON.`;
+    const raw=await this.call(prompt);
+    const clean=raw.replace(/```json|```/g,'').replace(/\/\/.*$/gm,'').trim();
+    return JSON.parse(clean);
+  },
+  async fetchPromocoes(){
+    const hoje=new Date().toISOString().slice(0,10);
+    const prompt=`Especialista em milhas Brasil. Hoje ${hoje}. Liste promocoes ativas de milhas (Smiles, LATAM, Livelo, Azul, TAP etc).\nRetorne SOMENTE JSON: {"promocoes":[{"titulo":"","programa":"","bonus":"","prazo":"","resumo":"","link":"https://melhorescartoes.com.br/...","valida":true}]}\nSo promocoes com prazo futuro. Apenas JSON.`;
+    const raw=await this.call(prompt);
+    const clean=raw.replace(/```json|```/g,'').replace(/\/\/.*$/gm,'').trim();
+    return JSON.parse(clean);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// GOOGLE SHEETS API
+// ═══════════════════════════════════════════════════════════════
+const CloudUI={
+  _okTimer:null,
+  set(state,label){
+    const el=document.getElementById('cloud-status');
+    const lb=document.getElementById('cloud-label');
+    if(!el)return;
+    el.className=state;
+    if(lb)lb.textContent=label;
+    clearTimeout(this._okTimer);
+    if(state==='ok')this._okTimer=setTimeout(()=>this.set('idle','Nuvem'),5000);
+  }
+};
+
+const SheetsAPI={
+  _queue:[],
+  _sending:false,
+
+  send(tipo,dados){
+    this._queue.push({tipo,dados,ts:new Date().toISOString()});
+    CloudUI.set('syncing','Salvando...');
+    if(!this._sending)this._flush();
+  },
+
+  async _flush(){
+    if(!this._queue.length){this._sending=false;return;}
+    this._sending=true;
+    const item=this._queue.shift();
+    const ok=await this._sendViaGet(item);
+    if(ok){
+      if(!this._queue.length)CloudUI.set('ok','Salvo ✓');
+    } else {
+      // Tentar mais uma vez antes de marcar erro
+      const ok2=await this._sendViaGet(item);
+      if(!ok2 && !this._queue.length)CloudUI.set('error','Erro na nuvem');
+    }
+    setTimeout(()=>this._flush(),300);
+  },
+
+  // GET com payload codificado — nunca tem bloqueio de CORS
+  async _sendViaGet(item){
+    try{
+      const payload=encodeURIComponent(JSON.stringify(item));
+      const url=SHEETS_URL+'?payload='+payload;
+      const res=await fetch(url,{method:'GET'});
+      const txt=await res.text();
+      console.log('✓ Sheets',item.tipo, txt.slice(0,60));
+      return true;
+    }catch(e){
+      console.warn('Sheets GET failed:',e.message);
+      return false;
+    }
+  },
+
+  async test(){
+    CloudUI.set('syncing','Testando...');
+    try{
+      const payload=encodeURIComponent(JSON.stringify({tipo:'_teste',dados:{msg:'ping'},ts:new Date().toISOString()}));
+      const url=SHEETS_URL+'?payload='+payload;
+      const res=await fetch(url,{method:'GET'});
+      const txt=await res.text();
+      let msg='Conexão OK!';
+      try{const j=JSON.parse(txt);msg=j.msg||'Conexão OK!';}catch(e){}
+      CloudUI.set('ok','Conectado ✓');
+      return{ok:true,msg};
+    }catch(e){
+      CloudUI.set('error','Sem conexão');
+      return{ok:false,msg:e.message};
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// HTML HELPERS
+// ═══════════════════════════════════════════════════════════════
+const H={
+  mbox:(l,v,s,c,acc)=>`<div class="mbox${acc?' acc':''}"><div class="ml">${l}</div><div class="mv" style="color:${c||'var(--txt0)'};">${v}</div>${s?`<div class="ms">${s}</div>`:''}</div>`,
+  kcard:(l,v,s,ic,cls)=>`<div class="kcard a${cls}"><span class="ki">${ic}</span><div class="kl">${l}</div><div class="kv">${v}</div>${s?`<div class="ks">${s}</div>`:''}</div>`,
+  irw:(l,v)=>`<div class="irw"><span class="ilbl">${l}</span><span class="ival">${v}</span></div>`,
+  tag:(txt,cls)=>`<span class="tag t${cls}">${txt}</span>`,
+  emptyState:(msg,sub)=>`<div class="empty"><div class="empty-ic">✈</div><div class="empty-t">${msg}</div><div class="empty-s">${sub}</div></div>`,
+};
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+const Render={
+  /* ── CALCULATOR ─────────────────────────────── */
+  calc(){
+    const f=Store.get().calcForm, r=Engine.calc(f), ind=IND[r.indicador];
+    document.getElementById('calc-ind').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;"><div class="indbadge ${ind.cls}">${ind.e} ${ind.l}</div>${f.mercado?H.tag(r.competitivo?'✓ Competitivo':'⚠ Acima do Mercado',r.competitivo?'g':'y'):''}</div>`;
+    document.getElementById('calc-m1').innerHTML=[H.mbox('Custo dos Pontos',R$(r.custoPontos),'Pontos × Milheiro','',false),H.mbox('Custo Total',R$(r.custoTotal),'Pontos + Taxas','var(--gold)',true),H.mbox('Valor Cobrado',R$(r.valorCobrado),`Desconto ${f.desconto||0}%`,'var(--grn)',false),H.mbox('Break-even',R$(r.custoTotal),'Mínimo s/ prejuízo','var(--yel)',false)].join('');
+    const lc=r.lucroLiquido>=0?'var(--grn)':'var(--red)';
+    document.getElementById('calc-m2').innerHTML=[H.mbox('Lucro Líquido',R$(r.lucroLiquido),'Receita − Custo',lc,false),H.mbox('Margem %',pct(r.margemPct),'% sobre receita','var(--gold)',false),H.mbox('ROI',pct(r.roi),'Retorno s/ capital','var(--cyan)',false),H.mbox('Valor Real/Mil',R$(r.valorRealMil),'Nesta emissão','var(--purple)',false)].join('');
+    document.getElementById('calc-pricing').innerHTML=[H.mbox('Mercado Conv.',R$(r.precoMercado),'Referência','var(--txt2)',false),H.mbox('Ideal 55%',R$(r.valorIdeal),'Zona recomendada','var(--gold)',false),H.mbox('Seu Preço',R$(r.valorCobrado),'Com desconto','var(--grn)',false),H.mbox('Máx. Cobrar',R$(r.precoMercado*.99),'Abaixo do mercado','var(--cyan)',false)].join('');
+    const pp=r.precoMercado>0?Math.min(100,(r.valorCobrado/r.precoMercado)*100):0;
+    const bc=r.indicador==='green'?'linear-gradient(90deg,#00C853,var(--grn))':r.indicador==='yellow'?'linear-gradient(90deg,#F9A825,var(--yel))':'linear-gradient(90deg,#C62828,var(--red))';
+    document.getElementById('calc-pbar').style.cssText=`width:${pp}%;background:${bc};`;
+    document.getElementById('calc-pct').innerHTML=`Seu preço representa <strong style="color:var(--txt1);">${pp.toFixed(1)}%</strong> do valor de mercado`;
+  },
+  /* ── STRATEGY ──────────────────────────────── */
+  strat(){
+    const f=Store.get().calcForm, r=Engine.calc(f);
+    const eB=r.melhorOpcao==='emitir';
+    document.getElementById('strat-cmp').innerHTML=`
+      <div class="cmpcard ${!eB?'winner-b':''}">${!eB?`<div style="font-size:9px;color:var(--cyan);font-weight:800;letter-spacing:.06em;margin-bottom:7px;">✓ MELHOR OPÇÃO</div>`:''}
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:9px;">💸 Vender Milhas Direto</div>
+        <div style="font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--cyan);">${R$(r.venderMilhas)}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:5px;">~R$25/mil no mercado</div></div>
+      <div class="cmpcard ${eB?'winner':''}">${eB?`<div style="font-size:9px;color:var(--grn);font-weight:800;letter-spacing:.06em;margin-bottom:7px;">✓ MELHOR OPÇÃO</div>`:''}
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:9px;">✈ Emitir e Revender</div>
+        <div style="font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--grn);">${R$(r.lucroLiquido)}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:5px;">Lucro líquido real</div></div>`;
+    document.getElementById('strat-diff').innerHTML=`💡 Diferença: <strong style="color:var(--gold);font-family:var(--font-mono);">${R$(Math.abs(r.lucroLiquido-r.venderMilhas))}</strong> — ${eB?'Emitir é mais lucrativo neste cenário.':'Vender as milhas diretamente rende mais.'}`;
+    document.getElementById('strat-met').innerHTML=[H.mbox('Preço Máx. p/ Comprar Milheiro',R$(r.maxMilheiro),`Meta: ${f.lucroDesejado}% lucro`,'var(--gold)',true),H.mbox('Break-even por Milheiro',R$(r.breakEvenMil),'Acima = prejuízo','var(--yel)',false)].join('');
+    document.getElementById('strat-tip').innerHTML=`<div style="font-size:10px;color:var(--cyan);font-weight:700;letter-spacing:.1em;margin-bottom:7px;text-transform:uppercase;">🎯 Regra de Ouro</div><div style="font-size:12px;color:var(--txt1);line-height:1.75;">Teto de compra: <strong style="color:var(--gold);font-family:var(--font-mono);">${R$(r.maxMilheiro)}/mil</strong> para ${f.lucroDesejado||0}% lucro. Abaixo de <strong style="color:var(--red);font-family:var(--font-mono);">${R$(r.breakEvenMil)}/mil</strong> = prejuízo garantido.</div>`;
+    const cpm=+f.cpm||0;
+    const rules=[{ok:r.precoMercado>0&&r.valorCobrado>=r.precoMercado*.5&&r.valorCobrado<=r.precoMercado*.65,t:'Cobrar entre 50%–65% do valor de mercado'},{ok:r.valorCobrado>0&&r.custoTotal<r.valorCobrado*.4,t:'Custo total < 40% do valor cobrado'},{ok:r.margemPct>=20,t:'Margem mínima de 20%'},{ok:r.roi>=30,t:'ROI acima de 30%'},{ok:r.competitivo,t:'Preço abaixo do mercado convencional'},{ok:cpm<=r.maxMilheiro&&r.maxMilheiro>0,t:`Milheiro dentro do teto (${R$(r.maxMilheiro)})`},{ok:r.melhorOpcao==='emitir',t:'Emitir supera venda direta das milhas'}];
+    document.getElementById('strat-chk').innerHTML=rules.map(({ok,t})=>`<div class="rrw ${ok?'ok':'fail'}"><span class="ri">${ok?'✓':'✗'}</span><span class="rt">${t}</span></div>`).join('');
+    document.getElementById('strat-sum').innerHTML=[[`Custo Total`,R$(r.custoTotal)],[`Valor Cobrado`,R$(r.valorCobrado)],[`Lucro Líquido`,R$(r.lucroLiquido)],[`Margem`,pct(r.margemPct)],[`ROI`,pct(r.roi)],[`Valor Real/Mil`,R$(r.valorRealMil)],[`CPM Pago`,R$(cpm)]].map(([l,v])=>H.irw(l,v)).join('');
+  },
+  /* ── SIMULATOR ─────────────────────────────── */
+  sim(){
+    const f=Store.get().calcForm, r=Engine.calc(f), cpm=+f.cpm||0;
+    document.getElementById('sim-table').innerHTML=SCENARIOS.map(({label,delta})=>{
+      const sr=Engine.calc({...f,mercado:((+f.mercado||0)*(1+delta/100)).toString()});
+      const isB=delta===0;
+      const col=sr.indicador==='green'?'var(--grn)':sr.indicador==='yellow'?'var(--yel)':'var(--red)';
+      const bc=isB?'var(--gold)':col;
+      return`<div class="srow ${isB?'base':''}" style="border-left-color:${bc};"><span style="font-size:12px;font-weight:600;color:${isB?'var(--gold)':col};">${label}</span><span style="font-family:var(--font-mono);font-size:12px;color:var(--txt1);">${R$(sr.precoMercado)}</span><span style="font-family:var(--font-mono);font-size:12px;color:var(--txt1);">${R$(sr.valorCobrado)}</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:${col};">${R$(sr.lucroLiquido)}</span><span style="font-family:var(--font-mono);font-size:12px;color:${col};">${pct(sr.margemPct)}</span></div>`;
+    }).join('');
+    const alerts=[{t:'Margem',ok:r.margemPct>=20,m:`Margem: ${pct(r.margemPct)} (mín: 20%)`},{t:'ROI',ok:r.roi>=30,m:`ROI: ${pct(r.roi)} (mín: 30%)`},{t:'Competitividade',ok:r.competitivo,m:r.competitivo?'Preço abaixo do mercado ✓':'Preço ACIMA do mercado!'},{t:'Custo de Compra',ok:cpm<=r.maxMilheiro&&r.maxMilheiro>0,m:`CPM: ${R$(cpm)} — Teto: ${R$(r.maxMilheiro)}`}];
+    document.getElementById('sim-alerts').innerHTML=alerts.map(({t,ok,m})=>`<div class="alrw ${ok?'ok':'fail'}"><span style="font-size:14px;">${ok?'✅':'🔴'}</span><div><div class="atipo">${t}</div><div class="amsg">${m}</div></div></div>`).join('');
+    let recs=[];
+    if(r.indicador==='green')recs.push({c:'var(--grn)',b:'rgba(0,230,118,.05)',bl:'var(--grn)',t:'🚀 <strong>Excelente!</strong> Margem e ROI sólidos. Prossiga com confiança.'});
+    if(r.indicador==='yellow')recs.push({c:'var(--yel)',b:'rgba(255,215,64,.05)',bl:'var(--yel)',t:'⚠ <strong>Margem apertada.</strong> Tente reduzir o CPM ou buscar rota mais valorizada.'});
+    if(r.indicador==='red')recs.push({c:'var(--red)',b:'rgba(255,77,109,.05)',bl:'var(--red)',t:'❌ <strong>Não emita!</strong> Prejuízo garantido. Revise CPM ou rota.'});
+    if(r.melhorOpcao==='vender')recs.push({c:'var(--cyan)',b:'rgba(0,229,255,.05)',bl:'var(--cyan)',t:`💸 <strong>Vender direto</strong> (${R$(r.venderMilhas)}) é mais lucrativo que emitir (${R$(r.lucroLiquido)}).`});
+    if(r.roi<30&&r.roi!==0)recs.push({c:'var(--gold)',b:'rgba(245,197,66,.05)',bl:'var(--gold)',t:'📉 ROI abaixo de 30%. Busque rotas mais valorizadas ou reduza o CPM.'});
+    if(!f.mercado)recs.push({c:'var(--txt2)',b:'var(--bg3)',bl:'var(--border)',t:'→ Preencha os dados na <strong style="color:var(--gold);">Calculadora</strong> para ver recomendações.'});
+    document.getElementById('sim-recs').innerHTML=recs.map(rec=>`<div style="padding:11px 13px;background:${rec.b};border-radius:var(--radius);border-left:3px solid ${rec.bl};margin-bottom:8px;font-size:12px;color:${rec.c};line-height:1.65;">${rec.t}</div>`).join('');
+  },
+  /* ── STOCK ──────────────────────────────────── */
+  stock(){
+    const est=Store.get().estoque;
+    document.getElementById('stock-cards').innerHTML=PROGRAMS.map(p=>{
+      const e=est[p.id]||{pontos:0,custoMedio:0};
+      const val=(e.pontos/1000)*(e.custoMedio||0);
+      const mktPrice=MercadoEngine.getLatestPrice(p.id)||25;
+      const hasMktData=MercadoEngine.getLatestPrice(p.id)!==null;
+      const vmkt=(e.pontos/1000)*mktPrice;
+      const valUp=e.custoMedio>0?((mktPrice/e.custoMedio*100)-100):0;
+      return`<div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:all var(--transition);">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;"><span style="width:10px;height:10px;border-radius:50%;background:${p.color};display:inline-block;box-shadow:0 0 8px ${p.color}66;"></span><span style="font-size:13px;font-weight:700;">${p.name}</span>${hasMktData?`<span class="tag tg" style="margin-left:auto;font-size:9px;">📊 Cotação atualizada</span>`:''}</div>
+        <div style="font-family:var(--font-mono);font-size:22px;font-weight:500;color:${p.color};margin-bottom:4px;">${N(e.pontos)}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-bottom:12px;">pontos em estoque</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div><div class="ml">Custo Médio</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--txt1);">${R$(e.custoMedio||0)}/mil</div></div>
+          <div><div class="ml">Valor Investido</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--txt1);">${R$(val)}</div></div>
+          <div><div class="ml">Valor Mercado${hasMktData?' 📊':' (est.)'}</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--grn);">${R$(vmkt)}</div></div>
+          <div><div class="ml">Cotação/Mil${hasMktData?'':' (padrão)'}</div><div style="font-family:var(--font-mono);font-size:12px;color:${hasMktData?'var(--cyan)':'var(--txt2)'};">R$${mktPrice.toFixed(2)}/mil</div></div>
+          <div><div class="ml">Valorização</div><div style="font-family:var(--font-mono);font-size:12px;color:${valUp>0?'var(--grn)':valUp<0?'var(--red)':'var(--txt2)'};">${e.custoMedio>0?pct(valUp):'—'}</div></div>
+        </div>
+        <div style="display:flex;gap:7px;">
+          <button class="bsuccess" style="flex:1;font-size:11px;" onclick="App.openStockModal('${p.id}','add')">+ Adicionar</button>
+          <button class="bdanger" style="flex:1;font-size:11px;" onclick="App.openStockModal('${p.id}','remove')">− Remover</button>
+        </div></div>`;
+    }).join('');
+    const tp=Object.values(est).reduce((a,e)=>a+(e.pontos||0),0);
+    const tv=Object.values(est).reduce((a,e)=>a+(e.pontos/1000)*(e.custoMedio||0),0);
+    const tm=PROGRAMS.reduce((a,p)=>a+((est[p.id]?.pontos||0)/1000)*(MercadoEngine.getLatestPrice(p.id)||25),0);
+    const tcm=tp>0?tv/(tp/1000):0;
+    const hasMkt=PROGRAMS.some(p=>MercadoEngine.getLatestPrice(p.id)!==null);
+    document.getElementById('stock-sum').innerHTML=[H.kcard('Total de Pontos',N(tp)+'pts','todos programas','✦','c'),H.kcard('Capital Investido',R$(tv),'custo de aquisição','💰','o'),H.kcard('Valor de Mercado',R$(tm),hasMkt?'Baseado em cotações reais':'~R$25/mil (estimado)','📈','g'),H.kcard('CPM Médio',R$(tcm),'média ponderada','⟳','p')].join('');
+  },
+  /* ── HISTORY ─────────────────────────────────── */
+  hist(fp,fs){
+    const s=Store.get();
+    let em=[...s.emissoes];
+    if(fp&&fp!=='all')em=em.filter(e=>e.programa===fp);
+    if(fs&&fs!=='all')em=em.filter(e=>e.ind===fs);
+    const lT=em.reduce((a,e)=>a+(e.lucro||0),0);
+    const rT=em.reduce((a,e)=>a+(e.cobrado||0),0);
+    const roiM=em.length?em.reduce((a,e)=>a+(e.roi||0),0)/em.length:0;
+    const txS=em.length?em.filter(e=>e.ind==='green').length/em.length*100:0;
+    document.getElementById('hist-kpis').innerHTML=[H.kcard('Emissões',em.length,'registradas','≡','c'),H.kcard('Lucro Total',R$(lT),'líquido','💰',lT>=0?'g':'r'),H.kcard('Receita Total',R$(rT),'valor cobrado','📈','o'),H.kcard('Taxa de Sucesso',pct(txS),'emissões 🟢','🏆','p')].join('');
+    document.getElementById('badge-hist').textContent=s.emissoes.length;
+    if(em.length===0){document.getElementById('hist-table').innerHTML=H.emptyState('Nenhuma emissão encontrada','Use a Calculadora e salve emissões para começar');return;}
+    document.getElementById('hist-table').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Programa</th><th>Tipo</th><th>Pontos</th><th>Custo</th><th>Cobrado</th><th>Lucro</th><th>Margem</th><th>ROI</th><th>Status</th><th>Obs</th><th></th></tr></thead><tbody>${em.map(e=>{const p=progById(e.programa),lc=(e.lucro||0)>=0?'var(--grn)':'var(--red)',ic=IND[e.ind];return`<tr><td style="color:var(--txt2);font-size:11px;">${e.data||'—'}</td><td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:${p.color};display:inline-block;"></span>${p.short}</span></td><td>${H.tag(e.tripType==='ida_volta'?'I+V':'Ida',e.tripType==='ida_volta'?'c':'gr')}</td><td>${N(e.pontos||0)}</td><td>${R$(e.custo||0)}</td><td>${R$(e.cobrado||0)}</td><td style="color:${lc};font-weight:600;">${R$(e.lucro||0)}</td><td style="color:${e.ind==='green'?'var(--grn)':e.ind==='yellow'?'var(--yel)':'var(--red)'};">${pct(e.margem||0)}</td><td style="color:var(--cyan);">${pct(e.roi||0)}</td><td>${ic?.e||'—'}</td><td style="color:var(--txt2);font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis;">${e.obs||'—'}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delEmissao(${e.id})">✕</button></td></tr>`;}).join('')}</tbody></table></div>`;
+  },
+  /* ── COMPRAS LIST ─────────────────────────────── */
+  compras(){
+    const c=Store.get().compras;
+    if(!c.length){document.getElementById('compras-list').innerHTML=H.emptyState('Nenhuma compra registrada','Preencha o formulário acima para registrar');return;}
+    document.getElementById('compras-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Programa</th><th>Pontos</th><th>CPM</th><th>Total</th><th>Parcelas</th><th>Status</th><th></th></tr></thead><tbody>${c.map(e=>{const p=progById(e.programa),rest=Math.max(0,(e.parcelas||1)-(e.parcelasPagas||0));return`<tr><td style="color:var(--txt2);font-size:11px;">${e.data}</td><td>${p.short}</td><td>${N(e.pontos)}</td><td>${R$(e.custoPorMil||0)}/mil</td><td style="color:var(--gold);font-weight:600;">${R$(e.valorTotal)}</td><td>${H.tag(rest>0?`${rest}x restante`:'Quitado',rest>0?'y':'g')}</td><td style="font-size:11px;color:var(--txt2);">${e.obs||'—'}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delCompra(${e.id})">✕</button></td></tr>`;}).join('')}</tbody></table></div>`;
+  },
+  /* ── VENDAS LIST ─────────────────────────────── */
+  vendas(){
+    const v=Store.get().vendas;
+    if(!v.length){document.getElementById('vendas-list').innerHTML=H.emptyState('Nenhuma venda registrada','Preencha o formulário acima');return;}
+    document.getElementById('vendas-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Programa</th><th>Pontos</th><th>Valor/Mil</th><th>Total</th><th>Canal</th><th>Status</th><th></th></tr></thead><tbody>${v.map(e=>{const p=progById(e.programa),isPend=e.status==='pendente';return`<tr><td style="color:var(--txt2);font-size:11px;">${e.data}</td><td>${p.short}</td><td>${N(e.pontos)}</td><td>${R$(e.valorPorMil||0)}/mil</td><td style="color:var(--grn);font-weight:600;">${R$(e.valorTotal)}</td><td style="font-size:11px;">${e.canal||'—'}</td><td>${isPend?`<button class="tag ty" style="cursor:pointer;border:none;" onclick="App.openRecvModal(${e.id})">⏳ Pendente</button>`:H.tag('✅ Recebido','g')}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delVenda(${e.id})">✕</button></td></tr>`;}).join('')}</tbody></table></div>`;
+  },
+  /* ── TRANSFERENCIAS LIST ─────────────────────── */
+  transfs(){
+    const t=Store.get().transferencias;
+    if(!t.length){document.getElementById('transf-list').innerHTML=H.emptyState('Nenhuma transferência registrada','Preencha o formulário acima');return;}
+    document.getElementById('transf-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Pts Origem</th><th>Pts Destino</th><th>Taxa</th><th>Obs</th><th></th></tr></thead><tbody>${t.map(e=>{return`<tr><td style="color:var(--txt2);font-size:11px;">${e.data}</td><td>${progById(e.programaOrigem).short}</td><td>${progById(e.programaDestino).short}</td><td style="color:var(--red);">${N(e.pontosOrigem)}</td><td style="color:var(--grn);">${N(e.pontosDestino)}</td><td>${R$(e.taxa||0)}</td><td style="font-size:11px;color:var(--txt2);">${e.obs||'—'}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delTransf(${e.id})">✕</button></td></tr>`;}).join('')}</tbody></table></div>`;
+  },
+  /* ── DRE ────────────────────────────────────── */
+  dre(mes,ano){
+    const s=Store.get(), d=Engine.dre(s.emissoes,s.despesas,mes,ano);
+    document.getElementById('dre-kpis').innerHTML=[H.kcard('Receita Total',R$(d.receita),`${d.em.length} emissões`,'📈','o'),H.kcard('Lucro Líquido',R$(d.lucroLiq),`Margem: ${pct(d.margemLiq)}`,'💰',d.lucroLiq>=0?'g':'r'),H.kcard('Margem Bruta',pct(d.margemBruta),'sobre receita','%','c'),H.kcard('Despesas',R$(d.totalDesp),'operacionais','💳','r')].join('');
+    document.getElementById('dre-table').innerHTML=[
+      {cls:'header',l:'RECEITAS',v:''},
+      {cls:'sub',l:`Emissão de Passagens (${d.em.length}x)`,v:R$(d.receita)},
+      {cls:'header',l:'CUSTO DAS MILHAS',v:''},
+      {cls:'sub',l:'Custo Total das Emissões',v:R$(d.custoMilhas)},
+      {cls:'total',l:'LUCRO BRUTO',v:R$(d.lucroBruto)},
+      {cls:'header',l:`DESPESAS OPERACIONAIS`,v:''},
+      ...d.dp.map(dp=>({cls:'sub',l:`${dp.descricao} (${dp.categoria})`,v:R$(dp.valor)})),
+      {cls:'sub',l:'Total Despesas',v:R$(d.totalDesp)},
+      {cls:`total profit ${d.lucroLiq>=0?'':''}`,l:'LUCRO LÍQUIDO',v:R$(d.lucroLiq)},
+    ].map(row=>`<div class="dre-row ${row.cls}"><span class="dre-lbl">${row.l}</span><span class="dre-val" style="color:${row.cls.includes('total')||row.cls.includes('profit')?d.lucroLiq>=0?'var(--gold)':'var(--red)':'var(--txt1)'};">${row.v}</span></div>`).join('');
+    // Expenses list
+    const desp=s.despesas.filter(d=>+d.mes==mes&&+d.ano==ano);
+    document.getElementById('dre-desp-list').innerHTML=desp.length?`<div style="display:flex;flex-direction:column;gap:5px;">${desp.map(dp=>`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${dp.descricao}</div><div style="font-size:10px;color:var(--txt2);">${dp.categoria}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--red);">${R$(dp.valor)}</span><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delDesp(${dp.id})">✕</button></div></div>`).join('')}</div>`:H.emptyState('Sem despesas neste período','Adicione despesas no formulário ao lado');
+  },
+  /* ── CAIXA ───────────────────────────────────── */
+  caixa(){
+    const s=Store.get(), c=Engine.caixa(s.vendas,s.compras);
+    document.getElementById('caixa-kpis').innerHTML=[H.kcard('Total a Receber',R$(c.aReceber),'vendas pendentes','💰','g'),H.kcard('Total a Pagar',R$(c.aPagar),'parcelas em aberto','💳','r'),H.kcard('Saldo Projetado',R$(c.saldo),'receber − pagar','📊',c.saldo>=0?'g':'r')].join('');
+    const pendentes=s.vendas.filter(v=>v.status==='pendente');
+    document.getElementById('caixa-receber').innerHTML=pendentes.length?`<div style="display:flex;flex-direction:column;gap:5px;">${pendentes.map(v=>`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(v.programa).name}</div><div style="font-size:10px;color:var(--txt2);">${v.data} · ${v.canal||'Sem canal'}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--grn);font-weight:600;">${R$(v.valorTotal)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.openRecvModal(${v.id})">Confirmar</button></div></div>`).join('')}</div>`:H.emptyState('Nenhum recebível pendente','Todas as vendas estão quitadas');
+    const compPend=s.compras.filter(c=>((c.parcelas||1)-(c.parcelasPagas||0))>0);
+    document.getElementById('caixa-pagar').innerHTML=compPend.length?`<div style="display:flex;flex-direction:column;gap:5px;">${compPend.map(cp=>{const rest=Math.max(0,(cp.parcelas||1)-(cp.parcelasPagas||0)),vp=(cp.valorTotal||0)/(cp.parcelas||1);return`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(cp.programa).name}</div><div style="font-size:10px;color:var(--txt2);">${cp.data} · ${rest}x parcelas restantes</div></div><span style="font-family:var(--font-mono);font-size:13px;color:var(--red);">${R$(rest*vp)}</span></div>`;}).join('')}</div>`:H.emptyState('Nenhum pagamento pendente','Todas as compras estão quitadas');
+    // Projection
+    const projMeses=[];
+    const now=new Date();
+    for(let i=0;i<3;i++){const d=new Date(now.getFullYear(),now.getMonth()+i,1);const m=d.getMonth()+1,a=d.getFullYear();const emM=s.emissoes.filter(e=>{const dt=new Date(e.data||'');return dt.getMonth()+1==m&&dt.getFullYear()==a;});const recM=s.vendas.filter(v=>v.status==='recebido'&&(()=>{const dt=new Date(v.data||'');return dt.getMonth()+1==m&&dt.getFullYear()==a;})());const lm=emM.reduce((a,e)=>a+(e.lucro||0),0);const rm=recM.reduce((a,v)=>a+(v.valorTotal||0),0);projMeses.push({label:`${MESES[m-1]} ${a}`,lucro:lm,receita:rm});}
+    document.getElementById('caixa-proj').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">${projMeses.map(m=>`<div style="background:var(--bg3);border-radius:var(--radius);padding:15px;"><div style="font-size:11px;color:var(--txt2);margin-bottom:9px;font-weight:600;">${m.label}</div><div class="ml">Lucro Emissões</div><div style="font-family:var(--font-mono);font-size:15px;font-weight:600;color:${m.lucro>=0?'var(--grn)':'var(--red)'};margin-bottom:6px;">${R$(m.lucro)}</div><div class="ml">Receita Vendas Recebida</div><div style="font-family:var(--font-mono);font-size:13px;color:var(--gold);">${R$(m.receita)}</div></div>`).join('')}</div>`;
+  },
+  /* ── DASHBOARD ────────────────────────────────── */
+  dashboard(){
+    const s=Store.get(), m=Engine.dashMetrics(s);
+    document.getElementById('dash-kpis').innerHTML=[H.kcard('Lucro Acumulado',R$(m.lucro),`${s.emissoes.length} emissões salvas`,'💰',m.lucro>=0?'g':'r'),H.kcard('ROI Médio',pct(m.roiMed),'retorno por operação','⟳','c'),H.kcard('Milhas em Estoque',N(m.estTot)+'pts',`Valor: ${R$(m.estVal)}`,'✦','o'),H.kcard('Taxa de Sucesso',pct(m.txSucc),'emissões altamente lucrativas','🏆','p')].join('');
+    const em=s.emissoes;
+    if(em.length>0){const rec=[...em].slice(0,40).reverse(),maxL=Math.max(...rec.map(e=>Math.abs(e.lucro||0)),1);document.getElementById('perf-bars').innerHTML=rec.map(e=>{const ht=Math.max(4,(Math.abs(e.lucro||0)/maxL)*66),col=e.ind==='green'?'var(--grn)':e.ind==='yellow'?'var(--yel)':'var(--red)';return`<div class="perfbar" style="height:${ht}px;background:${col};" title="${e.data}: ${R$(e.lucro||0)}"></div>`;}).join('');}
+    else document.getElementById('perf-bars').innerHTML=`<div style="color:var(--txt3);font-size:11px;text-align:center;width:100%;align-self:center;">Nenhuma emissão ainda</div>`;
+    Render.chartProg(m.porProg);
+    const est=s.estoque;
+    document.getElementById('dash-estoque').innerHTML=PROGRAMS.map(p=>{const e=est[p.id]||{pontos:0};const maxP=Math.max(...PROGRAMS.map(pp=>(est[pp.id]||{pontos:0}).pontos),1),pp2=Math.max(2,(e.pontos/maxP)*100);return`<div style="margin-bottom:11px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><div style="display:flex;align-items:center;gap:6px;"><span style="width:7px;height:7px;border-radius:50%;background:${p.color};display:inline-block;"></span><span style="font-size:12px;color:var(--txt1);">${p.short}</span></div><span style="font-family:var(--font-mono);font-size:11px;color:var(--txt1);">${N(e.pontos)}</span></div><div class="pbar"><div class="pfill" style="width:${pp2}%;background:${p.color};"></div></div></div>`;}).join('');
+    const r5=[...em].slice(0,5);
+    document.getElementById('dash-recent').innerHTML=r5.length?r5.map(e=>{const p=progById(e.programa),col=e.ind==='green'?'var(--grn)':e.ind==='yellow'?'var(--yel)':'var(--red)';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">${IND[e.ind]?.e}</span><div><div style="font-size:12px;color:var(--txt1);">${p.short}${e.obs?' · '+e.obs:''}</div><div style="font-size:10px;color:var(--txt3);">${e.data}</div></div></div><div style="text-align:right;"><div style="font-family:var(--font-mono);font-size:13px;color:${col};font-weight:500;">${R$(e.lucro||0)}</div><div style="font-size:10px;color:var(--txt3);">${pct(e.margem||0)}</div></div></div>`;}).join(''):H.emptyState('Nenhuma emissão ainda','Use a Calculadora para começar');
+  },
+  /* ── CHART ───────────────────────────────────── */
+  chartProg(pp){
+    const c=document.getElementById('chart-prog');
+    if(!c)return;
+    const ctx=c.getContext('2d'),dpr=window.devicePixelRatio||1;
+    const W=c.parentElement.offsetWidth-40,H=140;
+    c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+    ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+    const vals=PROGRAMS.map(p=>pp[p.id]?.lucro||0);
+    const maxV=Math.max(...vals.map(Math.abs),1);
+    const bW=Math.max(14,Math.floor((W-20)/(PROGRAMS.length*1.6))),gap=(W-PROGRAMS.length*bW)/(PROGRAMS.length+1);
+    const baseY=H-24;
+    PROGRAMS.forEach((p,i)=>{
+      const val=vals[i],x=gap+i*(bW+gap),bH=Math.max(2,(Math.abs(val)/maxV)*(baseY-10)),y=val>=0?baseY-bH:baseY,col=val>=0?p.color:'#ff4d6d';
+      ctx.fillStyle=col+'88';ctx.strokeStyle=col;ctx.lineWidth=1;
+      ctx.beginPath();if(val>=0)ctx.roundRect(x,y,bW,bH,[3,3,0,0]);else ctx.roundRect(x,baseY,bW,bH,[0,0,3,3]);
+      ctx.fill();ctx.stroke();
+      ctx.fillStyle=document.documentElement.classList.contains('light')?'#2d3a55':'#a8b3cc';
+      ctx.font=`600 9px 'Syne',sans-serif`;ctx.textAlign='center';
+      ctx.fillText(p.short,x+bW/2,H-6);
+    });
+    ctx.strokeStyle='rgba(128,128,128,.15)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,baseY);ctx.lineTo(W,baseY);ctx.stroke();
+  },
+  /* ── EM PREVIEW ──────────────────────────────── */
+  emPreview(){
+    const pt=+document.getElementById('em-pontos').value||0,cpm2=+document.getElementById('em-cpm').value||0,tx2=+document.getElementById('em-taxas').value||0,cob=+document.getElementById('em-cobrado').value||0;
+    if(pt||cob){
+      const c=Engine.calcEmissao({pontos:pt,cpm:cpm2,taxas:tx2,cobrado:cob});
+      document.getElementById('em-preview').style.display='block';
+      document.getElementById('em-prev-vals').innerHTML=[H.mbox('Custo Total',R$(c.custo),'','var(--gold)',true),H.mbox('Lucro Líquido',R$(c.lucro),'',c.lucro>=0?'var(--grn)':'var(--red)',false),H.mbox('Margem',pct(c.margem),'',c.ind==='green'?'var(--grn)':c.ind==='yellow'?'var(--yel)':'var(--red)',false),H.mbox('ROI',pct(c.roi),'','var(--cyan)',false)].join('');
+    } else document.getElementById('em-preview').style.display='none';
+  },
+  /* ── THEME ───────────────────────────────────── */
+  updateThemeBtn(){
+    const isDark=document.documentElement.classList.contains('dark');
+    document.querySelectorAll('.theme-toggle').forEach(b=>{b.textContent=isDark?'🌙 Modo Escuro':'☀ Modo Claro';});
+  },
+  /* ── ALL ─────────────────────────────────────── */
+  all(){
+    Render.dashboard();Render.calc();Render.strat();Render.sim();Render.stock();
+    Render.hist('all','all');Render.compras();Render.vendas();Render.transfs();
+    const now=new Date();Render.dre(now.getMonth()+1,now.getFullYear());Render.caixa();
+    Render.updateThemeBtn();
+    MercadoRender.summary();MercadoRender.precosAtuais();MercadoRender.histList();MercadoRender.promocoes();
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MERCADO RENDER
+// ═══════════════════════════════════════════════════════════════
+const MercadoRender={
+  page(){this.summary();this.precosAtuais();this.chart();this.histList();this.promocoes();},
+
+  summary(){
+    const s=MercadoEngine.getSummary();
+    const el=document.getElementById('mkt-summary');
+    if(!el)return;
+    if(!s){
+      el.innerHTML=[H.kcard('Maior Alta','—','Insira cotações','📈','g'),H.kcard('Maior Queda','—','Sem dados','📉','r'),H.kcard('Melhor p/ Vender','—','Sem dados','💰','o'),H.kcard('Última Cotação','—','Aguardando','📅','c')].join('');
+      return;
+    }
+    const hc=s.highestChange,lc=s.lowestChange,bs=s.bestSell;
+    el.innerHTML=[
+      H.kcard('Maior Alta',progById(hc?.programaId)?.short||'—',`${hc?.change>=0?'+':''}${(hc?.change||0).toFixed(2)}% HOT`,'📈','g'),
+      H.kcard('Maior Queda',progById(lc?.programaId)?.short||'—',`${(lc?.change||0).toFixed(2)}% HOT`,'📉','r'),
+      H.kcard('Melhor p/ Vender',`${progById(bs?.programaId)?.short||'—'}`,`R$${(bs?.valor||0).toFixed(2)}/mil HOT`,'💰','o'),
+      H.kcard('Última Cotação',s.latestDate||'—',`${s.count} programas`,'📅','c'),
+    ].join('');
+  },
+
+  precosAtuais(){
+    const hist=Store.get().mercado?.historico||[];
+    const el=document.getElementById('mkt-precos-atuais');
+    if(!el)return;
+    if(!hist.length){el.innerHTML=H.emptyState('Nenhuma cotação inserida','Cole uma mensagem do CotaMilhas e processe com Gemini');return;}
+    const dates=[...new Set(hist.map(h=>h.data))].sort().reverse();
+    const latestDate=dates[0];
+    const latest=hist.filter(h=>h.data===latestDate);
+    const byProg={};
+    latest.forEach(h=>{if(!byProg[h.programaId])byProg[h.programaId]={};if(!byProg[h.programaId][h.categoria])byProg[h.programaId][h.categoria]=[];byProg[h.programaId][h.categoria].push(h);});
+    const orderedProgs=PROGRAMS.filter(p=>byProg[p.id]);
+    el.innerHTML=orderedProgs.map(p=>{
+      const cats=byProg[p.id];
+      return`<div style="margin-bottom:10px;padding:10px;background:var(--bg3);border-radius:var(--radius);border-left:3px solid ${p.color};">
+        <div style="font-size:11px;font-weight:700;color:${p.color};margin-bottom:7px;display:flex;align-items:center;gap:6px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:${p.color};display:inline-block;"></span>${p.name}
+          <span style="margin-left:auto;font-size:9px;color:var(--txt3);">${latestDate}</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">
+          ${CAT_ORDER.filter(c=>cats[c]).map(cat=>{
+            const entry=cats[cat].sort((a,b)=>b.prazo-a.prazo)[0];
+            const col=CAT_COLORS[cat]||'var(--txt1)';
+            const varTxt=entry.variacaoPct?`<div style="font-size:8px;color:${entry.variacaoPct>0?'var(--grn)':'var(--red)'};">${entry.variacaoPct>0?'▲':'▼'}${Math.abs(entry.variacaoPct).toFixed(2)}%</div>`:'';
+            return`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 9px;min-width:72px;text-align:center;">
+              <div style="font-size:8px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.05em;">${cat}</div>
+              <div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--txt0);">R$${entry.valor.toFixed(2)}</div>
+              <div style="font-size:8px;color:var(--txt2);">${entry.prazo}d</div>
+              ${varTxt}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('')||H.emptyState('Sem dados','Nenhum programa encontrado');
+  },
+
+  chart(){
+    const hist=Store.get().mercado?.historico||[];
+    const cat=document.getElementById('mkt-filt-cat')?.value||'HOT';
+    const periodo=document.getElementById('mkt-filt-periodo')?.value||'30';
+    const filtProg=document.getElementById('mkt-filt-prog')?.value||'all';
+    let filtered=[...hist];
+    if(periodo!=='all'){const cutoff=new Date();cutoff.setDate(cutoff.getDate()-parseInt(periodo));filtered=filtered.filter(h=>new Date(h.data)>=cutoff);}
+    if(cat!=='all')filtered=filtered.filter(h=>h.categoria===cat);
+    if(filtProg!=='all')filtered=filtered.filter(h=>h.programaId===filtProg);
+    const dates=[...new Set(filtered.map(h=>h.data))].sort();
+    const progs=filtProg!=='all'?[filtProg]:[...new Set(filtered.map(h=>h.programaId))];
+    const c=document.getElementById('chart-mkt');
+    if(!c)return;
+    const ctx=c.getContext('2d'),dpr=window.devicePixelRatio||1;
+    const W=Math.max(c.parentElement.offsetWidth-40,300),CH=160;
+    c.width=W*dpr;c.height=CH*dpr;c.style.width=W+'px';c.style.height=CH+'px';
+    ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,CH);
+    if(!dates.length||!filtered.length){
+      ctx.fillStyle=document.documentElement.classList.contains('light')?'#6b7a9a':'rgba(168,179,204,0.4)';
+      ctx.font='13px Syne,sans-serif';ctx.textAlign='center';
+      ctx.fillText('Sem dados para o período/filtro selecionado',W/2,CH/2);
+      return;
+    }
+    const series=progs.map(progId=>{const prog=progById(progId);const vals=dates.map(date=>{const entries=filtered.filter(h=>h.programaId===progId&&h.data===date);return entries.length?Math.max(...entries.map(e=>e.valor)):null;});return{progId,color:prog.color,name:prog.short,vals};});
+    const allVals=filtered.map(h=>h.valor).filter(v=>v>0);
+    const minV=Math.min(...allVals)*0.97,maxV=Math.max(...allVals)*1.03;
+    const range=maxV-minV||1;
+    const padL=48,padR=12,padT=12,padB=28;
+    const cW=W-padL-padR,cH=CH-padT-padB;
+    // Grid
+    ctx.strokeStyle=document.documentElement.classList.contains('light')?'rgba(0,0,0,.07)':'rgba(255,255,255,.05)';
+    ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){const y=padT+(cH/4)*i;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();const val=maxV-(range/4)*i;ctx.fillStyle=document.documentElement.classList.contains('light')?'#6b7a9a':'rgba(168,179,204,0.5)';ctx.font='9px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(val.toFixed(2),padL-4,y+3);}
+    // Date labels
+    const dateStep=Math.max(1,Math.ceil(dates.length/7));
+    dates.forEach((d,i)=>{if(i%dateStep===0||i===dates.length-1){const x=padL+(dates.length>1?i/(dates.length-1):0.5)*cW;ctx.fillStyle=document.documentElement.classList.contains('light')?'#6b7a9a':'rgba(168,179,204,0.5)';ctx.font='9px DM Mono,monospace';ctx.textAlign='center';ctx.fillText(d.slice(5),x,CH-6);}});
+    // Lines
+    series.forEach(s=>{
+      ctx.beginPath();ctx.strokeStyle=s.color;ctx.lineWidth=2;
+      let started=false;
+      s.vals.forEach((v,i)=>{if(v===null){started=false;return;}const x=padL+(dates.length>1?i/(dates.length-1):0.5)*cW;const y=padT+cH-((v-minV)/range)*cH;if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);});
+      ctx.stroke();
+      // Dots
+      s.vals.forEach((v,i)=>{if(v===null)return;const x=padL+(dates.length>1?i/(dates.length-1):0.5)*cW;const y=padT+cH-((v-minV)/range)*cH;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle=s.color;ctx.fill();});
+    });
+    // Legend
+    ctx.textAlign='left';
+    series.forEach((s,i)=>{const lx=padL+i*70,ly=padT-2;if(lx+60>W)return;ctx.fillStyle=s.color;ctx.font='bold 9px Syne,sans-serif';ctx.fillText('● '+s.name,lx,ly);});
+    // Stats
+    const statsEl=document.getElementById('mkt-chart-stats');
+    if(statsEl){
+      const stats=progs.map(progId=>{const d2=filtered.filter(h=>h.programaId===progId);if(!d2.length)return null;const vals2=d2.map(h=>h.valor);const latest2=[...d2].sort((a,b)=>new Date(b.data)-new Date(a.data))[0];const oldest2=[...d2].sort((a,b)=>new Date(a.data)-new Date(b.data))[0];const variacao=oldest2&&oldest2.valor?((latest2.valor-oldest2.valor)/oldest2.valor)*100:0;return{progId,latest:latest2.valor,max:Math.max(...vals2),min:Math.min(...vals2),variacao};}).filter(Boolean);
+      statsEl.innerHTML=stats.slice(0,4).map(s=>{const prog=progById(s.progId);const vc=s.variacao>=0?'var(--grn)':'var(--red)';return H.mbox(prog.short,`R$${s.latest.toFixed(2)}/mil`,`Max: R$${s.max.toFixed(2)} · Min: R$${s.min.toFixed(2)} · Variação: <span style="color:${vc}">${s.variacao>=0?'+':''}${s.variacao.toFixed(2)}%</span>`,prog.color,false);}).join('');}
+  },
+
+  histList(){
+    const cotacoes=Store.get().mercado?.cotacoes||[];
+    const el=document.getElementById('mkt-hist-list');
+    if(!el)return;
+    if(!cotacoes.length){el.innerHTML=H.emptyState('Nenhuma cotação processada','Use o campo acima para inserir cotações do CotaMilhas');return;}
+    el.innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Tipo</th><th>Programas</th><th>Registros</th><th></th></tr></thead><tbody>${cotacoes.slice(0,20).map(c=>`<tr><td style="color:var(--txt2);font-size:11px;">${c.data||'—'}</td><td>${H.tag(c.tipo==='abertura'?'🌅 Abertura':'🌙 Fechamento',c.tipo==='abertura'?'c':'o')}</td><td style="font-size:11px;">${[...new Set((c.programas||[]).map(p=>p.nome))].join(', ')}</td><td>${H.tag((c.programas||[]).length+' preços','gr')}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delCotacao(${c.id})">✕</button></td></tr>`).join('')}</tbody></table></div>`;
+  },
+
+  promocoes(){
+    const proms=Store.get().mercado?.promocoes||[];
+    const el=document.getElementById('mkt-promocoes');
+    if(!el)return;
+    if(!proms.length){el.innerHTML=H.emptyState('Sem promoções carregadas','Clique em "Atualizar Promoções" para buscar com Gemini');return;}
+    const valid=proms.filter(p=>p.valida!==false);
+    if(!valid.length){el.innerHTML=H.emptyState('Nenhuma promoção válida no momento','Tente novamente mais tarde');return;}
+    el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">${valid.map(p=>`
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;transition:all var(--transition);display:flex;flex-direction:column;">
+        <div style="font-size:9px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">${p.programa||'Milhas'}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--txt0);margin-bottom:6px;line-height:1.35;flex:1;">${p.titulo}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+          ${p.bonus?`<span class="tag tg">${p.bonus}</span>`:''}
+          ${p.prazo?`<span class="tag ty">⏰ ${p.prazo}</span>`:''}
+        </div>
+        <div style="font-size:11px;color:var(--txt2);line-height:1.6;margin-bottom:10px;">${p.resumo||''}</div>
+        ${p.link&&p.link.startsWith('http')?`<a href="${p.link}" target="_blank" rel="noopener" style="font-size:11px;color:var(--cyan);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto;">Ver promoção →</a>`:''}
+      </div>`).join('')}</div>`;
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// APP
+// ═══════════════════════════════════════════════════════════════
+const App={
+  _stockOp:'add',
+  _cotTipo:'fechamento',
+  _notifTimer:null,
+
+  init(){
+    // Auth
+    const logged=sessionStorage.getItem('maauth')||localStorage.getItem('ma_session');
+    if(logged){document.getElementById('login').classList.add('hidden');document.getElementById('layout').style.display='flex';}
+    document.getElementById('btn-login').addEventListener('click',()=>App.doLogin());
+    document.getElementById('login-pw').addEventListener('keydown',e=>{if(e.key==='Enter')App.doLogin();});
+
+    // Theme
+    const savedTheme=Store.get().settings.theme||'dark';
+    document.documentElement.className=savedTheme;
+    document.querySelectorAll('.theme-toggle').forEach(b=>b.addEventListener('click',()=>App.toggleTheme()));
+
+    // Nav
+    document.querySelectorAll('.nv').forEach(b=>b.addEventListener('click',()=>App.nav(b.dataset.pg)));
+
+    // Calc inputs
+    ['f-pontos','f-taxas','f-cpm','f-mercado','f-lucro-des','f-desconto'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>App.onCalcInput());});
+    document.querySelectorAll('#calc-trip-btns .tbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#calc-trip-btns .tbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');Store.update(s=>s.calcForm.tripType=b.dataset.trip);App.reCalc();}));
+
+    // Calc actions
+    document.getElementById('btn-save-calc').addEventListener('click',()=>App.saveFromCalc());
+    document.getElementById('btn-clear-calc').addEventListener('click',()=>App.clearCalc());
+
+    // Compra
+    ['cp-pontos','cp-cpm'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{const p=+document.getElementById('cp-pontos').value||0,c=+document.getElementById('cp-cpm').value||0;if(p&&c){const t=document.getElementById('cp-total');if(t)t.value=(p/1000*c).toFixed(2);}});});
+    document.getElementById('btn-save-compra').addEventListener('click',()=>App.saveCompra());
+    document.getElementById('btn-clear-compra').addEventListener('click',()=>App.clearCompra());
+
+    // Venda
+    ['vd-pontos','vd-vpm'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{const p=+document.getElementById('vd-pontos').value||0,v=+document.getElementById('vd-vpm').value||0;if(p&&v){const t=document.getElementById('vd-total');if(t)t.value=(p/1000*v).toFixed(2);}});});
+    document.getElementById('btn-save-venda').addEventListener('click',()=>App.saveVenda());
+
+    // Transferência
+    document.getElementById('btn-save-transf').addEventListener('click',()=>App.saveTransf());
+
+    // Emissão manual
+    ['em-pontos','em-cpm','em-taxas','em-cobrado'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>Render.emPreview());});
+    document.getElementById('btn-save-em').addEventListener('click',()=>App.saveEmissao());
+
+    // History
+    document.getElementById('btn-export').addEventListener('click',()=>App.exportCSV());
+    document.getElementById('btn-del-all').addEventListener('click',()=>App.clearHist());
+    document.getElementById('filt-prog').addEventListener('change',()=>App.filterHist());
+    document.getElementById('filt-status').addEventListener('change',()=>App.filterHist());
+
+    // DRE
+    document.getElementById('btn-save-desp').addEventListener('click',()=>App.saveDesp());
+    document.getElementById('dre-mes').addEventListener('change',()=>App.renderDRE());
+    document.getElementById('dre-ano').addEventListener('change',()=>App.renderDRE());
+
+    // Stock modal
+    document.getElementById('btn-save-stock').addEventListener('click',()=>App.saveStockModal());
+    document.getElementById('btn-confirm-recv').addEventListener('click',()=>App.confirmRecv());
+
+    // Config
+    document.getElementById('btn-test-sheets')?.addEventListener('click',async()=>{
+      const btn=document.getElementById('btn-test-sheets');
+      const statusEl=document.getElementById('sheets-status');
+      btn.disabled=true;btn.textContent='⏳ Testando...';
+      if(statusEl)statusEl.innerHTML='';
+      const r=await SheetsAPI.test();
+      btn.disabled=false;btn.textContent='🔌 Testar';
+      if(statusEl)statusEl.innerHTML=r.ok
+        ?`<span style="color:var(--grn);">✓ ${r.msg}</span>`
+        :`<span style="color:var(--red);">✗ Falha: ${r.msg}</span>`;
+    });
+    document.getElementById('btn-logout').addEventListener('click',()=>App.logout());
+    document.getElementById('btn-backup').addEventListener('click',()=>App.exportBackup());
+    document.getElementById('restore-file').addEventListener('change',e=>App.importBackup(e));
+
+    // Populate selects
+    App.populateSelects();
+    App.populateDates();
+    App.buildProgBtns();
+    App.restoreCalcForm();
+
+    // Load saved config
+    const cfg=Store.get().settings;
+    // URL is hardcoded — no input to prefill
+
+    // Render all
+    Render.all();
+    // Initial cloud status
+    CloudUI.set('idle','Nuvem');
+    setTimeout(async()=>{
+      const r=await SheetsAPI.test();
+      if(!r.ok)CloudUI.set('error','Sem conexão');
+    },2000);
+  },
+
+  doLogin(){
+    const pw=document.getElementById('login-pw').value;
+    if(pw===PASSWORD){
+      document.getElementById('login').classList.add('hidden');
+      document.getElementById('layout').style.display='flex';
+      localStorage.setItem('ma_session','1');
+      document.getElementById('login-err').textContent='';
+      Render.all();
+      setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),100);
+    } else {
+      document.getElementById('login-err').textContent='Senha incorreta. Tente novamente.';
+      document.getElementById('login-pw').value='';
+    }
+  },
+
+  logout(){
+    localStorage.removeItem('ma_session');
+    sessionStorage.removeItem('maauth');
+    document.getElementById('login').classList.remove('hidden');
+    document.getElementById('layout').style.display='none';
+    document.getElementById('login-pw').value='';
+  },
+
+  toggleTheme(){
+    const isD=document.documentElement.classList.contains('dark');
+    document.documentElement.className=isD?'light':'dark';
+    Store.update(s=>s.settings.theme=isD?'light':'dark');
+    Render.updateThemeBtn();
+    setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),50);
+  },
+
+  nav(pg){
+    document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nv').forEach(b=>b.classList.remove('active'));
+    const pageEl=document.getElementById('pg-'+pg);
+    if(pageEl)pageEl.classList.add('active');
+    const navEl=document.querySelector(`[data-pg="${pg}"]`);
+    if(navEl)navEl.classList.add('active');
+    document.getElementById('content').scrollTop=0;
+    if(pg==='dashboard')setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),80);
+    if(pg==='hist')Render.hist(document.getElementById('filt-prog').value||'all',document.getElementById('filt-status').value||'all');
+    if(pg==='caixa')Render.caixa();
+    if(pg==='dre')App.renderDRE();
+    if(pg==='mercado'){MercadoRender.page();setTimeout(()=>MercadoRender.chart(),80);}
+  },
+
+  populateSelects(){
+    const opts=PROGRAMS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    ['cp-prog','vd-prog','em-prog','tf-orig','tf-dest'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+    // Filter history
+    const filtOpts='<option value="all">Todos os programas</option>'+opts;
+    const fp=document.getElementById('filt-prog');if(fp)fp.innerHTML=filtOpts;
+    // Mercado filter
+    const mktFilt=document.getElementById('mkt-filt-prog');
+    if(mktFilt)mktFilt.innerHTML='<option value="all">Todos os Programas</option>'+opts;
+  },
+
+  populateDates(){
+    const now=new Date(),mes=now.getMonth()+1,ano=now.getFullYear();
+    ['dre-mes','dp-mes'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=MESES.map((m,i)=>`<option value="${i+1}" ${i+1==mes?'selected':''}>${m}</option>`).join('');});
+    const anos=[];for(let a=ano;a>=ano-3;a--)anos.push(a);
+    ['dre-ano','dp-ano'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=anos.map(a=>`<option value="${a}" ${a==ano?'selected':''}>${a}</option>`).join('');});
+    // Default dates
+    ['cp-data','vd-data'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today();});
+  },
+
+  buildProgBtns(){
+    const c=document.getElementById('calc-prog-btns');
+    if(!c)return;
+    const saved=Store.get().calcForm.programa;
+    c.innerHTML=PROGRAMS.map(p=>`<button class="pbtn ${p.id===saved?'active':''}" data-prog="${p.id}" style="${p.id===saved?`border-color:${p.color};background:${p.color}15;`:''}"><span class="pdot" style="background:${p.color};${p.id===saved?`box-shadow:0 0 5px ${p.color};`:''}"></span>${p.name}</button>`).join('');
+    c.querySelectorAll('.pbtn').forEach(b=>{b.addEventListener('click',()=>{c.querySelectorAll('.pbtn').forEach(x=>{x.classList.remove('active');x.style.borderColor='';x.style.background='';x.querySelector('.pdot').style.boxShadow='';});const p=progById(b.dataset.prog);b.classList.add('active');b.style.borderColor=p.color;b.style.background=p.color+'15';b.querySelector('.pdot').style.boxShadow=`0 0 5px ${p.color}`;Store.update(s=>s.calcForm.programa=b.dataset.prog);App.reCalc();});});
+  },
+
+  onCalcInput(){
+    const map={pontos:'f-pontos',taxas:'f-taxas',cpm:'f-cpm',mercado:'f-mercado',lucroDesejado:'f-lucro-des',desconto:'f-desconto'};
+    Store.update(s=>{Object.entries(map).forEach(([k,id])=>{const el=document.getElementById(id);if(el)s.calcForm[k]=el.value;});});
+    App.reCalc();
+  },
+
+  reCalc(){Render.calc();Render.strat();Render.sim();},
+
+  restoreCalcForm(){
+    const f=Store.get().calcForm;
+    const map={pontos:'f-pontos',taxas:'f-taxas',cpm:'f-cpm',mercado:'f-mercado',lucroDesejado:'f-lucro-des',desconto:'f-desconto'};
+    Object.entries(map).forEach(([k,id])=>{const el=document.getElementById(id);if(el&&f[k])el.value=f[k];});
+    const tt=document.querySelector(`[data-trip="${f.tripType}"]`);
+    if(tt){document.querySelectorAll('#calc-trip-btns .tbtn').forEach(b=>b.classList.remove('active'));tt.classList.add('active');}
+  },
+
+  saveFromCalc(){
+    const f=Store.get().calcForm,r=Engine.calc(f);
+    if(!f.pontos||!f.mercado){App.notify('Preencha Pontos e Preço de Mercado.','er');return;}
+    const entry={id:Date.now(),data:today(),programa:f.programa,tripType:f.tripType,pontos:+f.pontos||0,cpm:+f.cpm||0,taxas:+f.taxas||0,cobrado:r.valorCobrado,custo:r.custoTotal,lucro:r.lucroLiquido,margem:r.margemPct,roi:r.roi,ind:r.indicador,obs:''};
+    Store.update(s=>s.emissoes.unshift(entry));
+    SheetsAPI.send('emissoes',entry);
+    Render.dashboard();Render.hist('all','all');
+    App.notify('✓ Emissão salva!','ok');
+  },
+
+  clearCalc(){
+    Store.update(s=>{s.calcForm.pontos='';s.calcForm.taxas='';s.calcForm.cpm='';s.calcForm.mercado='';});
+    ['f-pontos','f-taxas','f-cpm','f-mercado'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    App.reCalc();
+  },
+
+  saveEmissao(){
+    const pt=+document.getElementById('em-pontos').value||0,cpm2=+document.getElementById('em-cpm').value||0,tx2=+document.getElementById('em-taxas').value||0,cob=+document.getElementById('em-cobrado').value||0;
+    if(!pt||!cob){App.notify('Preencha Pontos e Valor Cobrado.','er');return;}
+    const calc=Engine.calcEmissao({pontos:pt,cpm:cpm2,taxas:tx2,cobrado:cob});
+    const entry={id:Date.now(),data:today(),programa:document.getElementById('em-prog').value,tripType:document.getElementById('em-tipo').value,pontos:pt,cpm:cpm2,taxas:tx2,cobrado:cob,custo:calc.custo,lucro:calc.lucro,margem:calc.margem,roi:calc.roi,ind:calc.ind,obs:document.getElementById('em-obs').value.trim()};
+    Store.update(s=>s.emissoes.unshift(entry));
+    SheetsAPI.send('emissoes',entry);
+    ['em-pontos','em-cpm','em-taxas','em-cobrado','em-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('em-preview').style.display='none';
+    Render.dashboard();Render.hist('all','all');
+    App.notify('✓ Emissão registrada!','ok');
+  },
+
+  saveCompra(){
+    const prog=document.getElementById('cp-prog').value,pt=+document.getElementById('cp-pontos').value||0,cpm2=+document.getElementById('cp-cpm').value||0,total=+document.getElementById('cp-total').value||(pt/1000*cpm2),parc=+document.getElementById('cp-parcelas').value||1,pgpg=+document.getElementById('cp-pgpagas').value||0;
+    if(!pt){App.notify('Informe a quantidade de pontos.','er');return;}
+    const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal:total,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim()};
+    Store.update(s=>{s.compras.unshift(entry);const e=s.estoque[prog];const novoTotal=e.pontos+pt,novoInv=e.totalInvestido+(pt/1000)*cpm2;e.pontos=novoTotal;e.totalInvestido=novoInv;e.custoMedio=novoTotal>0?novoInv/(novoTotal/1000):0;});
+    SheetsAPI.send('compras',entry);
+    App.clearCompra();Render.compras();Render.stock();Render.dashboard();Render.caixa();
+    App.notify('✓ Compra registrada!','ok');
+  },
+
+  clearCompra(){['cp-pontos','cp-cpm','cp-total','cp-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const el=document.getElementById('cp-parcelas');if(el)el.value='1';const el2=document.getElementById('cp-pgpagas');if(el2)el2.value='0';},
+
+  saveVenda(){
+    const prog=document.getElementById('vd-prog').value,pt=+document.getElementById('vd-pontos').value||0,vpm=+document.getElementById('vd-vpm').value||0,total=+document.getElementById('vd-total').value||(pt/1000*vpm);
+    if(!pt){App.notify('Informe a quantidade de pontos.','er');return;}
+    const entry={id:Date.now(),data:document.getElementById('vd-data').value||today(),programa:prog,pontos:pt,valorPorMil:vpm,valorTotal:total,status:document.getElementById('vd-status').value,canal:document.getElementById('vd-canal').value.trim(),obs:document.getElementById('vd-obs').value.trim()};
+    Store.update(s=>{s.vendas.unshift(entry);const e=s.estoque[prog];e.pontos=Math.max(0,e.pontos-pt);e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);});
+    SheetsAPI.send('vendas',entry);
+    ['vd-pontos','vd-vpm','vd-total','vd-canal','vd-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    Render.vendas();Render.stock();Render.dashboard();Render.caixa();
+    App.notify('✓ Venda registrada!','ok');
+  },
+
+  saveTransf(){
+    const orig=document.getElementById('tf-orig').value,dest=document.getElementById('tf-dest').value,oPts=+document.getElementById('tf-orig-pts').value||0,dPts=+document.getElementById('tf-dest-pts').value||oPts,taxa=+document.getElementById('tf-taxa').value||0;
+    if(!oPts){App.notify('Informe os pontos de origem.','er');return;}
+    if(orig===dest){App.notify('Origem e destino devem ser diferentes.','er');return;}
+    const entry={id:Date.now(),data:today(),programaOrigem:orig,programaDestino:dest,pontosOrigem:oPts,pontosDestino:dPts,taxa,obs:document.getElementById('tf-obs').value.trim()};
+    Store.update(s=>{const eo=s.estoque[orig],ed=s.estoque[dest];eo.pontos=Math.max(0,eo.pontos-oPts);eo.totalInvestido=(eo.pontos/1000)*(eo.custoMedio||0);const cust=eo.custoMedio||0;ed.pontos+=dPts;ed.totalInvestido+=(dPts/1000)*cust;ed.custoMedio=ed.pontos>0?ed.totalInvestido/(ed.pontos/1000):0;s.transferencias.unshift(entry);});
+    SheetsAPI.send('transferencias',entry);
+    ['tf-orig-pts','tf-dest-pts','tf-taxa','tf-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    Render.transfs();Render.stock();Render.dashboard();
+    App.notify('✓ Transferência registrada!','ok');
+  },
+
+  saveDesp(){
+    const desc=document.getElementById('dp-desc').value.trim(),val=+document.getElementById('dp-val').value||0,mes=+document.getElementById('dp-mes').value,ano=+document.getElementById('dp-ano').value;
+    if(!desc||!val){App.notify('Informe descrição e valor.','er');return;}
+    const entry={id:Date.now(),descricao:desc,valor:val,categoria:document.getElementById('dp-cat').value,mes,ano,data:today()};
+    Store.update(s=>s.despesas.unshift(entry));
+    SheetsAPI.send('despesas',entry);
+    document.getElementById('dp-desc').value='';document.getElementById('dp-val').value='';
+    App.renderDRE();
+    App.notify('✓ Despesa lançada!','ok');
+  },
+
+  renderDRE(){const m=+document.getElementById('dre-mes').value,a=+document.getElementById('dre-ano').value;if(m&&a)Render.dre(m,a);},
+
+  delEmissao(id){Store.update(s=>{s.emissoes=s.emissoes.filter(e=>e.id!==id);});App.filterHist();Render.dashboard();App.notify('Emissão removida.','');},
+  delCompra(id){Store.update(s=>{s.compras=s.compras.filter(c=>c.id!==id);});Render.compras();Render.caixa();App.notify('Compra removida.','');},
+  delVenda(id){Store.update(s=>{s.vendas=s.vendas.filter(v=>v.id!==id);});Render.vendas();Render.caixa();App.notify('Venda removida.','');},
+  delTransf(id){Store.update(s=>{s.transferencias=s.transferencias.filter(t=>t.id!==id);});Render.transfs();App.notify('Transferência removida.','');},
+  delDesp(id){Store.update(s=>{s.despesas=s.despesas.filter(d=>d.id!==id);});App.renderDRE();App.notify('Despesa removida.','');},
+
+  filterHist(){const fp=document.getElementById('filt-prog').value||'all',fs=document.getElementById('filt-status').value||'all';Render.hist(fp,fs);},
+  clearHist(){if(!confirm('Apagar TODOS os registros de emissões?'))return;Store.update(s=>s.emissoes=[]);App.filterHist();Render.dashboard();App.notify('Histórico limpo.','');},
+
+  openStockModal(prog,op){const p=progById(prog);document.getElementById('mst-prog').value=prog;document.getElementById('mst-title').textContent=`Ajustar Estoque — ${p.name}`;App.setStockOp(op);document.getElementById('mst-pontos').value='';document.getElementById('mst-cpm').value='';document.getElementById('mst-obs').value='';document.getElementById('modal-stock').classList.add('open');},
+  setStockOp(op){App._stockOp=op;document.getElementById('mst-op-add').classList.toggle('active',op==='add');document.getElementById('mst-op-rm').classList.toggle('active',op==='remove');},
+  closeModal(id){document.getElementById(id).classList.remove('open');},
+
+  saveStockModal(){
+    const prog=document.getElementById('mst-prog').value,pts=+document.getElementById('mst-pontos').value||0,cpm2=+document.getElementById('mst-cpm').value||0;
+    const obs=document.getElementById('mst-obs')?.value.trim()||'';
+    if(!pts){App.notify('Informe a quantidade de pontos.','er');return;}
+    Store.update(s=>{const e=s.estoque[prog];if(App._stockOp==='add'){const nt=e.pontos+pts,ni=e.totalInvestido+(pts/1000)*cpm2;e.pontos=nt;e.totalInvestido=ni;e.custoMedio=nt>0?ni/(nt/1000):0;}else{e.pontos=Math.max(0,e.pontos-pts);e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);}});
+    const estAtual=Store.get().estoque[prog];
+    SheetsAPI.send('estoque',{id:Date.now(),data:today(),programa:prog,operacao:App._stockOp,pontos:pts,custoPorMil:cpm2,saldoApos:estAtual.pontos,custoMedioApos:estAtual.custoMedio,obs});
+    App.closeModal('modal-stock');Render.stock();Render.dashboard();
+    App.notify(`✓ Estoque ${App._stockOp==='add'?'adicionado':'removido'}!`,'ok');
+  },
+
+  openRecvModal(id){document.getElementById('recv-id').value=id;document.getElementById('modal-recv').classList.add('open');},
+  confirmRecv(){const id=+document.getElementById('recv-id').value;Store.update(s=>{const v=s.vendas.find(v=>v.id===id);if(v)v.status='recebido';});SheetsAPI.send('recebimentos',{id,data:today(),status:'recebido'});App.closeModal('modal-recv');Render.vendas();Render.caixa();App.notify('✓ Recebimento confirmado!','ok');},
+
+  exportCSV(){
+    const em=Store.get().emissoes;if(!em.length){App.notify('Nenhuma emissão para exportar.','er');return;}
+    const hdrs=['Data','Programa','Tipo','Pontos','CPM','Taxas','Cobrado','Custo','Lucro','Margem%','ROI%','Status','Obs'];
+    const rows=em.map(e=>[e.data,progById(e.programa).name,e.tripType==='ida_volta'?'Ida+Volta':'Só Ida',e.pontos,e.cpm||0,e.taxas||0,e.cobrado||0,(e.custo||0).toFixed(2),(e.lucro||0).toFixed(2),(e.margem||0).toFixed(2),(e.roi||0).toFixed(2),IND[e.ind]?.l||e.ind,e.obs||'']);
+    const csv=[hdrs,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));a.download=`milesarb-${today()}.csv`;a.click();
+    App.notify('✓ CSV exportado!','ok');
+  },
+
+  exportBackup(){
+    const data=Store.get();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download=`milesarb-backup-${today()}.json`;a.click();App.notify('✓ Backup exportado!','ok');
+  },
+  importBackup(e){
+    const file=e.target.files[0];if(!file)return;
+    const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);Store.update(s=>{Object.assign(s,d);});Render.all();App.notify('✓ Backup importado!','ok');}catch(err){App.notify('Erro ao importar backup.','er');}};r.readAsText(file);
+  },
+
+  // ─── MERCADO ──────────────────────────────────────────────────
+  setCotTipo(tipo){
+    App._cotTipo=tipo;
+    document.getElementById('cot-tipo-ab')?.classList.toggle('active',tipo==='abertura');
+    document.getElementById('cot-tipo-fe')?.classList.toggle('active',tipo==='fechamento');
+  },
+
+  async parseCotacao(){
+    const texto=document.getElementById('cot-input')?.value.trim();
+    if(!texto){App.notify('Cole uma mensagem antes de processar.','er');return;}
+    const statusEl=document.getElementById('cot-status');
+    const btn=document.getElementById('btn-parse-cotacao');
+    if(btn)btn.disabled=true;
+    try{
+      let parsed=null;
+      let usedGemini=false;
+      // 1. Tentar Gemini primeiro se houver chave
+      if(GEMINI_KEY){
+        if(statusEl)statusEl.innerHTML='<span style="color:var(--cyan);">🤖 Tentando Gemini...</span>';
+        try{
+          parsed=await GeminiAPI.parseCotacao(texto,App._cotTipo);
+          usedGemini=true;
+        }catch(gemErr){
+          if(gemErr.message&&(gemErr.message.includes('QUOTA_EXCEEDED')||gemErr.message.includes('quota'))){
+            if(statusEl)statusEl.innerHTML='<span style="color:var(--yel);">⚡ Gemini indisponível — usando parser local...</span>';
+          } else {
+            if(statusEl)statusEl.innerHTML='<span style="color:var(--yel);">⚡ Gemini falhou — usando parser local...</span>';
+            console.warn('Gemini error, fallback to local:',gemErr.message);
+          }
+        }
+      }
+      // 2. Fallback: parser local (funciona offline, ilimitado)
+      if(!parsed){
+        if(statusEl)statusEl.innerHTML='<span style="color:var(--cyan);">⚡ Processando localmente...</span>';
+        parsed=LocalParser.parse(texto,App._cotTipo);
+      }
+      if(!parsed.programas?.length)throw new Error('Nenhum dado extraído — verifique o formato da mensagem');
+      const timestamp=Date.now();
+      Store.update(s=>{
+        if(!s.mercado)s.mercado={cotacoes:[],historico:[],promocoes:[]};
+        s.mercado.cotacoes.unshift({id:timestamp,...parsed});
+        parsed.programas.forEach(item=>{
+          s.mercado.historico.push({
+            id:timestamp+Math.random(),
+            data:parsed.data,
+            tipo:parsed.tipo,
+            programaId:item.programaId||'outro',
+            nome:item.nome||'',
+            categoria:item.categoria||'HOT',
+            valor:parseFloat(item.valor)||0,
+            prazo:parseInt(item.prazo)||0,
+            variacao:parseFloat(item.variacao)||0,
+            variacaoPct:parseFloat(item.variacaoPct)||0,
+            observacao:item.observacao||''
+          });
+        });
+      });
+      SheetsAPI.send('cotacoes',{tipo:App._cotTipo,data:parsed.data,count:parsed.programas.length,programas:JSON.stringify(parsed.programas)});
+      if(statusEl)statusEl.innerHTML=`<span style="color:var(--grn);">✓ ${parsed.programas.length} preços extraídos ${usedGemini?'via Gemini 🤖':'localmente ⚡'}!</span>`;
+      if(document.getElementById('cot-input'))document.getElementById('cot-input').value='';
+      const badgeMkt=document.getElementById('badge-mkt');
+      if(badgeMkt){badgeMkt.style.display='';setTimeout(()=>badgeMkt.style.display='none',4000);}
+      MercadoRender.page();
+      Render.stock();
+      Render.dashboard();
+      App.notify(`✓ ${parsed.programas.length} preços processados!`,'ok');
+    }catch(err){
+      console.error('parseCotacao error:',err);
+      if(statusEl)statusEl.innerHTML=`<span style="color:var(--red);">✗ Erro: ${err.message}</span>`;
+      App.notify('Erro ao processar cotação.','er');
+    }finally{
+      if(btn)btn.disabled=false;
+    }
+  },
+
+  async fetchPromocoes(){
+    const btn=document.getElementById('btn-atualizar-prom');
+    if(btn){btn.disabled=true;btn.textContent='🔄 Buscando...';}
+    App.notify('🔍 Buscando promoções com Gemini...','');
+    try{
+      const result=await GeminiAPI.fetchPromocoes();
+      if(!result.promocoes?.length)throw new Error('Nenhuma promoção retornada');
+      Store.update(s=>{
+        if(!s.mercado)s.mercado={cotacoes:[],historico:[],promocoes:[]};
+        s.mercado.promocoes=result.promocoes;
+      });
+      MercadoRender.promocoes();
+      App.notify(`✓ ${result.promocoes.filter(p=>p.valida!==false).length} promoções carregadas!`,'ok');
+    }catch(err){
+      console.error('fetchPromocoes error:',err);
+      App.notify('Erro ao buscar promoções: '+err.message,'er');
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent='🔥 Atualizar Promoções';}
+    }
+  },
+
+  delCotacao(id){
+    Store.update(s=>{
+      const cot=s.mercado?.cotacoes?.find(c=>c.id===id);
+      if(cot&&s.mercado.historico){
+        // Remove all history entries from same timestamp
+        s.mercado.historico=s.mercado.historico.filter(h=>Math.floor(h.id)!==id);
+      }
+      if(s.mercado?.cotacoes)s.mercado.cotacoes=s.mercado.cotacoes.filter(c=>c.id!==id);
+    });
+    MercadoRender.page();Render.stock();
+    App.notify('Cotação removida.','');
+  },
+
+  limparHistoricoMkt(){
+    if(!confirm('Apagar todo o histórico de cotações?'))return;
+    Store.update(s=>{if(s.mercado){s.mercado.cotacoes=[];s.mercado.historico=[];}});
+    MercadoRender.page();Render.stock();Render.dashboard();
+    App.notify('Histórico de cotações limpo.','');
+  },
+
+  notify(msg,type){
+    const el=document.getElementById('notif');el.textContent=msg;el.className=`show ${type}`;
+    clearTimeout(App._notifTimer);App._notifTimer=setTimeout(()=>el.classList.remove('show'),3000);
+  },
+};
+
+// BOOT
+document.addEventListener('DOMContentLoaded',()=>App.init());
+</script>
+</body>
+</html>
