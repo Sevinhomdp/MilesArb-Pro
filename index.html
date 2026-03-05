@@ -489,7 +489,10 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
           <div class="fgrp"><div class="flbl">Parcelas Pagas</div><div class="iwrap"><input type="number" id="cp-pgpagas" value="0" min="0"><span class="isuf">x</span></div></div>
           <div class="fgrp"><div class="flbl">Categoria</div><select id="cp-cat"><option>Cartão de Crédito</option><option>Débito</option><option>Boleto</option><option>Transferência</option><option>Outro</option></select></div>
         </div>
-        <div class="fgrp" style="margin-bottom:13px;"><div class="flbl">Observações</div><input type="text" id="cp-obs" placeholder="ex: Compra promoção Amex Double" style="padding:9px 12px;"></div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Taxa de Serviço (opcional)</div><div class="iwrap"><span class="ipfx">R$</span><input type="number" id="cp-taxa" placeholder="0" min="0" step="0.01"></div></div>
+          <div class="fgrp"><div class="flbl">Observações</div><input type="text" id="cp-obs" placeholder="ex: Compra promoção Amex Double" style="padding:9px 12px;"></div>
+        </div>
         <div style="display:flex;gap:9px;">
           <button class="bprimary" style="flex:1;" id="btn-save-compra">↓ Registrar Compra</button>
           <button class="bsecond" id="btn-clear-compra">Limpar</button>
@@ -995,7 +998,10 @@ const Engine={
           vrm=mil>0?vc/mil:0,
           maxM=mil>0?((vc*(1-ld/100))-tx)/mil:0,
           beM=mil>0?(vc-tx)/mil:0,
-          vi=mkt*0.55,vm=mil*25,
+          vi=mkt*0.55,
+          // Preço de venda das milhas: usa cotação atual do Mercado; fallback R$25/mil
+          vmPreco=MercadoEngine.getLatestPrice(f.programa)||25,
+          vm=mil*vmPreco,
           ind=mg>=20?'green':mg>=8?'yellow':'red';
     return{mil,custoPontos:cp,custoTotal:ct,valorCobrado:vc,lucroLiquido:ll,margemPct:mg,roi,valorRealMil:vrm,maxMilheiro:maxM,breakEvenMil:beM,valorIdeal:vi,venderMilhas:vm,melhorOpcao:ll>vm?'emitir':'vender',indicador:ind,competitivo:vc<mkt&&mkt>0,precoMercado:mkt};
   },
@@ -1011,8 +1017,11 @@ const Engine={
     const em=emissoes.filter(e=>{const d=e.data||'';const dt=new Date(d);return dt.getMonth()+1==mes&&dt.getFullYear()==ano});
     const dp=despesas.filter(d=>+d.mes==mes&&+d.ano==ano);
     const receita=em.reduce((s,e)=>s+(e.cobrado||0),0);
-    // Custo de milhas = custo de aquisição (CPM × pontos)
-    const custoMilhas=em.reduce((s,e)=>s+((e.pontos||0)/1000)*(e.cpm||0),0);
+    // Custo de milhas: usa custoMilhasReal (custo médio congelado) quando disponível;
+    // fallback para CPM declarado (compatibilidade com registros antigos)
+    const custoMilhas=em.reduce((s,e)=>s+(
+      e.custoMilhasReal!=null ? e.custoMilhasReal : ((e.pontos||0)/1000)*(e.cpm||0)
+    ),0);
     // Taxas pagas nas emissões (aeroportuárias, etc)
     const taxasEmissao=em.reduce((s,e)=>s+(e.taxas||0),0);
     const custoTotal=custoMilhas+taxasEmissao;
@@ -1025,7 +1034,15 @@ const Engine={
     return{receita,custoMilhas,taxasEmissao,custoTotal,lucroBruto,totalDesp,lucroLiq,margemBruta,margemLiq,em,dp};
   },
   caixa(vendas,compras){
-    const aReceber=vendas.filter(v=>v.status==='pendente').reduce((s,v)=>s+(v.valorTotal||0),0);
+    // aReceber: soma apenas as parcelas ainda NÃO recebidas de cada venda pendente
+    // Corrige bug onde venda 3x com 1 parcela recebida aparecia integralmente
+    const aReceber=vendas
+      .filter(v=>v.status==='pendente'||(v.parcelasRecebidas||0)<(v.parcelas||1))
+      .reduce((s,v)=>{
+        const parc=v.parcelas||1;
+        const restante=Math.max(0,parc-(v.parcelasRecebidas||0));
+        return s+restante*((v.valorTotal||0)/parc);
+      },0);
     const aPagar=compras.reduce((s,c)=>{const rest=(c.parcelas||1)-(c.parcelasPagas||0),vp=(c.valorTotal||0)/(c.parcelas||1);return s+Math.max(0,rest)*vp;},0);
     return{aReceber,aPagar,saldo:aReceber-aPagar};
   },
@@ -1045,6 +1062,49 @@ const Engine={
     const porProg={};
     PROGRAMS.forEach(p=>{const es=em.filter(e=>e.programa===p.id);porProg[p.id]={lucro:es.reduce((a,e)=>a+(e.lucro||0),0),count:es.length};});
     return{lucro,roiMed,txSucc,estTot,estVal:estValCusto,estValMkt,porProg};
+  },
+
+  // ── HELPERS DE CONTABILIDADE DE ESTOQUE ──────────────────────────
+  // consumirEstoque: subtrai pts do estoque usando custo médio congelado no momento da operação.
+  // Retorna o custo exato consumido (para ser congelado na operação).
+  // Garante pontos>=0, totalInvestido>=0, custoMedio=0 quando pontos=0.
+  consumirEstoque(e, pts){
+    if(!e||pts<=0) return 0;
+    const custoMedio = e.custoMedio||0;
+    const consumido  = Math.min(pts, e.pontos); // não pode consumir mais do que existe
+    const custoConsumido = (consumido/1000)*custoMedio;
+    e.pontos         = Math.max(0, e.pontos-consumido);
+    e.totalInvestido = Math.max(0, (e.totalInvestido||0)-custoConsumido);
+    // Recalcular custo médio; se zerou, zerar investido também
+    if(e.pontos>0){
+      e.custoMedio = e.totalInvestido/(e.pontos/1000);
+    } else {
+      e.custoMedio     = 0;
+      e.totalInvestido = 0;
+    }
+    return custoConsumido;
+  },
+
+  // normalizarEstoque: garante integridade dos três campos após qualquer operação.
+  normalizarEstoque(e){
+    if(!e) return;
+    e.pontos         = Math.max(0, e.pontos||0);
+    e.totalInvestido = Math.max(0, e.totalInvestido||0);
+    if(e.pontos>0){
+      e.custoMedio = Math.max(0, e.totalInvestido/(e.pontos/1000));
+    } else {
+      e.custoMedio     = 0;
+      e.totalInvestido = 0;
+    }
+  },
+
+  // restaurarEstoque: operação inversa de consumirEstoque (para cancelamentos/deleções).
+  // custoOriginal é o custoTotalVenda/custoTotalReal congelado na operação.
+  restaurarEstoque(e, pts, custoOriginal){
+    if(!e||pts<=0) return;
+    e.pontos         = (e.pontos||0)+pts;
+    e.totalInvestido = Math.max(0, (e.totalInvestido||0)+(custoOriginal||0));
+    e.custoMedio     = e.pontos>0 ? e.totalInvestido/(e.pontos/1000) : 0;
   },
 };
 
@@ -1386,6 +1446,7 @@ const LocalParser={
     {id:'esfera',   patterns:['esfera']},
     {id:'lifemiles',patterns:['lifemiles','avianca','life miles']},
     {id:'flyingbl', patterns:['flying blue','air france','klm','flyingblue']},
+    {id:'c6atomos', patterns:['c6 atomos','c6atomos','átomos','atomos','c6 - atomos','c6 átomos']},
   ],
   matchProgId(nome){
     const n=nome.toLowerCase().trim();
@@ -1394,6 +1455,24 @@ const LocalParser={
   },
   parse(texto,tipo){
     const hoje=new Date().toISOString().slice(0,10);
+    // Tentar extrair a data do texto (formatos: DD/MM/YYYY, DD/MM/YY, YYYY-MM-DD)
+    const dateRx=/(\d{2})\/(\d{2})\/(\d{4})|(\d{2})\/(\d{2})\/(\d{2})|(\d{4}-\d{2}-\d{2})/;
+    const dateMatch=texto.match(dateRx);
+    let dataExtraida=hoje;
+    if(dateMatch){
+      if(dateMatch[7]){
+        // Formato ISO: YYYY-MM-DD
+        dataExtraida=dateMatch[7];
+      } else if(dateMatch[1]){
+        // Formato DD/MM/YYYY
+        dataExtraida=`${dateMatch[3]}-${dateMatch[2].padStart(2,'0')}-${dateMatch[1].padStart(2,'0')}`;
+      } else if(dateMatch[4]){
+        // Formato DD/MM/YY — assume século 2000
+        dataExtraida=`20${dateMatch[6]}-${dateMatch[5].padStart(2,'0')}-${dateMatch[4].padStart(2,'0')}`;
+      }
+      // Validar que a data extraída faz sentido (não é futura por mais de 1 dia)
+      if(new Date(dataExtraida)>new Date(new Date().setDate(new Date().getDate()+1)))dataExtraida=hoje;
+    }
     const linhas=texto.split('\n').map(l=>l.trim()).filter(Boolean);
     const programas=[];
     let currentProg=null;
@@ -1453,7 +1532,7 @@ const LocalParser={
       }
     }
     if(!programas.length)throw new Error('Nenhum preço encontrado. Verifique o formato da mensagem CotaMilhas.');
-    return{tipo,data:hoje,programas};
+    return{tipo,data:dataExtraida,programas};
   }
 };
 
@@ -1689,7 +1768,26 @@ const Render={
   vendas(){
     const v=Store.get().vendas;
     if(!v.length){document.getElementById('vendas-list').innerHTML=H.emptyState('Nenhuma venda registrada','Preencha o formulário acima');return;}
-    document.getElementById('vendas-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Programa</th><th>Pontos</th><th>Valor/Mil</th><th>Total</th><th>Canal</th><th>Status</th><th></th></tr></thead><tbody>${v.map(e=>{const p=progById(e.programa),isPend=e.status==='pendente';return`<tr><td style="color:var(--txt2);font-size:11px;">${e.data}</td><td>${p.short}</td><td>${N(e.pontos)}</td><td>${R$(e.valorPorMil||0)}/mil</td><td style="color:var(--grn);font-weight:600;">${R$(e.valorTotal)}</td><td style="font-size:11px;">${e.canal||'—'}</td><td>${isPend?`<button class="tag ty" style="cursor:pointer;border:none;" onclick="App.openRecvModal(${e.id})">⏳ Pendente</button>`:H.tag('✅ Recebido','g')}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delVenda(${e.id})">✕</button></td></tr>`;}).join('')}</tbody></table></div>`;
+    document.getElementById('vendas-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Programa</th><th>Pontos</th><th>Valor/Mil</th><th>Total</th><th>Custo/Mil¹</th><th>Lucro¹</th><th>Canal</th><th>Status</th><th></th></tr></thead><tbody>${v.map(e=>{
+      const p=progById(e.programa),isPend=e.status==='pendente';
+      // Lucro e custo congelados no momento da venda; fallback para vendas sem esses campos
+      const lucro = e.lucroVenda!=null ? e.lucroVenda : null;
+      const custoUnit = e.custoUnitarioVenda!=null ? e.custoUnitarioVenda : null;
+      const lc = lucro!=null ? (lucro>=0?'var(--grn)':'var(--red)') : 'var(--txt3)';
+      return`<tr>
+        <td style="color:var(--txt2);font-size:11px;">${e.data}</td>
+        <td>${p.short}</td>
+        <td>${N(e.pontos)}</td>
+        <td>${R$(e.valorPorMil||0)}/mil</td>
+        <td style="color:var(--grn);font-weight:600;">${R$(e.valorTotal)}</td>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--txt2);">${custoUnit!=null?R$(custoUnit)+'/mil':'—'}</td>
+        <td style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:${lc};">${lucro!=null?R$(lucro):'—'}</td>
+        <td style="font-size:11px;">${e.canal||'—'}</td>
+        <td>${isPend?`<button class="tag ty" style="cursor:pointer;border:none;" onclick="App.openRecvModal(${e.id})">⏳ Pendente</button>`:H.tag('✅ Recebido','g')}</td>
+        <td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delVenda(${e.id})">✕</button></td>
+      </tr>`;}).join('')}</tbody></table>
+      <div style="font-size:10px;color:var(--txt3);padding:8px 4px;">¹ Custo e lucro congelados no momento do registro.</div>
+    </div>`;
   },
   /* ── TRANSFERENCIAS LIST ─────────────────────── */
   transfs(){
@@ -2471,11 +2569,26 @@ const App={
   saveFromCalc(){
     const f=Store.get().calcForm,r=Engine.calc(f);
     if(!f.pontos||!f.mercado){App.notify('Preencha Pontos e Preço de Mercado.','er');return;}
-    const entry={id:Date.now(),data:today(),programa:f.programa,tripType:f.tripType,pontos:+f.pontos||0,cpm:+f.cpm||0,taxas:+f.taxas||0,cobrado:r.valorCobrado,custo:r.custoTotal,lucro:r.lucroLiquido,margem:r.margemPct,roi:r.roi,ind:r.indicador,obs:''};
-    Store.update(s=>s.emissoes.unshift(entry));
+    const pontos=+f.pontos||0;
+    const taxas=+f.taxas||0;
+    // Custo real: baseado no custo médio do estoque, congelado agora
+    const custoMedioReal  = Store.get().estoque[f.programa]?.custoMedio||0;
+    const custoMilhasReal = (pontos/1000)*custoMedioReal;
+    const custoTotalReal  = custoMilhasReal+taxas;
+    const entry={id:Date.now(),data:today(),programa:f.programa,tripType:f.tripType,pontos,
+      cpm:+f.cpm||0,taxas,cobrado:r.valorCobrado,
+      custo:r.custoTotal,lucro:r.lucroLiquido,margem:r.margemPct,roi:r.roi,ind:r.indicador,
+      // Custo real congelado — para relatórios precisos
+      custoMilhasReal,custoTotalReal,
+      obs:''};
+    Store.update(s=>{
+      s.emissoes.unshift(entry);
+      // Subtração correta do totalInvestido via custo médio proporcional
+      Engine.consumirEstoque(s.estoque[entry.programa], entry.pontos);
+    });
     SheetsAPI.send('emissoes',entry);
     AuditLog.registrar(AuditLog.TIPOS.EMISSAO, {...entry, origem:'CALCULADORA'});
-    Render.dashboard();Render.hist('all','all');
+    Render.dashboard();Render.hist('all','all');Render.stock();
     App.notify('✓ Emissão salva!','ok');
   },
 
@@ -2486,16 +2599,36 @@ const App={
   },
 
   saveEmissao(){
-    const pt=+document.getElementById('em-pontos').value||0,cpm2=+document.getElementById('em-cpm').value||0,tx2=+document.getElementById('em-taxas').value||0,cob=+document.getElementById('em-cobrado').value||0;
+    const pt=+document.getElementById('em-pontos').value||0,tx2=+document.getElementById('em-taxas').value||0,cob=+document.getElementById('em-cobrado').value||0;
+    const prog=document.getElementById('em-prog').value;
     if(!pt||!cob){App.notify('Preencha Pontos e Valor Cobrado.','er');return;}
+    // CPM declarado: usa o campo se preenchido; fallback = custo médio do estoque
+    const cpmDigitado=+document.getElementById('em-cpm').value||0;
+    const cpmFallback=Store.get().estoque[prog]?.custoMedio||0;
+    const cpm2=cpmDigitado||cpmFallback;
+    if(!cpm2){App.notify('Informe o CPM ou registre uma compra para calcular o custo médio.','er');return;}
+    if(!cpmDigitado&&cpmFallback){App.notify(`CPM não informado — usando custo médio do estoque (R$${cpmFallback.toFixed(2)}/mil).`,'');}
+    // Custo real: sempre baseado no custo médio do estoque, congelado agora
+    const custoMedioReal  = Store.get().estoque[prog]?.custoMedio||0;
+    const custoMilhasReal = (pt/1000)*custoMedioReal;
+    const custoTotalReal  = custoMilhasReal+tx2;
     const calc=Engine.calcEmissao({pontos:pt,cpm:cpm2,taxas:tx2,cobrado:cob});
-    const entry={id:Date.now(),data:today(),programa:document.getElementById('em-prog').value,tripType:document.getElementById('em-tipo').value,pontos:pt,cpm:cpm2,taxas:tx2,cobrado:cob,custo:calc.custo,lucro:calc.lucro,margem:calc.margem,roi:calc.roi,ind:calc.ind,obs:document.getElementById('em-obs').value.trim()};
-    Store.update(s=>s.emissoes.unshift(entry));
+    const entry={id:Date.now(),data:today(),programa:prog,tripType:document.getElementById('em-tipo').value,pontos:pt,
+      cpm:cpm2,taxas:tx2,cobrado:cob,
+      custo:calc.custo,lucro:calc.lucro,margem:calc.margem,roi:calc.roi,ind:calc.ind,
+      // Custo real congelado no momento da emissão — para relatórios precisos
+      custoMilhasReal,custoTotalReal,
+      obs:document.getElementById('em-obs').value.trim()};
+    Store.update(s=>{
+      s.emissoes.unshift(entry);
+      // Subtração correta do totalInvestido via custo médio proporcional
+      Engine.consumirEstoque(s.estoque[entry.programa], entry.pontos);
+    });
     SheetsAPI.send('emissoes',entry);
     AuditLog.registrar(AuditLog.TIPOS.EMISSAO, {...entry, origem:'FORMULARIO'});
     ['em-pontos','em-cpm','em-taxas','em-cobrado','em-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     document.getElementById('em-preview').style.display='none';
-    Render.dashboard();Render.hist('all','all');
+    Render.dashboard();Render.hist('all','all');Render.stock();
     App.notify('✓ Emissão registrada!','ok');
   },
 
@@ -2504,11 +2637,19 @@ const App={
     const total=+document.getElementById('cp-total').value||0;
     const cpm2=pt>0&&total>0?total/(pt/1000):(+document.getElementById('cp-cpm').value||0);
     const parc=+document.getElementById('cp-parcelas').value||1,pgpg=+document.getElementById('cp-pgpagas').value||0;
+    const taxa=+document.getElementById('cp-taxa')?.value||0;
     if(!pt){App.notify('Informe a quantidade de pontos.','er');return;}
     if(!total&&!cpm2){App.notify('Informe o valor total ou CPM.','er');return;}
     const valorTotal=total||(pt/1000*cpm2);
-    const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim()};
-    Store.update(s=>{s.compras.unshift(entry);const e=s.estoque[prog];const novoTotal=e.pontos+pt,novoInv=e.totalInvestido+(pt/1000)*cpm2;e.pontos=novoTotal;e.totalInvestido=novoInv;e.custoMedio=novoTotal>0?novoInv/(novoTotal/1000):0;});
+    const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal,taxa,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim()};
+    Store.update(s=>{
+      s.compras.unshift(entry);
+      const e=s.estoque[prog];
+      const novoTotal=e.pontos+pt, novoInv=e.totalInvestido+(pt/1000)*cpm2;
+      e.pontos=novoTotal; e.totalInvestido=novoInv;
+      e.custoMedio=novoTotal>0?novoInv/(novoTotal/1000):0;
+      Engine.normalizarEstoque(e);
+    });
     SheetsAPI.send('compras',entry);
     AuditLog.registrar(AuditLog.TIPOS.COMPRA, {...entry, parcelas:parc, origem:'FORMULARIO'});
     // Registrar parcelas individuais no log
@@ -2525,16 +2666,28 @@ const App={
     App.notify('✓ Compra registrada!','ok');
   },
 
-  clearCompra(){['cp-pontos','cp-total','cp-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const cpmEl=document.getElementById('cp-cpm');if(cpmEl)cpmEl.value='';const el=document.getElementById('cp-parcelas');if(el)el.value='1';const el2=document.getElementById('cp-pgpagas');if(el2)el2.value='0';},
+  clearCompra(){['cp-pontos','cp-total','cp-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const cpmEl=document.getElementById('cp-cpm');if(cpmEl)cpmEl.value='';const taxaEl=document.getElementById('cp-taxa');if(taxaEl)taxaEl.value='';const el=document.getElementById('cp-parcelas');if(el)el.value='1';const el2=document.getElementById('cp-pgpagas');if(el2)el2.value='0';},
 
   saveVenda(){
     const prog=document.getElementById('vd-prog').value,pt=+document.getElementById('vd-pontos').value||0,vpm=+document.getElementById('vd-vpm').value||0,total=+document.getElementById('vd-total').value||(pt/1000*vpm);
     const parc=Math.max(1,+document.getElementById('vd-parcelas')?.value||1);
     if(!pt){App.notify('Informe a quantidade de pontos.','er');return;}
-    const entry={id:Date.now(),data:document.getElementById('vd-data').value||today(),programa:prog,pontos:pt,valorPorMil:vpm,valorTotal:total,parcelas:parc,parcelasRecebidas:document.getElementById('vd-status').value==='recebido'?parc:0,status:document.getElementById('vd-status').value,canal:document.getElementById('vd-canal').value.trim(),obs:document.getElementById('vd-obs').value.trim()};
-    Store.update(s=>{s.vendas.unshift(entry);const e=s.estoque[prog];e.pontos=Math.max(0,e.pontos-pt);e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);});
+    if(!total){App.notify('Informe o valor total ou o valor por milheiro.','er');return;}
+    // Congelar custo unitário ANTES de alterar o estoque — garante que o lucro nunca mude
+    const custoUnitarioVenda = Store.get().estoque[prog]?.custoMedio||0;
+    const custoTotalVenda    = (pt/1000)*custoUnitarioVenda;
+    const lucroVenda         = total - custoTotalVenda;
+    const entry={id:Date.now(),data:document.getElementById('vd-data').value||today(),programa:prog,pontos:pt,valorPorMil:vpm,valorTotal:total,
+      // Custo congelado no momento da venda — imutável
+      custoUnitarioVenda,custoTotalVenda,lucroVenda,
+      parcelas:parc,parcelasRecebidas:document.getElementById('vd-status').value==='recebido'?parc:0,status:document.getElementById('vd-status').value,canal:document.getElementById('vd-canal').value.trim(),obs:document.getElementById('vd-obs').value.trim()};
+    Store.update(s=>{
+      s.vendas.unshift(entry);
+      // Subtração correta: descontar custo proporcional do totalInvestido
+      Engine.consumirEstoque(s.estoque[prog], pt);
+    });
     SheetsAPI.send('vendas',entry);
-    AuditLog.registrar(AuditLog.TIPOS.VENDA, {...entry, origem:'FORMULARIO'});
+    AuditLog.registrar(AuditLog.TIPOS.VENDA, {...entry, resultado:lucroVenda, origem:'FORMULARIO'});
     // Registrar parcelas de recebimento
     for(let i=0;i<parc;i++){
       AuditLog.registrar(AuditLog.TIPOS.RECEBIMENTO, {
@@ -2555,7 +2708,18 @@ const App={
     if(!oPts){App.notify('Informe os pontos de origem.','er');return;}
     if(orig===dest){App.notify('Origem e destino devem ser diferentes.','er');return;}
     const entry={id:Date.now(),data:today(),programaOrigem:orig,programaDestino:dest,pontosOrigem:oPts,pontosDestino:dPts,taxa,obs:document.getElementById('tf-obs').value.trim()};
-    Store.update(s=>{const eo=s.estoque[orig],ed=s.estoque[dest];eo.pontos=Math.max(0,eo.pontos-oPts);eo.totalInvestido=(eo.pontos/1000)*(eo.custoMedio||0);const cust=eo.custoMedio||0;ed.pontos+=dPts;ed.totalInvestido+=(dPts/1000)*cust;ed.custoMedio=ed.pontos>0?ed.totalInvestido/(ed.pontos/1000):0;s.transferencias.unshift(entry);});
+    Store.update(s=>{
+      const eo=s.estoque[orig], ed=s.estoque[dest];
+      // 1. Consumir milhas da origem — subtrai custo proporcional do totalInvestido
+      const custoTransferido = Engine.consumirEstoque(eo, oPts);
+      // 2. Creditar destino — custo aplicado SOMENTE nas milhas transferidas (oPts).
+      //    Milhas bônus (dPts - oPts) entram com custo zero, diluindo o custo médio.
+      ed.pontos         += dPts;
+      ed.totalInvestido  = Math.max(0,(ed.totalInvestido||0)+custoTransferido);
+      ed.custoMedio      = ed.pontos>0 ? ed.totalInvestido/(ed.pontos/1000) : 0;
+      Engine.normalizarEstoque(ed);
+      s.transferencias.unshift(entry);
+    });
     SheetsAPI.send('transferencias',entry);
     AuditLog.registrar(AuditLog.TIPOS.TRANSFERENCIA, {
       ...entry, quantidade: entry.pontosOrigem, valorTotal: entry.taxa||0,
@@ -2587,15 +2751,33 @@ const App={
   delEmissao(id){
     const reg=Store.get().emissoes.find(e=>e.id===id);
     if(reg)AuditLog.registrar(AuditLog.TIPOS.CANCELAMENTO,{...reg,obs:`CANCELAMENTO de emissão — ${reg.obs||''}`,origem:'EXCLUSAO_MANUAL'});
-    Store.update(s=>{s.emissoes=s.emissoes.filter(e=>e.id!==id);});
-    App.filterHist();Render.dashboard();App.notify('Emissão removida. Cancelamento registrado no log.','');
+    Store.update(s=>{
+      const em=s.emissoes.find(e=>e.id===id);
+      if(em){
+        // Restaurar milhas no estoque usando o custo congelado da emissão
+        const custoOriginal = em.custoTotalReal!=null ? em.custoTotalReal-( em.taxas||0) : (em.custo||0)-(em.taxas||0);
+        Engine.restaurarEstoque(s.estoque[em.programa], em.pontos||0, Math.max(0,custoOriginal));
+      }
+      s.emissoes=s.emissoes.filter(e=>e.id!==id);
+    });
+    App.filterHist();Render.stock();Render.dashboard();App.notify('Emissão removida. Cancelamento registrado no log.','');
   },
   delCompra(id){
     const reg=Store.get().compras.find(c=>c.id===id);
     if(reg)AuditLog.registrar(AuditLog.TIPOS.CANCELAMENTO,{...reg,pontos:reg.pontos,valorTotal:reg.valorTotal,obs:`CANCELAMENTO de compra — ${reg.obs||''}`,origem:'EXCLUSAO_MANUAL'});
     Store.update(s=>{
       const c=s.compras.find(x=>x.id===id);
-      if(c){const e=s.estoque[c.programa];if(e){e.pontos=Math.max(0,e.pontos-(c.pontos||0));e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);}}
+      if(c){
+        const e=s.estoque[c.programa];
+        if(e){
+          // Reversão correta: subtrair exatamente o custo que foi adicionado na compra
+          const custoCompra = (c.pontos/1000)*(c.custoPorMil||0);
+          e.pontos         = Math.max(0, e.pontos-(c.pontos||0));
+          e.totalInvestido = Math.max(0, (e.totalInvestido||0)-custoCompra);
+          e.custoMedio     = e.pontos>0 ? e.totalInvestido/(e.pontos/1000) : 0;
+          Engine.normalizarEstoque(e);
+        }
+      }
       s.compras=s.compras.filter(c=>c.id!==id);
     });
     Render.compras();Render.stock();Render.caixa();App.notify('Compra removida. Cancelamento registrado.','');
@@ -2605,7 +2787,11 @@ const App={
     if(reg)AuditLog.registrar(AuditLog.TIPOS.CANCELAMENTO,{...reg,obs:`CANCELAMENTO de venda — ${reg.obs||''}`,origem:'EXCLUSAO_MANUAL'});
     Store.update(s=>{
       const v=s.vendas.find(x=>x.id===id);
-      if(v){const e=s.estoque[v.programa];if(e){e.pontos+=(v.pontos||0);e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);}}
+      if(v){
+        // Restaurar milhas com o custo exato que foi retirado — congelado em custoTotalVenda
+        const custoOriginal = v.custoTotalVenda!=null ? v.custoTotalVenda : 0;
+        Engine.restaurarEstoque(s.estoque[v.programa], v.pontos||0, custoOriginal);
+      }
       s.vendas=s.vendas.filter(v=>v.id!==id);
     });
     Render.vendas();Render.stock();Render.caixa();App.notify('Venda removida. Cancelamento registrado.','');
@@ -2754,7 +2940,19 @@ const App={
     const obs=document.getElementById('mst-obs')?.value.trim()||'';
     if(!pts){App.notify('Informe a quantidade de pontos.','er');return;}
     const estoqueAntesDaOp=Store.get().estoque[prog]?.pontos||0; // captura ANTES
-    Store.update(s=>{const e=s.estoque[prog];if(App._stockOp==='add'){const nt=e.pontos+pts,ni=e.totalInvestido+(pts/1000)*cpm2;e.pontos=nt;e.totalInvestido=ni;e.custoMedio=nt>0?ni/(nt/1000):0;}else{e.pontos=Math.max(0,e.pontos-pts);e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);}});
+    Store.update(s=>{
+      const e=s.estoque[prog];
+      if(App._stockOp==='add'){
+        // Adição: lógica original (CPM informado manualmente)
+        const nt=e.pontos+pts, ni=e.totalInvestido+(pts/1000)*cpm2;
+        e.pontos=nt; e.totalInvestido=ni;
+        e.custoMedio=nt>0?ni/(nt/1000):0;
+        Engine.normalizarEstoque(e);
+      } else {
+        // Remoção: usar consumirEstoque para subtração proporcional correta
+        Engine.consumirEstoque(e, pts);
+      }
+    });
     const estAtual=Store.get().estoque[prog];
     const stockEntry={id:Date.now(),data:today(),programa:prog,operacao:App._stockOp,pontos:pts,custoPorMil:cpm2,saldoApos:estAtual.pontos,custoMedioApos:estAtual.custoMedio,obs};
     SheetsAPI.send('estoque',stockEntry);
