@@ -353,6 +353,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
   </div>
   <div class="nav-sec">
     <div class="nav-sec-lbl">Sistema</div>
+    <button class="nv" data-pg="auditoria"><span class="nv-ic">🔒</span>Auditoria</button>
     <button class="nv" data-pg="config"><span class="nv-ic">⚙</span>Configurações</button>
   </div>
 
@@ -674,6 +675,56 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
       <div class="sec">📅 Projeção dos Próximos 3 Meses</div>
       <div id="caixa-proj"></div>
     </div>
+  </div>
+</div>
+
+<!-- ════ AUDITORIA & RASTREABILIDADE ══════════════════════════════ -->
+<div class="pg" id="pg-auditoria">
+  <div class="ph">
+    <div>
+      <div class="ptitle">🔒 Auditoria & Rastreabilidade</div>
+      <div class="psub">Log imutável de todas as operações — verificação de consistência financeira</div>
+    </div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;">
+      <select id="aud-tipo-filt" style="padding:6px 10px;font-size:12px;min-width:150px;">
+        <option value="">Todos os Tipos</option>
+        <option value="COMPRA">Compras</option>
+        <option value="VENDA">Vendas</option>
+        <option value="TRANSFERENCIA">Transferências</option>
+        <option value="EMISSAO">Emissões</option>
+        <option value="PAGAMENTO">Pagamentos</option>
+        <option value="RECEBIMENTO">Recebimentos</option>
+        <option value="ESTOQUE_ADJ">Ajuste Estoque</option>
+        <option value="CANCELAMENTO">Cancelamentos</option>
+        <option value="VERIFICACAO">Verificações</option>
+      </select>
+      <input type="month" id="aud-mes-filt" style="padding:6px 10px;font-size:12px;background:var(--bg1);border:1px solid var(--bordermd);border-radius:var(--radius);color:var(--txt0);">
+      <button class="bprimary" style="padding:6px 16px;font-size:12px;" onclick="App.runVerificacao()">🔍 Verificar Consistência</button>
+      <button class="bsecond" style="padding:6px 14px;font-size:12px;" onclick="App.exportAuditCSV()">⤓ Exportar Log</button>
+    </div>
+  </div>
+  <div class="pb">
+
+    <!-- KPIs de auditoria -->
+    <div class="kgrid k4" id="aud-kpis" style="margin-bottom:20px;"></div>
+
+    <!-- Painel de verificação de consistência -->
+    <div id="aud-consistencia" style="margin-bottom:20px;display:none;">
+      <div class="card" style="border:1px solid var(--border);">
+        <div class="sec">📋 Resultado da Verificação de Consistência</div>
+        <div id="aud-consist-result"></div>
+      </div>
+    </div>
+
+    <!-- Log de auditoria -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="sec" style="margin:0;">📜 Log de Auditoria <span style="font-size:10px;color:var(--txt3);font-weight:400;">(somente leitura — append-only)</span></div>
+        <span id="aud-log-count" style="font-size:11px;color:var(--txt2);"></span>
+      </div>
+      <div id="aud-log-table"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1000,6 +1051,194 @@ const Engine={
 // ═══════════════════════════════════════════════════════════════
 // MERCADO ENGINE
 // ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// AUDIT ENGINE — Motor de Auditoria e Rastreabilidade
+// Registro imutável de todas as operações do sistema
+// ═══════════════════════════════════════════════════════════════
+const AuditLog = {
+  // Tipos canônicos de operação
+  TIPOS: {
+    COMPRA:         'COMPRA',
+    VENDA:          'VENDA',
+    TRANSFERENCIA:  'TRANSFERENCIA',
+    EMISSAO:        'EMISSAO',
+    ESTOQUE_ADJ:    'ESTOQUE_ADJ',
+    DESPESA:        'DESPESA',
+    COTACAO:        'COTACAO',
+    RECEBIMENTO:    'RECEBIMENTO',
+    PAGAMENTO:      'PAGAMENTO',
+    CANCELAMENTO:   'CANCELAMENTO',
+    ALTERACAO:      'ALTERACAO',
+    VERIFICACAO:    'VERIFICACAO',
+  },
+
+  // Registrar uma operação no log de auditoria (append-only)
+  registrar(tipo, dados){
+    const ts = Date.now();
+    const entrada = {
+      id_log:       'LOG-' + ts + '-' + Math.random().toString(36).slice(2,7).toUpperCase(),
+      id_operacao:  dados.id_operacao || dados.id || ts,
+      tipo_operacao: tipo,
+      programa:     dados.programa || dados.programaOrigem || '—',
+      programa_dest: dados.programaDestino || null,
+      quantidade:   dados.pontos || dados.pontosOrigem || dados.quantidade || 0,
+      valor_total:  dados.valorTotal || dados.valor || dados.cobrado || 0,
+      valor_milheiro: dados.custoPorMil || dados.valorPorMil || dados.cpm || dados.valorMilheiro || 0,
+      taxas:        dados.taxas || dados.taxa || 0,
+      resultado:    dados.lucro != null ? dados.lucro : (dados.resultado != null ? dados.resultado : null),
+      data_operacao: dados.data || today(),
+      hora_operacao: new Date().toLocaleTimeString('pt-BR'),
+      ts_unix:      ts,
+      // Rastreabilidade de alterações
+      campo_alterado: dados.campoAlterado || null,
+      valor_anterior: dados.valorAnterior != null ? dados.valorAnterior : null,
+      valor_novo:     dados.valorNovo     != null ? dados.valorNovo     : null,
+      // Parcelamento
+      parcelas:     dados.parcelas || null,
+      parcela_num:  dados.parcelaNum || null,
+      parcela_status: dados.parcelaStatus || null,
+      // Origem
+      origem:       dados.origem || 'SISTEMA',
+      obs:          dados.obs || '',
+      // Hash de integridade (simples — soma de campos críticos)
+      hash:         AuditLog._hash(tipo, dados),
+    };
+    Store.update(s => {
+      if(!s.audit) s.audit = [];
+      s.audit.push(entrada);   // append-only — nunca remove
+    });
+    // Envia para o Google Sheets (aba _auditoria)
+    SheetsAPI.send('_auditoria', entrada);
+    return entrada;
+  },
+
+  // Hash simples de integridade — detecta adulteração offline
+  _hash(tipo, dados) {
+    const str = tipo + '|' + (dados.id||'') + '|' + (dados.valorTotal||0) + '|' + (dados.pontos||0) + '|' + (dados.programa||'');
+    let h = 0;
+    for(let i=0; i<str.length; i++) h = ((h<<5)-h+str.charCodeAt(i))|0;
+    return Math.abs(h).toString(16).toUpperCase().padStart(8,'0');
+  },
+
+  // Retorna log filtrado (leitura apenas)
+  getLogs(filtros = {}){
+    const logs = (Store.get().audit || []);
+    let r = [...logs];
+    if(filtros.tipo)     r = r.filter(l => l.tipo_operacao === filtros.tipo);
+    if(filtros.programa) r = r.filter(l => l.programa === filtros.programa || l.programa_dest === filtros.programa);
+    if(filtros.mes){
+      r = r.filter(l => {
+        const d = l.data_operacao || '';
+        return d.startsWith(filtros.mes);
+      });
+    }
+    return r.sort((a,b) => b.ts_unix - a.ts_unix);
+  },
+
+  // ── VERIFICAÇÃO DE CONSISTÊNCIA ────────────────────────────────
+  verificarConsistencia(){
+    const s = Store.get();
+    const erros = [];
+    const avisos = [];
+
+    // 1. Recalcular estoque a partir das operações
+    const estoqueCalc = {};
+    PROGRAMS.forEach(p => { estoqueCalc[p.id] = { pontos:0, totalInvestido:0 }; });
+
+    s.compras.forEach(c => {
+      const e = estoqueCalc[c.programa];
+      if(e){ e.pontos += c.pontos||0; e.totalInvestido += (c.pontos/1000)*(c.custoPorMil||0); }
+    });
+    s.vendas.forEach(v => {
+      const e = estoqueCalc[v.programa];
+      if(e){ e.pontos = Math.max(0, e.pontos-(v.pontos||0)); }
+    });
+    s.transferencias.forEach(t => {
+      const eo = estoqueCalc[t.programaOrigem];
+      const ed = estoqueCalc[t.programaDestino];
+      if(eo) eo.pontos = Math.max(0, eo.pontos-(t.pontosOrigem||0));
+      if(ed) ed.pontos += t.pontosDestino||0;
+    });
+
+    // Comparar com estoque armazenado
+    PROGRAMS.forEach(p => {
+      const stored = s.estoque[p.id]||{pontos:0};
+      const calc   = estoqueCalc[p.id]||{pontos:0};
+      const diff   = Math.abs((stored.pontos||0) - (calc.pontos||0));
+      if(diff > 0){
+        erros.push({
+          area: 'ESTOQUE',
+          programa: p.name,
+          descricao: `Divergência de ${N(diff)} pts`,
+          valorArmazenado: stored.pontos||0,
+          valorCalculado:  calc.pontos||0,
+          severidade: diff > 1000 ? 'CRÍTICO' : 'AVISO',
+        });
+      }
+    });
+
+    // 2. Verificar integridade do log (hashes)
+    const logs = Store.get().audit || [];
+    logs.forEach(log => {
+      const hashEsperado = AuditLog._hash(log.tipo_operacao, {
+        id: log.id_operacao, valorTotal: log.valor_total,
+        pontos: log.quantidade, programa: log.programa
+      });
+      if(log.hash && log.hash !== hashEsperado){
+        erros.push({
+          area: 'AUDITORIA',
+          programa: log.programa,
+          descricao: `Hash inválido no log ${log.id_log} — possível adulteração`,
+          valorArmazenado: log.hash,
+          valorCalculado:  hashEsperado,
+          severidade: 'CRÍTICO',
+        });
+      }
+    });
+
+    // 3. Vendas sem cobertura de estoque
+    s.vendas.forEach(v => {
+      const comp = s.compras.filter(c=>c.programa===v.programa).reduce((a,c)=>a+(c.pontos||0),0);
+      const vend = s.vendas.filter(x=>x.programa===v.programa).reduce((a,x)=>a+(x.pontos||0),0);
+      if(vend > comp){
+        avisos.push({
+          area: 'VENDA',
+          programa: progById(v.programa).name,
+          descricao: 'Vendas superam total comprado neste programa',
+          valorArmazenado: vend,
+          valorCalculado: comp,
+          severidade: 'AVISO',
+        });
+      }
+    });
+
+    // 4. Compras parceladas — parcelas pagas vs saldo caixa
+    const aPagar = s.compras.reduce((a,c)=>{
+      const rest = Math.max(0,(c.parcelas||1)-(c.parcelasPagas||0));
+      return a + rest*((c.valorTotal||0)/(c.parcelas||1));
+    },0);
+    if(aPagar > 0){
+      avisos.push({
+        area: 'CAIXA',
+        programa: 'Geral',
+        descricao: `${R$(aPagar)} em parcelas de compras em aberto`,
+        valorArmazenado: aPagar,
+        valorCalculado: 0,
+        severidade: 'INFO',
+      });
+    }
+
+    // Registrar verificação no log
+    AuditLog.registrar(AuditLog.TIPOS.VERIFICACAO, {
+      obs: `Verificação manual: ${erros.length} erros, ${avisos.length} avisos`,
+      resultado: erros.length === 0 ? 1 : -erros.length,
+    });
+
+    return { erros, avisos, ok: erros.length === 0 };
+  },
+};
+
 const MercadoEngine={
   // Retorna o preço mais recente de um programa.
   // Sort primário: data DESC. Sort secundário: id DESC (desempata cotações do mesmo dia)
@@ -1064,7 +1303,7 @@ const MercadoEngine={
 const Store=(()=>{
   const KEY='milesarb_v4';
   const defaultEst=()=>{const o={};PROGRAMS.forEach(p=>{o[p.id]={pontos:0,custoMedio:0,totalInvestido:0}});return o;};
-  const def=()=>({emissoes:[],compras:[],vendas:[],transferencias:[],despesas:[],estoque:defaultEst(),calcForm:{programa:'azul',tripType:'ida',pontos:'',taxas:'',cpm:'',mercado:'',lucroDesejado:'30',desconto:'35'},settings:{sheetsUrl:SHEETS_URL,theme:'dark'},mercado:{cotacoes:[],historico:[],promocoes:[]},_syncTs:0});
+  const def=()=>({emissoes:[],compras:[],vendas:[],transferencias:[],despesas:[],estoque:defaultEst(),audit:[],calcForm:{programa:'azul',tripType:'ida',pontos:'',taxas:'',cpm:'',mercado:'',lucroDesejado:'30',desconto:'35'},settings:{sheetsUrl:SHEETS_URL,theme:'dark'},mercado:{cotacoes:[],historico:[],promocoes:[]},_syncTs:0});
   let s=def();
   let _saveDebounce=null;
 
@@ -1529,6 +1768,110 @@ const Render={
     const r5=[...em].slice(0,5);
     document.getElementById('dash-recent').innerHTML=r5.length?r5.map(e=>{const p=progById(e.programa),col=e.ind==='green'?'var(--grn)':e.ind==='yellow'?'var(--yel)':'var(--red)';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">${IND[e.ind]?.e}</span><div><div style="font-size:12px;color:var(--txt1);">${p.short}${e.obs?' · '+e.obs:''}</div><div style="font-size:10px;color:var(--txt3);">${e.data}</div></div></div><div style="text-align:right;"><div style="font-family:var(--font-mono);font-size:13px;color:${col};font-weight:500;">${R$(e.lucro||0)}</div><div style="font-size:10px;color:var(--txt3);">${pct(e.margem||0)}</div></div></div>`;}).join(''):H.emptyState('Nenhuma emissão ainda','Use a Calculadora para começar');
   },
+  /* ── AUDITORIA ───────────────────────────────── */
+  auditoria(){
+    const logs=AuditLog.getLogs({
+      tipo:  document.getElementById('aud-tipo-filt')?.value||'',
+      mes:   document.getElementById('aud-mes-filt')?.value||'',
+    });
+    const allLogs=Store.get().audit||[];
+
+    // KPIs
+    const totalOps=allLogs.length;
+    const cancelamentos=allLogs.filter(l=>l.tipo_operacao==='CANCELAMENTO').length;
+    const verificacoes=allLogs.filter(l=>l.tipo_operacao==='VERIFICACAO').length;
+    const ultimaVer=allLogs.filter(l=>l.tipo_operacao==='VERIFICACAO').sort((a,b)=>b.ts_unix-a.ts_unix)[0];
+    document.getElementById('aud-kpis').innerHTML=[
+      H.kcard('Total de Logs',totalOps,'eventos registrados','📜','c'),
+      H.kcard('Cancelamentos',cancelamentos,'operações revertidas','⚠','r'),
+      H.kcard('Verificações',verificacoes,'checagens realizadas','🔍','g'),
+      H.kcard('Última Verificação',ultimaVer?ultimaVer.data_operacao:'Nunca','consistência financeira','✓','o'),
+    ].join('');
+
+    document.getElementById('aud-log-count').textContent=`${logs.length} registros exibidos de ${totalOps} totais`;
+
+    if(!logs.length){
+      document.getElementById('aud-log-table').innerHTML=H.emptyState('Nenhum log de auditoria','Realize operações no sistema para gerar registros');
+      return;
+    }
+
+    // Cores por tipo
+    const tipoMeta={
+      COMPRA:        {cor:'var(--red)',   icon:'↓', label:'COMPRA'},
+      VENDA:         {cor:'var(--grn)',   icon:'↑', label:'VENDA'},
+      TRANSFERENCIA: {cor:'var(--cyan)',  icon:'⇄', label:'TRANSFER.'},
+      EMISSAO:       {cor:'var(--gold)',  icon:'✦', label:'EMISSÃO'},
+      PAGAMENTO:     {cor:'var(--yel)',   icon:'💳', label:'PAGAMENTO'},
+      RECEBIMENTO:   {cor:'var(--grn)',   icon:'💰', label:'RECEBIM.'},
+      ESTOQUE_ADJ:   {cor:'var(--purple)','icon':'▦', label:'ESTOQUE'},
+      CANCELAMENTO:  {cor:'var(--red)',   icon:'✕', label:'CANCELAM.'},
+      VERIFICACAO:   {cor:'var(--cyan)',  icon:'🔍', label:'VERIF.'},
+      DESPESA:       {cor:'var(--red)',   icon:'📤', label:'DESPESA'},
+      ALTERACAO:     {cor:'var(--yel)',   icon:'✎', label:'ALTERAÇÃO'},
+    };
+
+    document.getElementById('aud-log-table').innerHTML=`<div style="overflow-x:auto;">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th style="min-width:80px;">ID Log</th>
+            <th>Tipo</th>
+            <th>Data</th>
+            <th>Hora</th>
+            <th>Programa</th>
+            <th style="text-align:right;">Qtd Milhas</th>
+            <th style="text-align:right;">Valor Total</th>
+            <th style="text-align:right;">R$/Mil</th>
+            <th style="text-align:right;">Taxas</th>
+            <th style="text-align:right;">Resultado</th>
+            <th>Parcela</th>
+            <th>Status Parc.</th>
+            <th>Alteração</th>
+            <th>Origem</th>
+            <th style="font-family:var(--font-mono);font-size:9px;">Hash</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs.map(l=>{
+            const tm=tipoMeta[l.tipo_operacao]||{cor:'var(--txt2)',icon:'?',label:l.tipo_operacao};
+            const p=progById(l.programa);
+            const pDest=l.programa_dest?progById(l.programa_dest):null;
+            const progCell=pDest
+              ?`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:${p.color};"></span>${p.short}<span style="color:var(--txt3);">→</span>${pDest.short}</span>`
+              :`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:${p.color};"></span>${p.short}</span>`;
+            const alteracao=l.campo_alterado
+              ?`<span style="font-size:10px;color:var(--txt2);">${l.campo_alterado}: <span style="color:var(--red);">${l.valor_anterior??'—'}</span> → <span style="color:var(--grn);">${l.valor_novo??'—'}</span></span>`
+              :'<span style="color:var(--txt3);">—</span>';
+            const parcCell=l.parcela_num!=null
+              ?`<span style="font-family:var(--font-mono);font-size:11px;">${l.parcela_num}/${l.parcelas||'?'}</span>`
+              :'<span style="color:var(--txt3);">—</span>';
+            const parcStatus=l.parcela_status
+              ?H.tag(l.parcela_status,l.parcela_status==='pago'||l.parcela_status==='recebido'?'g':'y')
+              :'<span style="color:var(--txt3);">—</span>';
+            const resColor=l.resultado==null?'var(--txt3)':l.resultado>=0?'var(--grn)':'var(--red)';
+            return `<tr>
+              <td style="font-family:var(--font-mono);font-size:9px;color:var(--txt3);">${l.id_log}</td>
+              <td><span style="color:${tm.cor};font-weight:700;font-size:11px;">${tm.icon} ${tm.label}</span></td>
+              <td style="font-size:11px;color:var(--txt2);white-space:nowrap;">${l.data_operacao||'—'}</td>
+              <td style="font-size:10px;color:var(--txt3);">${l.hora_operacao||'—'}</td>
+              <td>${progCell}</td>
+              <td style="font-family:var(--font-mono);text-align:right;">${l.quantidade>0?N(l.quantidade):'—'}</td>
+              <td style="font-family:var(--font-mono);font-weight:600;color:${tm.cor};text-align:right;">${l.valor_total>0?R$(l.valor_total):'—'}</td>
+              <td style="font-size:11px;text-align:right;">${l.valor_milheiro>0?R$(l.valor_milheiro)+'/mil':'—'}</td>
+              <td style="font-size:11px;text-align:right;color:var(--yel);">${l.taxas>0?R$(l.taxas):'—'}</td>
+              <td style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:${resColor};text-align:right;">${l.resultado!=null?R$(l.resultado):'—'}</td>
+              <td style="text-align:center;">${parcCell}</td>
+              <td>${parcStatus}</td>
+              <td>${alteracao}</td>
+              <td style="font-size:10px;color:var(--txt3);">${l.origem||'—'}</td>
+              <td style="font-family:var(--font-mono);font-size:9px;color:var(--txt3);letter-spacing:.04em;">${l.hash||'—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  },
+
   /* ── OPERAÇÕES HISTORY ────────────────────────── */
   operacoes(){
     const s=Store.get();
@@ -1720,7 +2063,7 @@ const Render={
   /* ── ALL ─────────────────────────────────────── */
   all(){
     Render.dashboard();Render.calc();Render.strat();Render.sim();Render.stock();
-    Render.hist('all','all');Render.compras();Render.vendas();Render.transfs();Render.operacoes();
+    Render.hist('all','all');Render.compras();Render.vendas();Render.transfs();Render.operacoes();Render.auditoria();
     const now=new Date();Render.dre(now.getMonth()+1,now.getFullYear());Render.caixa();
     Render.updateThemeBtn();
     MercadoRender.summary();MercadoRender.precosAtuais();MercadoRender.histList();MercadoRender.promocoes();
@@ -2047,6 +2390,16 @@ const App={
     document.getElementById('sidebar')?.classList.remove('open');
     document.getElementById('mobile-overlay')?.classList.remove('open');
     if(pg==='dashboard')setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),80);
+    if(pg==='auditoria'){
+      const mfEl2=document.getElementById('aud-mes-filt');
+      if(mfEl2&&!mfEl2.value)mfEl2.value=new Date().toISOString().slice(0,7);
+      Render.auditoria();
+      if(!document.getElementById('aud-tipo-filt')._wiredAud){
+        document.getElementById('aud-tipo-filt')._wiredAud=true;
+        document.getElementById('aud-tipo-filt')?.addEventListener('change',()=>Render.auditoria());
+        document.getElementById('aud-mes-filt')?.addEventListener('change',()=>Render.auditoria());
+      }
+    }
     if(pg==='operacoes'){
       // Populate prog filter on first open
       const pf=document.getElementById('ops-prog-filt');
@@ -2121,6 +2474,7 @@ const App={
     const entry={id:Date.now(),data:today(),programa:f.programa,tripType:f.tripType,pontos:+f.pontos||0,cpm:+f.cpm||0,taxas:+f.taxas||0,cobrado:r.valorCobrado,custo:r.custoTotal,lucro:r.lucroLiquido,margem:r.margemPct,roi:r.roi,ind:r.indicador,obs:''};
     Store.update(s=>s.emissoes.unshift(entry));
     SheetsAPI.send('emissoes',entry);
+    AuditLog.registrar(AuditLog.TIPOS.EMISSAO, {...entry, origem:'CALCULADORA'});
     Render.dashboard();Render.hist('all','all');
     App.notify('✓ Emissão salva!','ok');
   },
@@ -2138,6 +2492,7 @@ const App={
     const entry={id:Date.now(),data:today(),programa:document.getElementById('em-prog').value,tripType:document.getElementById('em-tipo').value,pontos:pt,cpm:cpm2,taxas:tx2,cobrado:cob,custo:calc.custo,lucro:calc.lucro,margem:calc.margem,roi:calc.roi,ind:calc.ind,obs:document.getElementById('em-obs').value.trim()};
     Store.update(s=>s.emissoes.unshift(entry));
     SheetsAPI.send('emissoes',entry);
+    AuditLog.registrar(AuditLog.TIPOS.EMISSAO, {...entry, origem:'FORMULARIO'});
     ['em-pontos','em-cpm','em-taxas','em-cobrado','em-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     document.getElementById('em-preview').style.display='none';
     Render.dashboard();Render.hist('all','all');
@@ -2155,6 +2510,17 @@ const App={
     const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim()};
     Store.update(s=>{s.compras.unshift(entry);const e=s.estoque[prog];const novoTotal=e.pontos+pt,novoInv=e.totalInvestido+(pt/1000)*cpm2;e.pontos=novoTotal;e.totalInvestido=novoInv;e.custoMedio=novoTotal>0?novoInv/(novoTotal/1000):0;});
     SheetsAPI.send('compras',entry);
+    AuditLog.registrar(AuditLog.TIPOS.COMPRA, {...entry, parcelas:parc, origem:'FORMULARIO'});
+    // Registrar parcelas individuais no log
+    for(let i=0;i<parc;i++){
+      AuditLog.registrar(AuditLog.TIPOS.PAGAMENTO, {
+        id_operacao: entry.id, programa: entry.programa,
+        valorTotal: valorTotal/parc, parcelas: parc, parcelaNum: i+1,
+        parcelaStatus: i<pgpg?'pago':'pendente',
+        obs: `Parcela ${i+1}/${parc} — Compra ${progById(entry.programa).name}`,
+        origem:'AUTO',
+      });
+    }
     App.clearCompra();Render.compras();Render.stock();Render.dashboard();Render.caixa();
     App.notify('✓ Compra registrada!','ok');
   },
@@ -2168,6 +2534,17 @@ const App={
     const entry={id:Date.now(),data:document.getElementById('vd-data').value||today(),programa:prog,pontos:pt,valorPorMil:vpm,valorTotal:total,parcelas:parc,parcelasRecebidas:document.getElementById('vd-status').value==='recebido'?parc:0,status:document.getElementById('vd-status').value,canal:document.getElementById('vd-canal').value.trim(),obs:document.getElementById('vd-obs').value.trim()};
     Store.update(s=>{s.vendas.unshift(entry);const e=s.estoque[prog];e.pontos=Math.max(0,e.pontos-pt);e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);});
     SheetsAPI.send('vendas',entry);
+    AuditLog.registrar(AuditLog.TIPOS.VENDA, {...entry, origem:'FORMULARIO'});
+    // Registrar parcelas de recebimento
+    for(let i=0;i<parc;i++){
+      AuditLog.registrar(AuditLog.TIPOS.RECEBIMENTO, {
+        id_operacao: entry.id, programa: entry.programa,
+        valorTotal: total/parc, parcelas: parc, parcelaNum: i+1,
+        parcelaStatus: entry.status==='recebido'?'recebido':'pendente',
+        obs: `Parcela ${i+1}/${parc} — Venda ${progById(entry.programa).name}`,
+        origem:'AUTO',
+      });
+    }
     ['vd-pontos','vd-vpm','vd-total','vd-canal','vd-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     Render.vendas();Render.stock();Render.dashboard();Render.caixa();
     App.notify('✓ Venda registrada!','ok');
@@ -2180,6 +2557,11 @@ const App={
     const entry={id:Date.now(),data:today(),programaOrigem:orig,programaDestino:dest,pontosOrigem:oPts,pontosDestino:dPts,taxa,obs:document.getElementById('tf-obs').value.trim()};
     Store.update(s=>{const eo=s.estoque[orig],ed=s.estoque[dest];eo.pontos=Math.max(0,eo.pontos-oPts);eo.totalInvestido=(eo.pontos/1000)*(eo.custoMedio||0);const cust=eo.custoMedio||0;ed.pontos+=dPts;ed.totalInvestido+=(dPts/1000)*cust;ed.custoMedio=ed.pontos>0?ed.totalInvestido/(ed.pontos/1000):0;s.transferencias.unshift(entry);});
     SheetsAPI.send('transferencias',entry);
+    AuditLog.registrar(AuditLog.TIPOS.TRANSFERENCIA, {
+      ...entry, quantidade: entry.pontosOrigem, valorTotal: entry.taxa||0,
+      origem:'FORMULARIO',
+      obs: `${progById(entry.programaOrigem).name} → ${progById(entry.programaDestino).name}: ${N(entry.pontosOrigem)} pts`,
+    });
     ['tf-orig-pts','tf-dest-pts','tf-taxa','tf-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     Render.transfs();Render.stock();Render.dashboard();
     App.notify('✓ Transferência registrada!','ok');
@@ -2191,6 +2573,10 @@ const App={
     const entry={id:Date.now(),descricao:desc,valor:val,categoria:document.getElementById('dp-cat').value,mes,ano,data:today()};
     Store.update(s=>s.despesas.unshift(entry));
     SheetsAPI.send('despesas',entry);
+    AuditLog.registrar(AuditLog.TIPOS.DESPESA, {
+      ...entry, quantidade: 0, valorTotal: entry.valor,
+      origem:'FORMULARIO',
+    });
     document.getElementById('dp-desc').value='';document.getElementById('dp-val').value='';
     App.renderDRE();
     App.notify('✓ Despesa lançada!','ok');
@@ -2198,13 +2584,141 @@ const App={
 
   renderDRE(){const m=+document.getElementById('dre-mes').value,a=+document.getElementById('dre-ano').value;if(m&&a)Render.dre(m,a);},
 
-  delEmissao(id){Store.update(s=>{s.emissoes=s.emissoes.filter(e=>e.id!==id);});App.filterHist();Render.dashboard();App.notify('Emissão removida.','');},
-  delCompra(id){Store.update(s=>{s.compras=s.compras.filter(c=>c.id!==id);});Render.compras();Render.caixa();App.notify('Compra removida.','');},
-  delVenda(id){Store.update(s=>{s.vendas=s.vendas.filter(v=>v.id!==id);});Render.vendas();Render.caixa();App.notify('Venda removida.','');},
-  delTransf(id){Store.update(s=>{s.transferencias=s.transferencias.filter(t=>t.id!==id);});Render.transfs();App.notify('Transferência removida.','');},
-  delDesp(id){Store.update(s=>{s.despesas=s.despesas.filter(d=>d.id!==id);});App.renderDRE();App.notify('Despesa removida.','');},
+  delEmissao(id){
+    const reg=Store.get().emissoes.find(e=>e.id===id);
+    if(reg)AuditLog.registrar(AuditLog.TIPOS.CANCELAMENTO,{...reg,obs:`CANCELAMENTO de emissão — ${reg.obs||''}`,origem:'EXCLUSAO_MANUAL'});
+    Store.update(s=>{s.emissoes=s.emissoes.filter(e=>e.id!==id);});
+    App.filterHist();Render.dashboard();App.notify('Emissão removida. Cancelamento registrado no log.','');
+  },
+  delCompra(id){
+    const reg=Store.get().compras.find(c=>c.id===id);
+    if(reg)AuditLog.registrar(AuditLog.TIPOS.CANCELAMENTO,{...reg,pontos:reg.pontos,valorTotal:reg.valorTotal,obs:`CANCELAMENTO de compra — ${reg.obs||''}`,origem:'EXCLUSAO_MANUAL'});
+    Store.update(s=>{
+      const c=s.compras.find(x=>x.id===id);
+      if(c){const e=s.estoque[c.programa];if(e){e.pontos=Math.max(0,e.pontos-(c.pontos||0));e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);}}
+      s.compras=s.compras.filter(c=>c.id!==id);
+    });
+    Render.compras();Render.stock();Render.caixa();App.notify('Compra removida. Cancelamento registrado.','');
+  },
+  delVenda(id){
+    const reg=Store.get().vendas.find(v=>v.id===id);
+    if(reg)AuditLog.registrar(AuditLog.TIPOS.CANCELAMENTO,{...reg,obs:`CANCELAMENTO de venda — ${reg.obs||''}`,origem:'EXCLUSAO_MANUAL'});
+    Store.update(s=>{
+      const v=s.vendas.find(x=>x.id===id);
+      if(v){const e=s.estoque[v.programa];if(e){e.pontos+=(v.pontos||0);e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);}}
+      s.vendas=s.vendas.filter(v=>v.id!==id);
+    });
+    Render.vendas();Render.stock();Render.caixa();App.notify('Venda removida. Cancelamento registrado.','');
+  },
+  delTransf(id){
+    const reg=Store.get().transferencias.find(t=>t.id===id);
+    if(reg)AuditLog.registrar(AuditLog.TIPOS.CANCELAMENTO,{...reg,pontos:reg.pontosOrigem,obs:`CANCELAMENTO de transferência — ${reg.obs||''}`,origem:'EXCLUSAO_MANUAL'});
+    Store.update(s=>{s.transferencias=s.transferencias.filter(t=>t.id!==id);});
+    Render.transfs();App.notify('Transferência removida. Cancelamento registrado.','');
+  },
+  delDesp(id){
+    const reg=Store.get().despesas.find(d=>d.id===id);
+    if(reg)AuditLog.registrar(AuditLog.TIPOS.CANCELAMENTO,{...reg,valorTotal:reg.valor,obs:`CANCELAMENTO de despesa — ${reg.descricao||''}`,origem:'EXCLUSAO_MANUAL'});
+    Store.update(s=>{s.despesas=s.despesas.filter(d=>d.id!==id);});
+    App.renderDRE();App.notify('Despesa removida. Cancelamento registrado.','');
+  },
 
   filterHist(){const fp=document.getElementById('filt-prog').value||'all',fs=document.getElementById('filt-status').value||'all';Render.hist(fp,fs);},
+  // ── AUDITORIA: VERIFICAR CONSISTÊNCIA ──────────────
+  runVerificacao(){
+    const resultado = AuditLog.verificarConsistencia();
+    const panel = document.getElementById('aud-consistencia');
+    const resultEl = document.getElementById('aud-consist-result');
+    if(!panel||!resultEl) return;
+
+    panel.style.display='block';
+    const { erros, avisos, ok } = resultado;
+
+    let html = '';
+
+    // Banner de status
+    if(ok && avisos.length===0){
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:14px;background:rgba(0,200,83,.1);border:1px solid var(--grn);border-radius:var(--radius);margin-bottom:14px;">
+        <span style="font-size:20px;">✅</span>
+        <div><div style="font-weight:700;color:var(--grn);">Sistema Consistente</div><div style="font-size:12px;color:var(--txt2);">Nenhuma divergência encontrada em estoque, caixa ou log de auditoria.</div></div>
+      </div>`;
+    } else {
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:14px;background:rgba(198,40,40,.1);border:1px solid var(--red);border-radius:var(--radius);margin-bottom:14px;">
+        <span style="font-size:20px;">${erros.length>0?'🚨':'⚠️'}</span>
+        <div><div style="font-weight:700;color:${erros.length>0?'var(--red)':'var(--yel)'};">${erros.length>0?erros.length+' Erro(s) Crítico(s)':'Sistema com Avisos'}</div>
+        <div style="font-size:12px;color:var(--txt2);">${erros.length} erros críticos · ${avisos.length} avisos</div></div>
+      </div>`;
+    }
+
+    // Erros críticos
+    if(erros.length){
+      html += `<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">🚨 Erros Críticos</div>`;
+      erros.forEach(e=>{
+        html += `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 14px;background:rgba(198,40,40,.08);border:1px solid rgba(198,40,40,.25);border-radius:var(--radius);margin-bottom:6px;">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--red);">[${e.area}] ${e.programa}</div>
+            <div style="font-size:11px;color:var(--txt2);margin-top:2px;">${e.descricao}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:16px;">
+            <div style="font-size:10px;color:var(--txt3);">Armazenado</div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--red);">${typeof e.valorArmazenado==='number'?N(e.valorArmazenado):e.valorArmazenado}</div>
+            <div style="font-size:10px;color:var(--txt3);margin-top:4px;">Calculado</div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--grn);">${typeof e.valorCalculado==='number'?N(e.valorCalculado):e.valorCalculado}</div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Avisos
+    if(avisos.length){
+      html += `<div><div style="font-size:11px;font-weight:700;color:var(--yel);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">⚠️ Avisos</div>`;
+      avisos.forEach(a=>{
+        const isInfo=a.severidade==='INFO';
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:rgba(249,168,37,.07);border:1px solid rgba(249,168,37,.2);border-radius:var(--radius);margin-bottom:5px;">
+          <div>
+            <div style="font-size:12px;color:var(--yel);font-weight:600;">[${a.area}] ${a.programa}</div>
+            <div style="font-size:11px;color:var(--txt2);">${a.descricao}</div>
+          </div>
+          ${!isInfo?`<div style="text-align:right;flex-shrink:0;"><span style="font-family:var(--font-mono);font-size:12px;color:var(--yel);">${typeof a.valorArmazenado==='number'?R$(a.valorArmazenado):a.valorArmazenado}</span></div>`:''}
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    resultEl.innerHTML=html;
+    Render.auditoria(); // Refresh log to show the new verification entry
+    App.notify(ok?'✅ Consistência OK!':'⚠️ Divergências encontradas — verifique o painel',ok?'ok':'er');
+  },
+
+  // ── EXPORTAR LOG DE AUDITORIA CSV ────────────────────
+  exportAuditCSV(){
+    const logs=Store.get().audit||[];
+    if(!logs.length){App.notify('Nenhum log para exportar.','er');return;}
+    const header=['ID_LOG','ID_OPERACAO','TIPO_OPERACAO','PROGRAMA','PROGRAMA_DESTINO','QUANTIDADE_MILHAS','VALOR_TOTAL','VALOR_MILHEIRO','TAXAS','RESULTADO','DATA_OPERACAO','HORA_OPERACAO','TS_UNIX','CAMPO_ALTERADO','VALOR_ANTERIOR','VALOR_NOVO','PARCELA_NUM','TOTAL_PARCELAS','STATUS_PARCELA','ORIGEM','OBS','HASH'];
+    const rows=[header];
+    logs.sort((a,b)=>b.ts_unix-a.ts_unix).forEach(l=>{
+      rows.push([
+        l.id_log||'',l.id_operacao||'',l.tipo_operacao||'',
+        progById(l.programa).name,l.programa_dest?progById(l.programa_dest).name:'',
+        l.quantidade||0,l.valor_total||0,l.valor_milheiro||0,l.taxas||0,
+        l.resultado!=null?l.resultado:'',
+        l.data_operacao||'',l.hora_operacao||'',l.ts_unix||'',
+        l.campo_alterado||'',l.valor_anterior!=null?l.valor_anterior:'',l.valor_novo!=null?l.valor_novo:'',
+        l.parcela_num!=null?l.parcela_num:'',l.parcelas||'',l.parcela_status||'',
+        l.origem||'',l.obs||'',l.hash||''
+      ]);
+    });
+    const nl='\n';
+    const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join(nl);
+    const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`MilesArb_AuditLog_${today()}.csv`;a.click();
+    URL.revokeObjectURL(url);
+    App.notify('✓ Log de auditoria exportado!','ok');
+  },
+
   // ── EXPORTAR HISTÓRICO DE OPERAÇÕES CSV ──────────────
   exportOpsCSV(){
     const s=Store.get();
@@ -2239,17 +2753,63 @@ const App={
     const prog=document.getElementById('mst-prog').value,pts=+document.getElementById('mst-pontos').value||0,cpm2=+document.getElementById('mst-cpm').value||0;
     const obs=document.getElementById('mst-obs')?.value.trim()||'';
     if(!pts){App.notify('Informe a quantidade de pontos.','er');return;}
+    const estoqueAntesDaOp=Store.get().estoque[prog]?.pontos||0; // captura ANTES
     Store.update(s=>{const e=s.estoque[prog];if(App._stockOp==='add'){const nt=e.pontos+pts,ni=e.totalInvestido+(pts/1000)*cpm2;e.pontos=nt;e.totalInvestido=ni;e.custoMedio=nt>0?ni/(nt/1000):0;}else{e.pontos=Math.max(0,e.pontos-pts);e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);}});
     const estAtual=Store.get().estoque[prog];
-    SheetsAPI.send('estoque',{id:Date.now(),data:today(),programa:prog,operacao:App._stockOp,pontos:pts,custoPorMil:cpm2,saldoApos:estAtual.pontos,custoMedioApos:estAtual.custoMedio,obs});
+    const stockEntry={id:Date.now(),data:today(),programa:prog,operacao:App._stockOp,pontos:pts,custoPorMil:cpm2,saldoApos:estAtual.pontos,custoMedioApos:estAtual.custoMedio,obs};
+    SheetsAPI.send('estoque',stockEntry);
+    AuditLog.registrar(AuditLog.TIPOS.ESTOQUE_ADJ, {
+      ...stockEntry,
+      valorTotal: (pts/1000)*cpm2, quantidade: pts,
+      campoAlterado: 'pontos',
+      valorAnterior: estoqueAntesDaOp,
+      valorNovo: estAtual.pontos,
+      origem: 'AJUSTE_MANUAL',
+    });
     App.closeModal('modal-stock');Render.stock();Render.dashboard();
     App.notify(`✓ Estoque ${App._stockOp==='add'?'adicionado':'removido'}!`,'ok');
   },
 
   openRecvModal(id){document.getElementById('recv-id').value=id;document.getElementById('modal-recv').classList.add('open');},
-  confirmRecv(){const id=+document.getElementById('recv-id').value;Store.update(s=>{const v=s.vendas.find(v=>v.id===id);if(v){v.status='recebido';v.parcelasRecebidas=v.parcelas||1;}});SheetsAPI.send('recebimentos',{id,data:today(),status:'recebido'});App.closeModal('modal-recv');Render.vendas();Render.caixa();App.notify('✓ Recebimento confirmado!','ok');},
-  confirmParcRecv(id){Store.update(s=>{const v=s.vendas.find(v=>v.id===id);if(v){v.parcelasRecebidas=(v.parcelasRecebidas||0)+1;if(v.parcelasRecebidas>=(v.parcelas||1))v.status='recebido';}});SheetsAPI.send('recebimentos',{id,data:today(),status:'parcial'});Render.vendas();Render.caixa();App.notify('✓ Parcela confirmada!','ok');},
-  confirmPagamento(id){Store.update(s=>{const c=s.compras.find(c=>c.id===id);if(c){c.parcelasPagas=(c.parcelasPagas||0)+1;}});SheetsAPI.send('pagamentos',{id,data:today(),acao:'fatura_paga'});Render.compras();Render.caixa();App.notify('✓ Fatura marcada como paga!','ok');},
+  confirmRecv(){
+    const id=+document.getElementById('recv-id').value;
+    const venda=Store.get().vendas.find(v=>v.id===id);
+    Store.update(s=>{const v=s.vendas.find(v=>v.id===id);if(v){v.status='recebido';v.parcelasRecebidas=v.parcelas||1;}});
+    SheetsAPI.send('recebimentos',{id,data:today(),status:'recebido'});
+    if(venda)AuditLog.registrar(AuditLog.TIPOS.RECEBIMENTO,{
+      id_operacao:id, programa:venda.programa, valorTotal:venda.valorTotal,
+      parcelaStatus:'recebido', campoAlterado:'status',
+      valorAnterior:'pendente', valorNovo:'recebido', origem:'CONFIRMACAO_MANUAL',
+    });
+    App.closeModal('modal-recv');Render.vendas();Render.caixa();App.notify('✓ Recebimento confirmado!','ok');
+  },
+  confirmParcRecv(id){
+    const venda=Store.get().vendas.find(v=>v.id===id);
+    const parcelaAtual=(venda?.parcelasRecebidas||0)+1;
+    Store.update(s=>{const v=s.vendas.find(v=>v.id===id);if(v){v.parcelasRecebidas=(v.parcelasRecebidas||0)+1;if(v.parcelasRecebidas>=(v.parcelas||1))v.status='recebido';}});
+    SheetsAPI.send('recebimentos',{id,data:today(),status:'parcial'});
+    if(venda)AuditLog.registrar(AuditLog.TIPOS.RECEBIMENTO,{
+      id_operacao:id, programa:venda.programa,
+      valorTotal:(venda.valorTotal||0)/(venda.parcelas||1),
+      parcelaNum:parcelaAtual, parcelas:venda.parcelas||1,
+      parcelaStatus:'recebido', origem:'CONFIRMACAO_PARCELA',
+    });
+    Render.vendas();Render.caixa();App.notify('✓ Parcela confirmada!','ok');
+  },
+  confirmPagamento(id){
+    const compra=Store.get().compras.find(c=>c.id===id);
+    const parcelaAtual=(compra?.parcelasPagas||0)+1;
+    Store.update(s=>{const c=s.compras.find(c=>c.id===id);if(c){c.parcelasPagas=(c.parcelasPagas||0)+1;}});
+    SheetsAPI.send('pagamentos',{id,data:today(),acao:'fatura_paga'});
+    if(compra)AuditLog.registrar(AuditLog.TIPOS.PAGAMENTO,{
+      id_operacao:id, programa:compra.programa,
+      valorTotal:(compra.valorTotal||0)/(compra.parcelas||1),
+      parcelaNum:parcelaAtual, parcelas:compra.parcelas||1,
+      parcelaStatus:'pago', campoAlterado:'parcelasPagas',
+      valorAnterior:parcelaAtual-1, valorNovo:parcelaAtual, origem:'CONFIRMACAO_PAGAMENTO',
+    });
+    Render.compras();Render.caixa();App.notify('✓ Fatura marcada como paga!','ok');
+  },
 
   exportCSV(){
     const em=Store.get().emissoes;if(!em.length){App.notify('Nenhuma emissão para exportar.','er');return;}
