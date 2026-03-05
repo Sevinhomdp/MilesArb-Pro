@@ -748,15 +748,22 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 <div class="pg" id="pg-operacoes">
   <div class="ph">
     <div><div class="ptitle">📋 Histórico de Operações</div><div class="psub">Registro completo de compras, vendas e transferências</div></div>
-    <div style="display:flex;gap:9px;">
-      <select id="ops-tipo-filt" style="padding:6px 10px;font-size:12px;min-width:140px;"><option value="all">Todos os Tipos</option><option value="compras">Compras</option><option value="vendas">Vendas</option><option value="transferencias">Transferências</option></select>
-      <select id="ops-prog-filt" style="padding:6px 10px;font-size:12px;min-width:140px;"></select>
+    <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;">
+      <select id="ops-tipo-filt" style="padding:6px 10px;font-size:12px;min-width:130px;">
+        <option value="all">Todos os Tipos</option>
+        <option value="compras">Compras</option>
+        <option value="vendas">Vendas</option>
+        <option value="transferencias">Transferências</option>
+      </select>
+      <select id="ops-prog-filt" style="padding:6px 10px;font-size:12px;min-width:160px;"></select>
+      <input type="month" id="ops-mes-filt" style="padding:6px 10px;font-size:12px;background:var(--bg1);border:1px solid var(--bordermd);border-radius:var(--radius);color:var(--txt0);">
+      <button class="bsecond" style="padding:6px 14px;font-size:12px;" onclick="App.exportOpsCSV()">⤓ Exportar CSV</button>
     </div>
   </div>
   <div class="pb">
     <div class="kgrid k4" id="ops-kpis" style="margin-bottom:20px;"></div>
     <div class="card">
-      <div class="sec">Registro de Operações</div>
+      <div class="sec">Registro Permanente de Operações</div>
       <div id="ops-table"></div>
     </div>
   </div>
@@ -994,13 +1001,23 @@ const Engine={
 // MERCADO ENGINE
 // ═══════════════════════════════════════════════════════════════
 const MercadoEngine={
+  // Retorna o preço mais recente de um programa.
+  // Sort primário: data DESC. Sort secundário: id DESC (desempata cotações do mesmo dia)
   getLatestPrice(progId){
     const hist=Store.get().mercado?.historico||[];
     if(!hist.length)return null;
-    const progEntries=hist.filter(h=>h.programaId===progId).sort((a,b)=>new Date(b.data)-new Date(a.data));
+    const progEntries=hist
+      .filter(h=>h.programaId===progId)
+      .sort((a,b)=>{
+        const dd=new Date(b.data)-new Date(a.data);
+        if(dd!==0)return dd;          // datas diferentes: mais recente primeiro
+        return (b.id||0)-(a.id||0);  // mesmo dia: mais recentemente processado primeiro
+      });
     if(!progEntries.length)return null;
     const latestDate=progEntries[0].data;
+    // Filtra apenas o dia mais recente, já em ordem id DESC
     const latest=progEntries.filter(h=>h.data===latestDate);
+    // Prioridade: HOT 150d > HOT qualquer prazo > MAX > maior valor disponível
     const hot150=latest.find(h=>h.categoria==='HOT'&&h.prazo===150);
     if(hot150)return hot150.valor;
     const hot=latest.find(h=>h.categoria==='HOT');
@@ -1017,11 +1034,21 @@ const MercadoEngine={
   getSummary(){
     const hist=Store.get().mercado?.historico||[];
     if(!hist.length)return null;
-    const dates=[...new Set(hist.map(h=>h.data))].sort().reverse();
+    // Datas únicas ordenadas — mais recente primeiro (ISO YYYY-MM-DD ordena como string)
+    const dates=[...new Set(hist.map(h=>h.data))].sort((a,b)=>b.localeCompare(a));
     const latestDate=dates[0];
     const prevDate=dates[1]||null;
-    const latest=hist.filter(h=>h.data===latestDate&&h.categoria==='HOT');
-    const prev=prevDate?hist.filter(h=>h.data===prevDate&&h.categoria==='HOT'):[];
+    // Para cada programa, pegar apenas o registo mais recentemente processado (id DESC)
+    const dedupHOT=(date)=>{
+      const byProg={};
+      hist
+        .filter(h=>h.data===date&&h.categoria==='HOT')
+        .sort((a,b)=>(b.id||0)-(a.id||0))
+        .forEach(h=>{if(!byProg[h.programaId])byProg[h.programaId]=h;});
+      return Object.values(byProg);
+    };
+    const latest=dedupHOT(latestDate);
+    const prev=prevDate?dedupHOT(prevDate):[];
     if(!latest.length)return null;
     const changes=latest.map(l=>{const p=prev.find(x=>x.programaId===l.programaId);const chg=p?((l.valor-p.valor)/p.valor)*100:0;return{...l,change:chg};});
     const highestChange=changes.reduce((a,b)=>b.change>a.change?b:a,changes[0]);
@@ -1507,25 +1534,148 @@ const Render={
     const s=Store.get();
     const tipoFilt=document.getElementById('ops-tipo-filt')?.value||'all';
     const progFilt=document.getElementById('ops-prog-filt')?.value||'all';
+    const mesFilt=document.getElementById('ops-mes-filt')?.value||'';  // ex: "2026-03"
+
+    // Montar lista unificada com campos normalizados
     let ops=[];
-    if(tipoFilt==='all'||tipoFilt==='compras')s.compras.forEach(c=>ops.push({...c,_tipo:'Compra',_color:'var(--red)',_icon:'↓'}));
-    if(tipoFilt==='all'||tipoFilt==='vendas')s.vendas.forEach(v=>ops.push({...v,_tipo:'Venda',_color:'var(--grn)',_icon:'↑'}));
-    if(tipoFilt==='all'||tipoFilt==='transferencias')s.transferencias.forEach(t=>ops.push({...t,_tipo:'Transfer.',_color:'var(--cyan)',_icon:'⇄',programa:t.programaOrigem}));
-    if(progFilt!=='all')ops=ops.filter(o=>o.programa===progFilt);
+    if(tipoFilt==='all'||tipoFilt==='compras'){
+      s.compras.forEach(c=>ops.push({
+        _tipo:'Compra',_color:'var(--red)',_icon:'↓',
+        id:c.id, data:c.data, programa:c.programa,
+        pontos:c.pontos||0,
+        valorTotal:c.valorTotal||0,
+        cpm:c.custoPorMil||0,        // custo por milheiro
+        taxas:c.taxa||0,             // taxa se houver
+        lucro:null,                  // não se aplica a compras isoladas
+        parcelas:c.parcelas||1,
+        parcelasPagas:c.parcelasPagas||0,
+        status:((c.parcelasPagas||0)>=(c.parcelas||1))?'quitado':'pendente',
+        obs:c.obs||'',
+        categoria:c.categoria||'',
+        programaDestino:null
+      }));
+    }
+    if(tipoFilt==='all'||tipoFilt==='vendas'){
+      s.vendas.forEach(v=>{
+        // Lucro bruto estimado = valor venda - custo de estoque atual
+        const est=s.estoque[v.programa]||{custoMedio:0};
+        const custoVenda=(v.pontos/1000)*(est.custoMedio||0);
+        const lucroBruto=(v.valorTotal||0)-custoVenda;
+        ops.push({
+          _tipo:'Venda',_color:'var(--grn)',_icon:'↑',
+          id:v.id, data:v.data, programa:v.programa,
+          pontos:v.pontos||0,
+          valorTotal:v.valorTotal||0,
+          cpm:v.valorPorMil||0,
+          taxas:0,
+          lucro:lucroBruto,
+          parcelas:v.parcelas||1,
+          parcelasPagas:v.parcelasRecebidas||0,
+          status:v.status||'pendente',
+          obs:v.obs||'',
+          categoria:v.canal||'',
+          programaDestino:null
+        });
+      });
+    }
+    if(tipoFilt==='all'||tipoFilt==='transferencias'){
+      s.transferencias.forEach(t=>ops.push({
+        _tipo:'Transfer.',_color:'var(--cyan)',_icon:'⇄',
+        id:t.id, data:t.data, programa:t.programaOrigem,
+        pontos:t.pontosOrigem||0,
+        valorTotal:0,
+        cpm:0,
+        taxas:t.taxa||0,
+        lucro:null,
+        parcelas:1, parcelasPagas:1,
+        status:'concluído',
+        obs:t.obs||'',
+        categoria:'',
+        programaDestino:t.programaDestino
+      }));
+    }
+
+    // Filtro por programa
+    if(progFilt!=='all')ops=ops.filter(o=>o.programa===progFilt||o.programaDestino===progFilt);
+    // Filtro por mês (YYYY-MM)
+    if(mesFilt)ops=ops.filter(o=>(o.data||'').startsWith(mesFilt));
+
     ops.sort((a,b)=>new Date(b.data||0)-new Date(a.data||0));
-    const totC=s.compras.reduce((a,c)=>a+(c.valorTotal||0),0),totV=s.vendas.reduce((a,v)=>a+(v.valorTotal||0),0);
-    const totPC=s.compras.reduce((a,c)=>a+(c.pontos||0),0),totPV=s.vendas.reduce((a,v)=>a+(v.pontos||0),0);
-    document.getElementById('ops-kpis').innerHTML=[H.kcard('Total Comprado',R$(totC),N(totPC)+' pts','↓','r'),H.kcard('Total Vendido',R$(totV),N(totPV)+' pts','↑','g'),H.kcard('Saldo (V−C)',R$(totV-totC),'resultado bruto','⟳',totV>=totC?'g':'r'),H.kcard('Operações',ops.length,'registradas','≡','c')].join('');
-    if(!ops.length){document.getElementById('ops-table').innerHTML=H.emptyState('Nenhuma operação','Registre compras, vendas e transferências');return;}
-    document.getElementById('ops-table').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Tipo</th><th>Data</th><th>Programa</th><th>Pontos</th><th>Valor Total</th><th>CPM/VPM</th><th>Parcelas</th><th>Status</th><th>Obs</th></tr></thead><tbody>${ops.map(o=>{
-      const p=progById(o.programa),parc=o.parcelas||1;
-      const parcSt=o._tipo==='Compra'?`${o.parcelasPagas||0}/${parc}`:o._tipo==='Venda'?`${o.parcelasRecebidas||0}/${parc}`:'—';
-      const cpmv=o._tipo==='Compra'?R$(o.custoPorMil||0)+'/mil':o._tipo==='Venda'?R$(o.valorPorMil||0)+'/mil':'—';
-      const quitado=o._tipo==='Compra'?(o.parcelasPagas||0)>=(o.parcelas||1):o.status==='recebido';
-      const stTag=o._tipo==='Transfer.'?'—':H.tag(quitado?'✅ Quitado':'⏳ Pendente',quitado?'g':'y');
-      const dest=o.programaDestino?` → ${progById(o.programaDestino).short}`:'';
-      return`<tr><td><span style="color:${o._color};font-weight:700;">${o._icon} ${o._tipo}</span></td><td style="color:var(--txt2);font-size:11px;">${o.data||'—'}</td><td><span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:${p.color};flex-shrink:0;"></span>${p.short}${dest}</span></td><td style="font-family:var(--font-mono);">${N(o.pontos||o.pontosOrigem||0)}</td><td style="font-family:var(--font-mono);color:${o._color};font-weight:600;">${R$(o.valorTotal||0)}</td><td style="font-size:11px;">${cpmv}</td><td style="font-size:11px;">${parcSt}</td><td>${stTag}</td><td style="font-size:11px;color:var(--txt2);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${o.obs||'—'}</td></tr>`;
-    }).join('')}</tbody></table></div>`;
+
+    // KPIs sempre sobre todos os dados sem filtro de mês para contexto geral
+    const totC=s.compras.reduce((a,c)=>a+(c.valorTotal||0),0);
+    const totV=s.vendas.reduce((a,v)=>a+(v.valorTotal||0),0);
+    const totPtsC=s.compras.reduce((a,c)=>a+(c.pontos||0),0);
+    const totPtsV=s.vendas.reduce((a,v)=>a+(v.pontos||0),0);
+    const lucroTotal=s.vendas.reduce((a,v)=>{
+      const est=s.estoque[v.programa]||{custoMedio:0};
+      return a+(v.valorTotal||0)-((v.pontos/1000)*(est.custoMedio||0));
+    },0);
+    document.getElementById('ops-kpis').innerHTML=[
+      H.kcard('Capital Investido (C)',R$(totC),N(totPtsC)+' pts comprados','↓','r'),
+      H.kcard('Receita de Vendas (V)',R$(totV),N(totPtsV)+' pts vendidos','↑','g'),
+      H.kcard('Resultado Bruto (V−C)',R$(totV-totC),'vendas − compras','⟳',totV>=totC?'g':'r'),
+      H.kcard('Operações no Filtro',ops.length,'itens exibidos','≡','c'),
+    ].join('');
+
+    if(!ops.length){
+      document.getElementById('ops-table').innerHTML=H.emptyState('Nenhuma operação encontrada','Ajuste os filtros ou registre operações');
+      return;
+    }
+
+    document.getElementById('ops-table').innerHTML=`<div style="overflow-x:auto;">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Data</th>
+            <th>Programa</th>
+            <th>Qtd. Milhas</th>
+            <th>Valor Total</th>
+            <th>Valor/Milheiro</th>
+            <th>Taxas</th>
+            <th>Lucro Est.</th>
+            <th>Parcelas</th>
+            <th>Status</th>
+            <th>Obs</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ops.map(o=>{
+            const p=progById(o.programa);
+            const dest=o.programaDestino?` <span style="color:var(--cyan);">→ ${progById(o.programaDestino).short}</span>`:'';
+            const cpmStr=o.cpm>0?`<span style="font-family:var(--font-mono);font-size:11px;">${R$(o.cpm)}/mil</span>`:'<span style="color:var(--txt3);">—</span>';
+            const taxStr=o.taxas>0?`<span style="font-family:var(--font-mono);font-size:11px;color:var(--yel);">-${R$(o.taxas)}</span>`:'<span style="color:var(--txt3);">—</span>';
+            const lucroStr=o.lucro!==null
+              ?`<span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:${o.lucro>=0?'var(--grn)':'var(--red)'};">${R$(o.lucro)}</span>`
+              :'<span style="color:var(--txt3);">—</span>';
+            const parc=o.parcelas||1;
+            const parcSt=parc>1?`${o.parcelasPagas||0}/${parc}`:'—';
+            const stLower=(o.status||'').toLowerCase();
+            const stOk=stLower==='quitado'||stLower==='recebido'||stLower==='concluído';
+            const stTag=H.tag(stOk?`✅ ${o.status}`:`⏳ ${o.status}`,stOk?'g':'y');
+            return `<tr>
+              <td><span style="color:${o._color};font-weight:700;font-size:12px;">${o._icon} ${o._tipo}</span></td>
+              <td style="color:var(--txt2);font-size:11px;white-space:nowrap;">${o.data||'—'}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:5px;">
+                  <span style="width:7px;height:7px;border-radius:50%;background:${p.color};flex-shrink:0;"></span>
+                  <span style="font-size:12px;">${p.short}${dest}</span>
+                </div>
+              </td>
+              <td style="font-family:var(--font-mono);text-align:right;">${N(o.pontos)}</td>
+              <td style="font-family:var(--font-mono);font-weight:600;color:${o._color};text-align:right;">${o.valorTotal>0?R$(o.valorTotal):'—'}</td>
+              <td style="text-align:right;">${cpmStr}</td>
+              <td style="text-align:right;">${taxStr}</td>
+              <td style="text-align:right;">${lucroStr}</td>
+              <td style="font-size:11px;color:var(--txt2);text-align:center;">${parcSt}</td>
+              <td>${stTag}</td>
+              <td style="font-size:11px;color:var(--txt2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.obs||o.categoria||'—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
   },
 
   /* ── CHART ───────────────────────────────────── */
@@ -1605,11 +1755,20 @@ const MercadoRender={
     const el=document.getElementById('mkt-precos-atuais');
     if(!el)return;
     if(!hist.length){el.innerHTML=H.emptyState('Nenhuma cotação inserida','Cole uma mensagem do CotaMilhas e processe com Gemini');return;}
-    const dates=[...new Set(hist.map(h=>h.data))].sort().reverse();
+    const dates=[...new Set(hist.map(h=>h.data))].sort((a,b)=>b.localeCompare(a));
     const latestDate=dates[0];
-    const latest=hist.filter(h=>h.data===latestDate);
+    // Deduplicar: para cada (prog, categoria, prazo) manter só o mais recente (id DESC)
     const byProg={};
-    latest.forEach(h=>{if(!byProg[h.programaId])byProg[h.programaId]={};if(!byProg[h.programaId][h.categoria])byProg[h.programaId][h.categoria]=[];byProg[h.programaId][h.categoria].push(h);});
+    hist
+      .filter(h=>h.data===latestDate)
+      .sort((a,b)=>(b.id||0)-(a.id||0))   // mais recente primeiro
+      .forEach(h=>{
+        if(!byProg[h.programaId])byProg[h.programaId]={};
+        if(!byProg[h.programaId][h.categoria])byProg[h.programaId][h.categoria]=[];
+        // Só adiciona se não houver entrada igual (mesmo prazo) mais recente já adicionada
+        const jaExiste=byProg[h.programaId][h.categoria].some(e=>e.prazo===h.prazo);
+        if(!jaExiste)byProg[h.programaId][h.categoria].push(h);
+      });
     const orderedProgs=PROGRAMS.filter(p=>byProg[p.id]);
     el.innerHTML=orderedProgs.map(p=>{
       const cats=byProg[p.id];
@@ -1889,12 +2048,22 @@ const App={
     document.getElementById('mobile-overlay')?.classList.remove('open');
     if(pg==='dashboard')setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),80);
     if(pg==='operacoes'){
-      Render.operacoes();
-      // populate prog filter
+      // Populate prog filter on first open
       const pf=document.getElementById('ops-prog-filt');
-      if(pf&&pf.options.length<=1){pf.innerHTML='<option value="all">Todos os Programas</option>'+PROGRAMS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');}
-      document.getElementById('ops-tipo-filt')?.addEventListener('change',()=>Render.operacoes());
-      document.getElementById('ops-prog-filt')?.addEventListener('change',()=>Render.operacoes());
+      if(pf&&pf.options.length<=1){
+        pf.innerHTML='<option value="all">Todos os Programas</option>'+PROGRAMS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+      }
+      // Default: mês atual no filtro
+      const mfEl=document.getElementById('ops-mes-filt');
+      if(mfEl&&!mfEl.value)mfEl.value=new Date().toISOString().slice(0,7);
+      Render.operacoes();
+      // Wire filters (apenas uma vez, verifica se já foi attachado)
+      if(!document.getElementById('ops-tipo-filt')._wired){
+        document.getElementById('ops-tipo-filt')._wired=true;
+        document.getElementById('ops-tipo-filt')?.addEventListener('change',()=>Render.operacoes());
+        document.getElementById('ops-prog-filt')?.addEventListener('change',()=>Render.operacoes());
+        document.getElementById('ops-mes-filt')?.addEventListener('change',()=>Render.operacoes());
+      }
     }
     if(pg==='hist')Render.hist(document.getElementById('filt-prog').value||'all',document.getElementById('filt-status').value||'all');
     if(pg==='caixa')Render.caixa();
@@ -2036,6 +2205,30 @@ const App={
   delDesp(id){Store.update(s=>{s.despesas=s.despesas.filter(d=>d.id!==id);});App.renderDRE();App.notify('Despesa removida.','');},
 
   filterHist(){const fp=document.getElementById('filt-prog').value||'all',fs=document.getElementById('filt-status').value||'all';Render.hist(fp,fs);},
+  // ── EXPORTAR HISTÓRICO DE OPERAÇÕES CSV ──────────────
+  exportOpsCSV(){
+    const s=Store.get();
+    const rows=[['Tipo','Data','Programa','Qtd Milhas','Valor Total','Valor por Milheiro','Taxas','Lucro Estimado','Parcelas','Pagas/Recebidas','Status','Obs']];
+    s.compras.forEach(c=>{
+      rows.push(['Compra',c.data||'',progById(c.programa).name,c.pontos||0,c.valorTotal||0,c.custoPorMil||0,c.taxa||0,'N/A',c.parcelas||1,c.parcelasPagas||0,(c.parcelasPagas||0)>=(c.parcelas||1)?'Quitado':'Pendente',c.obs||'']);
+    });
+    s.vendas.forEach(v=>{
+      const est=s.estoque[v.programa]||{custoMedio:0};
+      const lucro=(v.valorTotal||0)-((v.pontos/1000)*(est.custoMedio||0));
+      rows.push(['Venda',v.data||'',progById(v.programa).name,v.pontos||0,v.valorTotal||0,v.valorPorMil||0,0,lucro.toFixed(2),v.parcelas||1,v.parcelasRecebidas||0,v.status||'pendente',v.obs||'']);
+    });
+    s.transferencias.forEach(t=>{
+      rows.push(['Transferência',t.data||'',progById(t.programaOrigem).name+' → '+progById(t.programaDestino||'outro').name,t.pontosOrigem||0,0,0,t.taxa||0,'N/A',1,1,'Concluído',t.obs||'']);
+    });
+    const nl='\n';const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join(nl);
+    const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`MilesArb_Historico_${today()}.csv`;a.click();
+    URL.revokeObjectURL(url);
+    App.notify('✓ CSV exportado!','ok');
+  },
+
   clearHist(){if(!confirm('Apagar TODOS os registros de emissões?'))return;Store.update(s=>s.emissoes=[]);App.filterHist();Render.dashboard();App.notify('Histórico limpo.','');},
 
   openStockModal(prog,op){const p=progById(prog);document.getElementById('mst-prog').value=prog;document.getElementById('mst-title').textContent=`Ajustar Estoque — ${p.name}`;App.setStockOp(op);document.getElementById('mst-pontos').value='';document.getElementById('mst-cpm').value='';document.getElementById('mst-obs').value='';document.getElementById('modal-stock').classList.add('open');},
