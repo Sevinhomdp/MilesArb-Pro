@@ -234,6 +234,33 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 .login-title{font-size:22px;font-weight:800;color:var(--txt0);margin-bottom:5px;letter-spacing:-.03em}
 .login-sub{font-size:12px;color:var(--txt2);margin-bottom:26px}
 .login-err{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
+/* ═══════ RESPONSIVIDADE MOBILE ══════════════════════════════════ */
+@media(max-width:768px){
+  :root{--sidebar-w:0px}
+  #sidebar{position:fixed;left:-230px;width:230px;z-index:100;transition:left .25s ease;box-shadow:4px 0 20px rgba(0,0,0,.4)}
+  #sidebar.open{left:0}
+  #layout{flex-direction:column}
+  #content{height:100vh}
+  .ph{padding:12px 16px;flex-wrap:wrap;gap:8px}
+  .ptitle{font-size:16px}
+  .pb{padding:14px 16px 30px}
+  .kgrid.k4{grid-template-columns:repeat(2,1fr)}
+  .kgrid.k3{grid-template-columns:repeat(2,1fr)}
+  .kgrid.k2{grid-template-columns:1fr}
+  .frow.fr2,.frow.fr3{grid-template-columns:1fr}
+  .dtbl{font-size:11px}
+  .dtbl th,.dtbl td{padding:7px 6px;white-space:nowrap}
+  #stock-cards{grid-template-columns:1fr!important}
+  .mbox{min-width:100%}
+  #cloud-status{bottom:12px;right:12px;font-size:10px;padding:4px 10px}
+  .logo-area{padding:14px 12px 10px}
+  /* Mobile menu toggle button */
+  #mobile-menu-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:16px;color:var(--txt1);position:fixed;top:14px;left:14px;z-index:200;}
+  #mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+  #mobile-overlay.open{display:block}
+}
+@media(min-width:769px){#mobile-menu-btn{display:none}#mobile-overlay{display:none!important}}
+
 /* ═══════ CLOUD STATUS ═══════════════════════════════════════════ */
 #cloud-status{
   display:inline-flex;align-items:center;gap:7px;
@@ -284,6 +311,8 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 </div>
 
 <!-- ══════ MAIN LAYOUT ═══════════════════════════════════════════ -->
+<button id="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('mobile-overlay').classList.toggle('open');" aria-label="Menu">☰</button>
+<div id="mobile-overlay" onclick="document.getElementById('sidebar').classList.remove('open');document.getElementById('mobile-overlay').classList.remove('open');"></div>
 <div id="layout" style="display:none;">
 
 <!-- SIDEBAR -->
@@ -318,6 +347,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
     <div class="nav-sec-lbl">Controle</div>
     <button class="nv" data-pg="estoque"><span class="nv-ic">▦</span>Estoque de Milhas</button>
     <button class="nv" data-pg="hist"><span class="nv-ic">≡</span>Histórico <span class="nv-badge" id="badge-hist">0</span></button>
+    <button class="nv" data-pg="operacoes"><span class="nv-ic">📋</span>Operações</button>
     <button class="nv" data-pg="dre"><span class="nv-ic">📊</span>DRE Mensal</button>
     <button class="nv" data-pg="caixa"><span class="nv-ic">💳</span>Projeção de Caixa</button>
   </div>
@@ -450,8 +480,8 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
         </div>
         <div class="frow fr3">
           <div class="fgrp"><div class="flbl">Quantidade de Pontos</div><div class="iwrap"><input type="number" id="cp-pontos" placeholder="50000"><span class="isuf">pts</span></div></div>
-          <div class="fgrp"><div class="flbl">Custo por Milheiro</div><div class="iwrap"><input type="number" id="cp-cpm" placeholder="28,50"><span class="isuf">R$/mil</span></div></div>
-          <div class="fgrp"><div class="flbl">Valor Total</div><div class="iwrap"><input type="number" id="cp-total" placeholder="Auto"><span class="isuf">R$</span></div></div>
+          <div class="fgrp"><div class="flbl">Valor Total Pago <span style="color:var(--cyan);font-size:10px;">★ Principal</span></div><div class="iwrap"><input type="number" id="cp-total" placeholder="1.425,00"><span class="isuf">R$</span></div></div>
+          <div class="fgrp"><div class="flbl">CPM Calculado <span style="color:var(--txt2);font-size:10px;">(auto)</span></div><div class="iwrap"><input type="number" id="cp-cpm" placeholder="Auto" readonly style="background:var(--bg3);cursor:not-allowed;"><span class="isuf">R$/mil</span></div></div>
         </div>
         <div class="frow fr3">
           <div class="fgrp"><div class="flbl">Nº de Parcelas</div><div class="iwrap"><input type="number" id="cp-parcelas" value="1" min="1"><span class="isuf">x</span></div></div>
@@ -487,6 +517,10 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
           <div class="fgrp"><div class="flbl">Quantidade de Pontos</div><div class="iwrap"><input type="number" id="vd-pontos" placeholder="50000"><span class="isuf">pts</span></div></div>
           <div class="fgrp"><div class="flbl">Valor por Milheiro</div><div class="iwrap"><input type="number" id="vd-vpm" placeholder="25,00"><span class="isuf">R$/mil</span></div></div>
           <div class="fgrp"><div class="flbl">Valor Total</div><div class="iwrap"><input type="number" id="vd-total" placeholder="Auto"><span class="isuf">R$</span></div></div>
+        </div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Parcelas do Recebimento</div><div class="iwrap"><input type="number" id="vd-parcelas" placeholder="1" min="1" value="1"><span class="isuf">x</span></div></div>
+          <div class="fgrp"><div class="flbl">Valor por Parcela</div><div class="iwrap"><input type="number" id="vd-vparc" placeholder="Auto" readonly style="background:var(--bg3);cursor:not-allowed;"><span class="isuf">R$</span></div></div>
         </div>
         <div class="frow fr2">
           <div class="fgrp"><div class="flbl">Status do Pagamento</div><select id="vd-status"><option value="pendente">⏳ Aguardando Recebimento</option><option value="recebido">✅ Recebido</option></select></div>
@@ -564,8 +598,8 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 <div class="pg" id="pg-estoque">
   <div class="ph"><div><div class="ptitle">Estoque de Milhas</div><div class="psub">Saldo por programa com custo médio ponderado</div></div></div>
   <div class="pb">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;" id="stock-cards"></div>
-    <div class="card"><div class="sec">Resumo do Portfólio</div><div class="kgrid k4" id="stock-sum"></div></div>
+    <div class="card" style="margin-bottom:20px;"><div class="sec">Resumo do Portfólio</div><div class="kgrid k4" id="stock-sum"></div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" id="stock-cards"></div>
   </div>
 </div>
 
@@ -710,6 +744,24 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 </div>
 
 
+<!-- ════ HISTÓRICO DE OPERAÇÕES ════════════════════════════════ -->
+<div class="pg" id="pg-operacoes">
+  <div class="ph">
+    <div><div class="ptitle">📋 Histórico de Operações</div><div class="psub">Registro completo de compras, vendas e transferências</div></div>
+    <div style="display:flex;gap:9px;">
+      <select id="ops-tipo-filt" style="padding:6px 10px;font-size:12px;min-width:140px;"><option value="all">Todos os Tipos</option><option value="compras">Compras</option><option value="vendas">Vendas</option><option value="transferencias">Transferências</option></select>
+      <select id="ops-prog-filt" style="padding:6px 10px;font-size:12px;min-width:140px;"></select>
+    </div>
+  </div>
+  <div class="pb">
+    <div class="kgrid k4" id="ops-kpis" style="margin-bottom:20px;"></div>
+    <div class="card">
+      <div class="sec">Registro de Operações</div>
+      <div id="ops-table"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ════ MERCADO ══════════════════════════════════════════════ -->
 <div class="pg" id="pg-mercado">
   <div class="ph">
@@ -847,6 +899,7 @@ const PROGRAMS=[
   {id:'lifemiles',name:'LifeMiles (Avianca)',short:'LifeMiles', color:'#B71C1C'},
   {id:'tap',      name:'TAP Miles&Go',      short:'TAP',       color:'#00695C'},
   {id:'flyingbl', name:'Flying Blue (AF/KL)',short:'FlyingBlue',color:'#01579B'},
+  {id:'c6atomos', name:'C6 Átomos',         short:'C6',        color:'#FFB300'},
   {id:'outro',    name:'Outro Programa',    short:'Outro',     color:'#546E7A'},
 ];
 const SCENARIOS=[{label:'Queda 20%',delta:-20},{label:'Queda 10%',delta:-10},{label:'Atual ★',delta:0},{label:'Alta 10%',delta:10},{label:'Alta 20%',delta:20},{label:'Alta 30%',delta:30}];
@@ -900,13 +953,18 @@ const Engine={
     const em=emissoes.filter(e=>{const d=e.data||'';const dt=new Date(d);return dt.getMonth()+1==mes&&dt.getFullYear()==ano});
     const dp=despesas.filter(d=>+d.mes==mes&&+d.ano==ano);
     const receita=em.reduce((s,e)=>s+(e.cobrado||0),0);
-    const custoMilhas=em.reduce((s,e)=>s+(e.custo||0),0);
-    const lucroBruto=receita-custoMilhas;
+    // Custo de milhas = custo de aquisição (CPM × pontos)
+    const custoMilhas=em.reduce((s,e)=>s+((e.pontos||0)/1000)*(e.cpm||0),0);
+    // Taxas pagas nas emissões (aeroportuárias, etc)
+    const taxasEmissao=em.reduce((s,e)=>s+(e.taxas||0),0);
+    const custoTotal=custoMilhas+taxasEmissao;
+    const lucroBruto=receita-custoTotal;
+    // Despesas operacionais fixas/variáveis
     const totalDesp=dp.reduce((s,d)=>s+(d.valor||0),0);
     const lucroLiq=lucroBruto-totalDesp;
     const margemBruta=receita>0?(lucroBruto/receita)*100:0;
     const margemLiq=receita>0?(lucroLiq/receita)*100:0;
-    return{receita,custoMilhas,lucroBruto,totalDesp,lucroLiq,margemBruta,margemLiq,em,dp};
+    return{receita,custoMilhas,taxasEmissao,custoTotal,lucroBruto,totalDesp,lucroLiq,margemBruta,margemLiq,em,dp};
   },
   caixa(vendas,compras){
     const aReceber=vendas.filter(v=>v.status==='pendente').reduce((s,v)=>s+(v.valorTotal||0),0);
@@ -919,10 +977,16 @@ const Engine={
     const roiMed=em.length?em.reduce((a,e)=>a+(e.roi||0),0)/em.length:0;
     const txSucc=em.length?em.filter(e=>e.ind==='green').length/em.length*100:0;
     const estTot=Object.values(s.estoque).reduce((a,e)=>a+(e.pontos||0),0);
-    const estVal=Object.values(s.estoque).reduce((a,e)=>a+(e.pontos/1000)*(e.custoMedio||0),0);
+    // Valor de mercado real: usar cotação atual ou R$25/mil como fallback
+    const estValMkt=PROGRAMS.reduce((a,p)=>{
+      const e=s.estoque[p.id]||{pontos:0};
+      const mkt=MercadoEngine.getLatestPrice(p.id)||25;
+      return a+(e.pontos/1000)*mkt;
+    },0);
+    const estValCusto=Object.values(s.estoque).reduce((a,e)=>a+(e.pontos/1000)*(e.custoMedio||0),0);
     const porProg={};
     PROGRAMS.forEach(p=>{const es=em.filter(e=>e.programa===p.id);porProg[p.id]={lucro:es.reduce((a,e)=>a+(e.lucro||0),0),count:es.length};});
-    return{lucro,roiMed,txSucc,estTot,estVal,porProg};
+    return{lucro,roiMed,txSucc,estTot,estVal:estValCusto,estValMkt,porProg};
   },
 };
 
@@ -1374,13 +1438,16 @@ const Render={
     document.getElementById('dre-table').innerHTML=[
       {cls:'header',l:'RECEITAS',v:''},
       {cls:'sub',l:`Emissão de Passagens (${d.em.length}x)`,v:R$(d.receita)},
-      {cls:'header',l:'CUSTO DAS MILHAS',v:''},
-      {cls:'sub',l:'Custo Total das Emissões',v:R$(d.custoMilhas)},
+      {cls:'header',l:'CUSTOS DAS EMISSÕES',v:''},
+      {cls:'sub',l:'Custo de Aquisição das Milhas',v:'-'+R$(d.custoMilhas)},
+      {cls:'sub',l:`Taxas Aeroportuárias e Emissão`,v:'-'+R$(d.taxasEmissao||0)},
+      {cls:'sub',l:'Custo Total Emissões',v:'-'+R$(d.custoTotal||d.custoMilhas)},
       {cls:'total',l:'LUCRO BRUTO',v:R$(d.lucroBruto)},
       {cls:'header',l:`DESPESAS OPERACIONAIS`,v:''},
-      ...d.dp.map(dp=>({cls:'sub',l:`${dp.descricao} (${dp.categoria})`,v:R$(dp.valor)})),
-      {cls:'sub',l:'Total Despesas',v:R$(d.totalDesp)},
-      {cls:`total profit ${d.lucroLiq>=0?'':''}`,l:'LUCRO LÍQUIDO',v:R$(d.lucroLiq)},
+      ...d.dp.map(dp=>({cls:'sub',l:`${dp.descricao} (${dp.categoria})`,v:'-'+R$(dp.valor)})),
+      {cls:'sub',l:'Total Despesas Operacionais',v:'-'+R$(d.totalDesp)},
+      {cls:`total profit`,l:'LUCRO LÍQUIDO',v:R$(d.lucroLiq)},
+      {cls:'sub',l:'Margem Líquida',v:pct(d.margemLiq)},
     ].map(row=>`<div class="dre-row ${row.cls}"><span class="dre-lbl">${row.l}</span><span class="dre-val" style="color:${row.cls.includes('total')||row.cls.includes('profit')?d.lucroLiq>=0?'var(--gold)':'var(--red)':'var(--txt1)'};">${row.v}</span></div>`).join('');
     // Expenses list
     const desp=s.despesas.filter(d=>+d.mes==mes&&+d.ano==ano);
@@ -1390,10 +1457,32 @@ const Render={
   caixa(){
     const s=Store.get(), c=Engine.caixa(s.vendas,s.compras);
     document.getElementById('caixa-kpis').innerHTML=[H.kcard('Total a Receber',R$(c.aReceber),'vendas pendentes','💰','g'),H.kcard('Total a Pagar',R$(c.aPagar),'parcelas em aberto','💳','r'),H.kcard('Saldo Projetado',R$(c.saldo),'receber − pagar','📊',c.saldo>=0?'g':'r')].join('');
-    const pendentes=s.vendas.filter(v=>v.status==='pendente');
-    document.getElementById('caixa-receber').innerHTML=pendentes.length?`<div style="display:flex;flex-direction:column;gap:5px;">${pendentes.map(v=>`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(v.programa).name}</div><div style="font-size:10px;color:var(--txt2);">${v.data} · ${v.canal||'Sem canal'}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--grn);font-weight:600;">${R$(v.valorTotal)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.openRecvModal(${v.id})">Confirmar</button></div></div>`).join('')}</div>`:H.emptyState('Nenhum recebível pendente','Todas as vendas estão quitadas');
+    // Recebíveis: mostrar parcelas individuais de vendas pendentes
+    const pendentes=s.vendas.filter(v=>v.status==='pendente'||(v.parcelas>1&&(v.parcelasRecebidas||0)<(v.parcelas||1)));
+    const receberRows=[];
+    pendentes.forEach(v=>{
+      const parc=v.parcelas||1,receb=v.parcelasRecebidas||0,vp=(v.valorTotal||0)/parc;
+      if(parc===1){
+        receberRows.push(`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(v.programa).name}</div><div style="font-size:10px;color:var(--txt2);">${v.data} · ${v.canal||'—'}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--grn);font-weight:600;">${R$(vp)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.openRecvModal(${v.id})">✓ Confirmar</button></div></div>`);
+      } else {
+        for(let i=receb;i<parc;i++){
+          receberRows.push(`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(v.programa).name} <span style="color:var(--cyan);">Parcela ${i+1}/${parc}</span></div><div style="font-size:10px;color:var(--txt2);">${v.data} · ${v.canal||'—'}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--grn);font-weight:600;">${R$(vp)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.confirmParcRecv(${v.id})">✓ Confirmar</button></div></div>`);
+        }
+      }
+    });
+    document.getElementById('caixa-receber').innerHTML=receberRows.length?`<div style="display:flex;flex-direction:column;gap:5px;">${receberRows.join('')}</div>`:H.emptyState('Nenhum recebível pendente','Todas as vendas estão quitadas');
+
+    // A pagar: mostrar parcelas individuais de compras
     const compPend=s.compras.filter(c=>((c.parcelas||1)-(c.parcelasPagas||0))>0);
-    document.getElementById('caixa-pagar').innerHTML=compPend.length?`<div style="display:flex;flex-direction:column;gap:5px;">${compPend.map(cp=>{const rest=Math.max(0,(cp.parcelas||1)-(cp.parcelasPagas||0)),vp=(cp.valorTotal||0)/(cp.parcelas||1);return`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(cp.programa).name}</div><div style="font-size:10px;color:var(--txt2);">${cp.data} · ${rest}x parcelas restantes</div></div><span style="font-family:var(--font-mono);font-size:13px;color:var(--red);">${R$(rest*vp)}</span></div>`;}).join('')}</div>`:H.emptyState('Nenhum pagamento pendente','Todas as compras estão quitadas');
+    const pagarRows=[];
+    compPend.forEach(cp=>{
+      const rest=Math.max(0,(cp.parcelas||1)-(cp.parcelasPagas||0)),vp=(cp.valorTotal||0)/(cp.parcelas||1);
+      const pagas=cp.parcelasPagas||0,total=cp.parcelas||1;
+      for(let i=pagas;i<total;i++){
+        pagarRows.push(`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(cp.programa).name} <span style="color:var(--yel);">Fatura ${i+1}/${total}</span></div><div style="font-size:10px;color:var(--txt2);">${cp.data}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--red);">${R$(vp)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.confirmPagamento(${cp.id})">✓ Pago</button></div></div>`);
+      }
+    });
+    document.getElementById('caixa-pagar').innerHTML=pagarRows.length?`<div style="display:flex;flex-direction:column;gap:5px;">${pagarRows.join('')}</div>`:H.emptyState('Nenhum pagamento pendente','Todas as compras estão quitadas');
     // Projection
     const projMeses=[];
     const now=new Date();
@@ -1403,7 +1492,7 @@ const Render={
   /* ── DASHBOARD ────────────────────────────────── */
   dashboard(){
     const s=Store.get(), m=Engine.dashMetrics(s);
-    document.getElementById('dash-kpis').innerHTML=[H.kcard('Lucro Acumulado',R$(m.lucro),`${s.emissoes.length} emissões salvas`,'💰',m.lucro>=0?'g':'r'),H.kcard('ROI Médio',pct(m.roiMed),'retorno por operação','⟳','c'),H.kcard('Milhas em Estoque',N(m.estTot)+'pts',`Valor: ${R$(m.estVal)}`,'✦','o'),H.kcard('Taxa de Sucesso',pct(m.txSucc),'emissões altamente lucrativas','🏆','p')].join('');
+    document.getElementById('dash-kpis').innerHTML=[H.kcard('Lucro Acumulado',R$(m.lucro),`${s.emissoes.length} emissões salvas`,'💰',m.lucro>=0?'g':'r'),H.kcard('ROI Médio',pct(m.roiMed),'retorno por operação','⟳','c'),H.kcard('Milhas em Estoque',N(m.estTot)+'pts',`Valor mercado: ${R$(m.estValMkt)}`,'✦','o'),H.kcard('Taxa de Sucesso',pct(m.txSucc),'emissões altamente lucrativas','🏆','p')].join('');
     const em=s.emissoes;
     if(em.length>0){const rec=[...em].slice(0,40).reverse(),maxL=Math.max(...rec.map(e=>Math.abs(e.lucro||0)),1);document.getElementById('perf-bars').innerHTML=rec.map(e=>{const ht=Math.max(4,(Math.abs(e.lucro||0)/maxL)*66),col=e.ind==='green'?'var(--grn)':e.ind==='yellow'?'var(--yel)':'var(--red)';return`<div class="perfbar" style="height:${ht}px;background:${col};" title="${e.data}: ${R$(e.lucro||0)}"></div>`;}).join('');}
     else document.getElementById('perf-bars').innerHTML=`<div style="color:var(--txt3);font-size:11px;text-align:center;width:100%;align-self:center;">Nenhuma emissão ainda</div>`;
@@ -1413,14 +1502,42 @@ const Render={
     const r5=[...em].slice(0,5);
     document.getElementById('dash-recent').innerHTML=r5.length?r5.map(e=>{const p=progById(e.programa),col=e.ind==='green'?'var(--grn)':e.ind==='yellow'?'var(--yel)':'var(--red)';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">${IND[e.ind]?.e}</span><div><div style="font-size:12px;color:var(--txt1);">${p.short}${e.obs?' · '+e.obs:''}</div><div style="font-size:10px;color:var(--txt3);">${e.data}</div></div></div><div style="text-align:right;"><div style="font-family:var(--font-mono);font-size:13px;color:${col};font-weight:500;">${R$(e.lucro||0)}</div><div style="font-size:10px;color:var(--txt3);">${pct(e.margem||0)}</div></div></div>`;}).join(''):H.emptyState('Nenhuma emissão ainda','Use a Calculadora para começar');
   },
+  /* ── OPERAÇÕES HISTORY ────────────────────────── */
+  operacoes(){
+    const s=Store.get();
+    const tipoFilt=document.getElementById('ops-tipo-filt')?.value||'all';
+    const progFilt=document.getElementById('ops-prog-filt')?.value||'all';
+    let ops=[];
+    if(tipoFilt==='all'||tipoFilt==='compras')s.compras.forEach(c=>ops.push({...c,_tipo:'Compra',_color:'var(--red)',_icon:'↓'}));
+    if(tipoFilt==='all'||tipoFilt==='vendas')s.vendas.forEach(v=>ops.push({...v,_tipo:'Venda',_color:'var(--grn)',_icon:'↑'}));
+    if(tipoFilt==='all'||tipoFilt==='transferencias')s.transferencias.forEach(t=>ops.push({...t,_tipo:'Transfer.',_color:'var(--cyan)',_icon:'⇄',programa:t.programaOrigem}));
+    if(progFilt!=='all')ops=ops.filter(o=>o.programa===progFilt);
+    ops.sort((a,b)=>new Date(b.data||0)-new Date(a.data||0));
+    const totC=s.compras.reduce((a,c)=>a+(c.valorTotal||0),0),totV=s.vendas.reduce((a,v)=>a+(v.valorTotal||0),0);
+    const totPC=s.compras.reduce((a,c)=>a+(c.pontos||0),0),totPV=s.vendas.reduce((a,v)=>a+(v.pontos||0),0);
+    document.getElementById('ops-kpis').innerHTML=[H.kcard('Total Comprado',R$(totC),N(totPC)+' pts','↓','r'),H.kcard('Total Vendido',R$(totV),N(totPV)+' pts','↑','g'),H.kcard('Saldo (V−C)',R$(totV-totC),'resultado bruto','⟳',totV>=totC?'g':'r'),H.kcard('Operações',ops.length,'registradas','≡','c')].join('');
+    if(!ops.length){document.getElementById('ops-table').innerHTML=H.emptyState('Nenhuma operação','Registre compras, vendas e transferências');return;}
+    document.getElementById('ops-table').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Tipo</th><th>Data</th><th>Programa</th><th>Pontos</th><th>Valor Total</th><th>CPM/VPM</th><th>Parcelas</th><th>Status</th><th>Obs</th></tr></thead><tbody>${ops.map(o=>{
+      const p=progById(o.programa),parc=o.parcelas||1;
+      const parcSt=o._tipo==='Compra'?`${o.parcelasPagas||0}/${parc}`:o._tipo==='Venda'?`${o.parcelasRecebidas||0}/${parc}`:'—';
+      const cpmv=o._tipo==='Compra'?R$(o.custoPorMil||0)+'/mil':o._tipo==='Venda'?R$(o.valorPorMil||0)+'/mil':'—';
+      const quitado=o._tipo==='Compra'?(o.parcelasPagas||0)>=(o.parcelas||1):o.status==='recebido';
+      const stTag=o._tipo==='Transfer.'?'—':H.tag(quitado?'✅ Quitado':'⏳ Pendente',quitado?'g':'y');
+      const dest=o.programaDestino?` → ${progById(o.programaDestino).short}`:'';
+      return`<tr><td><span style="color:${o._color};font-weight:700;">${o._icon} ${o._tipo}</span></td><td style="color:var(--txt2);font-size:11px;">${o.data||'—'}</td><td><span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:${p.color};flex-shrink:0;"></span>${p.short}${dest}</span></td><td style="font-family:var(--font-mono);">${N(o.pontos||o.pontosOrigem||0)}</td><td style="font-family:var(--font-mono);color:${o._color};font-weight:600;">${R$(o.valorTotal||0)}</td><td style="font-size:11px;">${cpmv}</td><td style="font-size:11px;">${parcSt}</td><td>${stTag}</td><td style="font-size:11px;color:var(--txt2);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${o.obs||'—'}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+  },
+
   /* ── CHART ───────────────────────────────────── */
   chartProg(pp){
     const c=document.getElementById('chart-prog');
     if(!c)return;
     const ctx=c.getContext('2d'),dpr=window.devicePixelRatio||1;
-    const W=c.parentElement.offsetWidth-40,H=140;
-    c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
-    ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+    const parent=c.parentElement;
+    const W=parent.clientWidth-40,H=140;
+    // Only resize if dimensions actually changed (prevents drift)
+    if(c._lastW!==W){c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';c._lastW=W;}
+    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
     const vals=PROGRAMS.map(p=>pp[p.id]?.lucro||0);
     const maxV=Math.max(...vals.map(Math.abs),1);
     const bW=Math.max(14,Math.floor((W-20)/(PROGRAMS.length*1.6))),gap=(W-PROGRAMS.length*bW)/(PROGRAMS.length+1);
@@ -1453,7 +1570,7 @@ const Render={
   /* ── ALL ─────────────────────────────────────── */
   all(){
     Render.dashboard();Render.calc();Render.strat();Render.sim();Render.stock();
-    Render.hist('all','all');Render.compras();Render.vendas();Render.transfs();
+    Render.hist('all','all');Render.compras();Render.vendas();Render.transfs();Render.operacoes();
     const now=new Date();Render.dre(now.getMonth()+1,now.getFullYear());Render.caixa();
     Render.updateThemeBtn();
     MercadoRender.summary();MercadoRender.precosAtuais();MercadoRender.histList();MercadoRender.promocoes();
@@ -1634,13 +1751,22 @@ const App={
     document.getElementById('btn-clear-calc').addEventListener('click',()=>App.clearCalc());
 
     // Compra
-    ['cp-pontos','cp-cpm'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{const p=+document.getElementById('cp-pontos').value||0,c=+document.getElementById('cp-cpm').value||0;if(p&&c){const t=document.getElementById('cp-total');if(t)t.value=(p/1000*c).toFixed(2);}});});
+    // Compra: calcular CPM automaticamente a partir do valor total
+    ['cp-pontos','cp-total'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{const p=+document.getElementById('cp-pontos').value||0,t=+document.getElementById('cp-total').value||0;const cpmEl=document.getElementById('cp-cpm');if(p&&t&&cpmEl){cpmEl.value=(t/(p/1000)).toFixed(2);}else if(cpmEl)cpmEl.value='';});});
     document.getElementById('btn-save-compra').addEventListener('click',()=>App.saveCompra());
     document.getElementById('btn-clear-compra').addEventListener('click',()=>App.clearCompra());
 
     // Venda
     ['vd-pontos','vd-vpm'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{const p=+document.getElementById('vd-pontos').value||0,v=+document.getElementById('vd-vpm').value||0;if(p&&v){const t=document.getElementById('vd-total');if(t)t.value=(p/1000*v).toFixed(2);}});});
     document.getElementById('btn-save-venda').addEventListener('click',()=>App.saveVenda());
+    // Venda parcelada: calcular valor por parcela
+    ['vd-total','vd-pontos','vd-vpm','vd-parcelas'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{
+      const pts=+document.getElementById('vd-pontos').value||0,vpm2=+document.getElementById('vd-vpm').value||0;
+      const tot=+document.getElementById('vd-total').value||(pts/1000*vpm2);
+      const parc2=Math.max(1,+document.getElementById('vd-parcelas').value||1);
+      const vpEl=document.getElementById('vd-vparc');
+      if(vpEl&&tot)vpEl.value=(tot/parc2).toFixed(2);
+    });});
 
     // Transferência
     document.getElementById('btn-save-transf').addEventListener('click',()=>App.saveTransf());
@@ -1758,7 +1884,18 @@ const App={
     const navEl=document.querySelector(`[data-pg="${pg}"]`);
     if(navEl)navEl.classList.add('active');
     document.getElementById('content').scrollTop=0;
+    // Close mobile sidebar on navigate
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('mobile-overlay')?.classList.remove('open');
     if(pg==='dashboard')setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),80);
+    if(pg==='operacoes'){
+      Render.operacoes();
+      // populate prog filter
+      const pf=document.getElementById('ops-prog-filt');
+      if(pf&&pf.options.length<=1){pf.innerHTML='<option value="all">Todos os Programas</option>'+PROGRAMS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');}
+      document.getElementById('ops-tipo-filt')?.addEventListener('change',()=>Render.operacoes());
+      document.getElementById('ops-prog-filt')?.addEventListener('change',()=>Render.operacoes());
+    }
     if(pg==='hist')Render.hist(document.getElementById('filt-prog').value||'all',document.getElementById('filt-status').value||'all');
     if(pg==='caixa')Render.caixa();
     if(pg==='dre')App.renderDRE();
@@ -1839,21 +1976,27 @@ const App={
   },
 
   saveCompra(){
-    const prog=document.getElementById('cp-prog').value,pt=+document.getElementById('cp-pontos').value||0,cpm2=+document.getElementById('cp-cpm').value||0,total=+document.getElementById('cp-total').value||(pt/1000*cpm2),parc=+document.getElementById('cp-parcelas').value||1,pgpg=+document.getElementById('cp-pgpagas').value||0;
+    const prog=document.getElementById('cp-prog').value,pt=+document.getElementById('cp-pontos').value||0;
+    const total=+document.getElementById('cp-total').value||0;
+    const cpm2=pt>0&&total>0?total/(pt/1000):(+document.getElementById('cp-cpm').value||0);
+    const parc=+document.getElementById('cp-parcelas').value||1,pgpg=+document.getElementById('cp-pgpagas').value||0;
     if(!pt){App.notify('Informe a quantidade de pontos.','er');return;}
-    const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal:total,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim()};
+    if(!total&&!cpm2){App.notify('Informe o valor total ou CPM.','er');return;}
+    const valorTotal=total||(pt/1000*cpm2);
+    const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim()};
     Store.update(s=>{s.compras.unshift(entry);const e=s.estoque[prog];const novoTotal=e.pontos+pt,novoInv=e.totalInvestido+(pt/1000)*cpm2;e.pontos=novoTotal;e.totalInvestido=novoInv;e.custoMedio=novoTotal>0?novoInv/(novoTotal/1000):0;});
     SheetsAPI.send('compras',entry);
     App.clearCompra();Render.compras();Render.stock();Render.dashboard();Render.caixa();
     App.notify('✓ Compra registrada!','ok');
   },
 
-  clearCompra(){['cp-pontos','cp-cpm','cp-total','cp-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const el=document.getElementById('cp-parcelas');if(el)el.value='1';const el2=document.getElementById('cp-pgpagas');if(el2)el2.value='0';},
+  clearCompra(){['cp-pontos','cp-total','cp-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const cpmEl=document.getElementById('cp-cpm');if(cpmEl)cpmEl.value='';const el=document.getElementById('cp-parcelas');if(el)el.value='1';const el2=document.getElementById('cp-pgpagas');if(el2)el2.value='0';},
 
   saveVenda(){
     const prog=document.getElementById('vd-prog').value,pt=+document.getElementById('vd-pontos').value||0,vpm=+document.getElementById('vd-vpm').value||0,total=+document.getElementById('vd-total').value||(pt/1000*vpm);
+    const parc=Math.max(1,+document.getElementById('vd-parcelas')?.value||1);
     if(!pt){App.notify('Informe a quantidade de pontos.','er');return;}
-    const entry={id:Date.now(),data:document.getElementById('vd-data').value||today(),programa:prog,pontos:pt,valorPorMil:vpm,valorTotal:total,status:document.getElementById('vd-status').value,canal:document.getElementById('vd-canal').value.trim(),obs:document.getElementById('vd-obs').value.trim()};
+    const entry={id:Date.now(),data:document.getElementById('vd-data').value||today(),programa:prog,pontos:pt,valorPorMil:vpm,valorTotal:total,parcelas:parc,parcelasRecebidas:document.getElementById('vd-status').value==='recebido'?parc:0,status:document.getElementById('vd-status').value,canal:document.getElementById('vd-canal').value.trim(),obs:document.getElementById('vd-obs').value.trim()};
     Store.update(s=>{s.vendas.unshift(entry);const e=s.estoque[prog];e.pontos=Math.max(0,e.pontos-pt);e.totalInvestido=(e.pontos/1000)*(e.custoMedio||0);});
     SheetsAPI.send('vendas',entry);
     ['vd-pontos','vd-vpm','vd-total','vd-canal','vd-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -1911,7 +2054,9 @@ const App={
   },
 
   openRecvModal(id){document.getElementById('recv-id').value=id;document.getElementById('modal-recv').classList.add('open');},
-  confirmRecv(){const id=+document.getElementById('recv-id').value;Store.update(s=>{const v=s.vendas.find(v=>v.id===id);if(v)v.status='recebido';});SheetsAPI.send('recebimentos',{id,data:today(),status:'recebido'});App.closeModal('modal-recv');Render.vendas();Render.caixa();App.notify('✓ Recebimento confirmado!','ok');},
+  confirmRecv(){const id=+document.getElementById('recv-id').value;Store.update(s=>{const v=s.vendas.find(v=>v.id===id);if(v){v.status='recebido';v.parcelasRecebidas=v.parcelas||1;}});SheetsAPI.send('recebimentos',{id,data:today(),status:'recebido'});App.closeModal('modal-recv');Render.vendas();Render.caixa();App.notify('✓ Recebimento confirmado!','ok');},
+  confirmParcRecv(id){Store.update(s=>{const v=s.vendas.find(v=>v.id===id);if(v){v.parcelasRecebidas=(v.parcelasRecebidas||0)+1;if(v.parcelasRecebidas>=(v.parcelas||1))v.status='recebido';}});SheetsAPI.send('recebimentos',{id,data:today(),status:'parcial'});Render.vendas();Render.caixa();App.notify('✓ Parcela confirmada!','ok');},
+  confirmPagamento(id){Store.update(s=>{const c=s.compras.find(c=>c.id===id);if(c){c.parcelasPagas=(c.parcelasPagas||0)+1;}});SheetsAPI.send('pagamentos',{id,data:today(),acao:'fatura_paga'});Render.compras();Render.caixa();App.notify('✓ Fatura marcada como paga!','ok');},
 
   exportCSV(){
     const em=Store.get().emissoes;if(!em.length){App.notify('Nenhuma emissão para exportar.','er');return;}
