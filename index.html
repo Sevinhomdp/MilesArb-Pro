@@ -973,14 +973,71 @@ const MercadoEngine={
 const Store=(()=>{
   const KEY='milesarb_v4';
   const defaultEst=()=>{const o={};PROGRAMS.forEach(p=>{o[p.id]={pontos:0,custoMedio:0,totalInvestido:0}});return o;};
-  const def=()=>({emissoes:[],compras:[],vendas:[],transferencias:[],despesas:[],estoque:defaultEst(),calcForm:{programa:'azul',tripType:'ida',pontos:'',taxas:'',cpm:'',mercado:'',lucroDesejado:'30',desconto:'35'},settings:{sheetsUrl:SHEETS_URL,theme:'dark'},mercado:{cotacoes:[],historico:[],promocoes:[]}});
+  const def=()=>({emissoes:[],compras:[],vendas:[],transferencias:[],despesas:[],estoque:defaultEst(),calcForm:{programa:'azul',tripType:'ida',pontos:'',taxas:'',cpm:'',mercado:'',lucroDesejado:'30',desconto:'35'},settings:{sheetsUrl:SHEETS_URL,theme:'dark'},mercado:{cotacoes:[],historico:[],promocoes:[]},_syncTs:0});
   let s=def();
-  function load(){try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);s={...def(),...p};if(!s.estoque||Object.keys(s.estoque).length<PROGRAMS.length){const ne=defaultEst();PROGRAMS.forEach(p=>{if(s.estoque[p.id])ne[p.id]=s.estoque[p.id]});s.estoque=ne;}if(!s.mercado)s.mercado={cotacoes:[],historico:[],promocoes:[]};}}catch(e){s=def();}}
-  function save(){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
+  let _saveDebounce=null;
+
+  function _loadLocal(){
+    try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);s={...def(),...p};_fixEstoque();_fixMercado();}}catch(e){s=def();}
+  }
+  function _fixEstoque(){
+    if(!s.estoque||Object.keys(s.estoque).length<PROGRAMS.length){
+      const ne=defaultEst();PROGRAMS.forEach(p=>{if(s.estoque&&s.estoque[p.id])ne[p.id]=s.estoque[p.id]});s.estoque=ne;
+    }
+  }
+  function _fixMercado(){if(!s.mercado)s.mercado={cotacoes:[],historico:[],promocoes:[]};}
+
+  function _saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
+
+  // Push full state to Sheets (debounced 800ms)
+  function _pushToCloud(){
+    clearTimeout(_saveDebounce);
+    _saveDebounce=setTimeout(async()=>{
+      try{
+        s._syncTs=Date.now();
+        _saveLocal();
+        const body=JSON.stringify({action:'saveState',state:s});
+        await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body});
+      }catch(e){console.warn('Cloud push failed:',e.message);}
+    },800);
+  }
+
+  // Pull full state from Sheets
+  async function syncFromCloud(silent){
+    try{
+      if(!silent)CloudUI.set('syncing','Sincronizando...');
+      const url=SHEETS_URL+'?action=getState';
+      const res=await fetch(url,{method:'GET'});
+      const txt=await res.text();
+      const data=JSON.parse(txt);
+      if(data.status==='ok'&&data.state){
+        const remote=data.state;
+        // Only update if remote is newer than local
+        if((remote._syncTs||0)>(s._syncTs||0)){
+          s={...def(),...remote};
+          _fixEstoque();_fixMercado();
+          _saveLocal();
+          CloudUI.set('ok','Sincronizado ✓');
+          return true; // data changed
+        }
+        CloudUI.set('ok','Atualizado ✓');
+        return false;
+      }
+      if(data.status==='empty'){CloudUI.set('ok','Conectado ✓');return false;}
+    }catch(e){
+      CloudUI.set('error','Sem conexão');
+      console.warn('Cloud sync failed:',e.message);
+    }
+    return false;
+  }
+
   function get(){return s;}
-  function update(fn){fn(s);save();}
-  load();
-  return{get,update,save};
+  function update(fn){fn(s);_saveLocal();_pushToCloud();}
+
+  // Init: load local first for instant render, then sync from cloud
+  _loadLocal();
+
+  return{get,update,save:_saveLocal,syncFromCloud};
 })();
 
 // ═══════════════════════════════════════════════════════════════
@@ -1130,6 +1187,7 @@ const SheetsAPI={
   _queue:[],
   _sending:false,
 
+  // Send individual record to audit log sheet
   send(tipo,dados){
     this._queue.push({tipo,dados,ts:new Date().toISOString()});
     CloudUI.set('syncing','Salvando...');
@@ -1140,25 +1198,17 @@ const SheetsAPI={
     if(!this._queue.length){this._sending=false;return;}
     this._sending=true;
     const item=this._queue.shift();
-    const ok=await this._sendViaGet(item);
-    if(ok){
-      if(!this._queue.length)CloudUI.set('ok','Salvo ✓');
-    } else {
-      // Tentar mais uma vez antes de marcar erro
-      const ok2=await this._sendViaGet(item);
-      if(!ok2 && !this._queue.length)CloudUI.set('error','Erro na nuvem');
-    }
-    setTimeout(()=>this._flush(),300);
+    await this._sendViaGet(item);
+    if(!this._queue.length)CloudUI.set('ok','Salvo ✓');
+    setTimeout(()=>this._flush(),200);
   },
 
-  // GET com payload codificado — nunca tem bloqueio de CORS
   async _sendViaGet(item){
     try{
       const payload=encodeURIComponent(JSON.stringify(item));
       const url=SHEETS_URL+'?payload='+payload;
       const res=await fetch(url,{method:'GET'});
-      const txt=await res.text();
-      console.log('✓ Sheets',item.tipo, txt.slice(0,60));
+      console.log('✓ Sheets',item.tipo);
       return true;
     }catch(e){
       console.warn('Sheets GET failed:',e.message);
@@ -1171,12 +1221,9 @@ const SheetsAPI={
     try{
       const payload=encodeURIComponent(JSON.stringify({tipo:'_teste',dados:{msg:'ping'},ts:new Date().toISOString()}));
       const url=SHEETS_URL+'?payload='+payload;
-      const res=await fetch(url,{method:'GET'});
-      const txt=await res.text();
-      let msg='Conexão OK!';
-      try{const j=JSON.parse(txt);msg=j.msg||'Conexão OK!';}catch(e){}
+      await fetch(url,{method:'GET'});
       CloudUI.set('ok','Conectado ✓');
-      return{ok:true,msg};
+      return{ok:true,msg:'Conexão estabelecida com sucesso!'};
     }catch(e){
       CloudUI.set('error','Sem conexão');
       return{ok:false,msg:e.message};
@@ -1643,14 +1690,29 @@ const App={
     const cfg=Store.get().settings;
     // URL is hardcoded — no input to prefill
 
-    // Render all
+    // Render all (local data first — instant)
     Render.all();
-    // Initial cloud status
     CloudUI.set('idle','Nuvem');
+
+    // Sync from cloud on startup, then re-render if data changed
     setTimeout(async()=>{
-      const r=await SheetsAPI.test();
-      if(!r.ok)CloudUI.set('error','Sem conexão');
-    },2000);
+      const changed=await Store.syncFromCloud(false);
+      if(changed){
+        Render.all();
+        App.notify('🔄 Dados atualizados da nuvem!','ok');
+        setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),100);
+      }
+    },1500);
+
+    // Poll for changes from other devices every 30 seconds
+    setInterval(async()=>{
+      const changed=await Store.syncFromCloud(true);
+      if(changed){
+        Render.all();
+        App.notify('🔄 Dados sincronizados!','ok');
+        setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),100);
+      }
+    },30000);
   },
 
   doLogin(){
@@ -1661,7 +1723,11 @@ const App={
       localStorage.setItem('ma_session','1');
       document.getElementById('login-err').textContent='';
       Render.all();
-      setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),100);
+      setTimeout(async()=>{
+        const changed=await Store.syncFromCloud(false);
+        if(changed){Render.all();App.notify('🔄 Dados sincronizados da nuvem!','ok');}
+        setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),100);
+      },500);
     } else {
       document.getElementById('login-err').textContent='Senha incorreta. Tente novamente.';
       document.getElementById('login-pw').value='';
