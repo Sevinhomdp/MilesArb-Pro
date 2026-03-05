@@ -454,10 +454,91 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 
 <!-- ════ SIMULADOR ═══════════════════════════════════════════ -->
 <div class="pg" id="pg-sim">
-  <div class="ph"><div><div class="ptitle">Simulador de Cenários</div><div class="psub">Impacto de variações no preço de mercado</div></div></div>
+  <div class="ph"><div><div class="ptitle">Simulador de Emissão</div><div class="psub">Simule rapidamente antes de gerar uma cotação real</div></div></div>
   <div class="pb">
+
+    <!-- ── SIMULADOR RÁPIDO ─────────────────────────────────── -->
+    <div class="twocol" style="margin-bottom:20px;">
+      <!-- Formulário de entrada -->
+      <div class="card">
+        <div class="sec">⚡ Simulação Rápida</div>
+        <!-- Rota -->
+        <div class="frow fr3" style="margin-bottom:13px;">
+          <div class="fgrp">
+            <div class="flbl">Origem</div>
+            <input type="text" id="sim-orig" placeholder="GRU" maxlength="5" style="padding:9px 12px;text-transform:uppercase;" oninput="App.simCalc()">
+          </div>
+          <div class="fgrp">
+            <div class="flbl">Destino</div>
+            <input type="text" id="sim-dest" placeholder="LIS" maxlength="5" style="padding:9px 12px;text-transform:uppercase;" oninput="App.simCalc()">
+          </div>
+          <div class="fgrp">
+            <div class="flbl">Classe</div>
+            <select id="sim-classe" onchange="App.simCalc()">
+              <option value="">— Classe —</option>
+              <option value="economica">Econômica</option>
+              <option value="executiva">Executiva</option>
+              <option value="primeira">Primeira Classe</option>
+              <option value="premium_economy">Premium Economy</option>
+            </select>
+          </div>
+        </div>
+        <!-- Companhia -->
+        <div class="fgrp" style="margin-bottom:13px;">
+          <div class="flbl">Companhia Aérea</div>
+          <select id="sim-cia" onchange="App.simCalc()"></select>
+        </div>
+        <!-- Números -->
+        <div class="frow fr3">
+          <div class="fgrp">
+            <div class="flbl">Milhas Necessárias</div>
+            <div class="iwrap"><input type="number" id="sim-milhas" placeholder="30000" min="0" oninput="App.simCalc()"><span class="isuf">pts</span></div>
+          </div>
+          <div class="fgrp">
+            <div class="flbl">Custo das Milhas</div>
+            <div class="iwrap"><input type="number" id="sim-cpm" placeholder="18,00" min="0" step="0.01" oninput="App.simCalc()"><span class="isuf">R$/mil</span></div>
+          </div>
+          <div class="fgrp">
+            <div class="flbl">Taxas</div>
+            <div class="iwrap"><input type="number" id="sim-taxas" placeholder="280,00" min="0" step="0.01" oninput="App.simCalc()"><span class="isuf">R$</span></div>
+          </div>
+        </div>
+        <!-- Observação -->
+        <div class="fgrp" style="margin-top:4px;margin-bottom:13px;">
+          <div class="flbl">Observação <span style="color:var(--txt3);font-size:10px;">(opcional)</span></div>
+          <input type="text" id="sim-obs" placeholder="ex: Família, ida e volta…" style="padding:9px 12px;" oninput="App.simCalc()">
+        </div>
+        <button class="bprimary" style="width:100%;padding:11px;" id="btn-save-sim">💾 Salvar Simulação</button>
+      </div>
+
+      <!-- Painel de resultados ao vivo -->
+      <div id="sim-result-panel">
+        <div class="card" style="margin-bottom:14px;" id="sim-res-main">
+          <div class="sec">Resultado da Simulação</div>
+          <div id="sim-res-body" style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">
+            Preencha os campos ao lado para ver o resultado.
+          </div>
+        </div>
+        <!-- Referência de mercado para a rota simulada -->
+        <div id="sim-ref-mkt" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- ── SIMULAÇÕES SALVAS ─────────────────────────────────── -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="sec" style="justify-content:space-between;">
+        <span>📋 Simulações Salvas</span>
+        <button id="btn-clear-sims" style="font-size:10px;color:var(--red);background:none;border:none;cursor:pointer;padding:0 4px;">Limpar tudo</button>
+      </div>
+      <div id="sim-saved-list">
+        <div style="color:var(--txt3);font-size:12px;text-align:center;padding:20px 0;">Nenhuma simulação salva ainda.</div>
+      </div>
+    </div>
+
+    <!-- ── CENÁRIOS DE MERCADO (existente — lê da Calculadora) ── -->
     <div class="card" style="margin-bottom:16px;">
-      <div class="sec">Cenários de Mercado</div>
+      <div class="sec">◈ Cenários de Mercado</div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:10px;">Baseado nos dados preenchidos na <strong style="color:var(--gold);">Calculadora</strong>.</div>
       <div class="shdr"><div class="shd">Cenário</div><div class="shd">Preço Mercado</div><div class="shd">Você Cobra</div><div class="shd">Lucro Líquido</div><div class="shd">Margem</div></div>
       <div id="sim-table"></div>
     </div>
@@ -465,6 +546,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
       <div class="card"><div class="sec">Alertas Automáticos</div><div id="sim-alerts"></div></div>
       <div class="card"><div class="sec">Recomendações</div><div id="sim-recs"></div></div>
     </div>
+
   </div>
 </div>
 
@@ -575,6 +657,8 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
     <div style="max-width:680px;">
       <div class="card">
         <div class="sec">Dados da Emissão</div>
+        <!-- Sugestão inteligente de companhias — aparece ao preencher Origem+Destino -->
+        <div id="em-sugestao" style="display:none;margin-bottom:14px;"></div>
         <div class="frow fr2">
           <div class="fgrp"><div class="flbl">Programa</div><select id="em-prog"></select></div>
           <div class="fgrp"><div class="flbl">Tipo de Viagem</div><select id="em-tipo"><option value="ida">Só Ida</option><option value="ida_volta">Ida e Volta</option></select></div>
@@ -588,10 +672,18 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
           <div class="fgrp"><div class="flbl">Valor Cobrado do Cliente</div><div class="iwrap"><input type="number" id="em-cobrado" placeholder="1200,00"><span class="isuf">R$</span></div></div>
           <div class="fgrp"><div class="flbl">Rota / Observações</div><input type="text" id="em-obs" placeholder="ex: GRU → LIS" style="padding:9px 12px;"></div>
         </div>
+        <!-- Campos de Rota — opcionais, alimentam o Histórico de Cotações -->
+        <div class="frow fr3" style="margin-top:2px;">
+          <div class="fgrp"><div class="flbl">Origem <span style="color:var(--txt3);font-size:10px;">(opcional)</span></div><input type="text" id="em-origem" placeholder="ex: GRU" maxlength="5" style="padding:9px 12px;text-transform:uppercase;"></div>
+          <div class="fgrp"><div class="flbl">Destino <span style="color:var(--txt3);font-size:10px;">(opcional)</span></div><input type="text" id="em-destino" placeholder="ex: LIS" maxlength="5" style="padding:9px 12px;text-transform:uppercase;"></div>
+          <div class="fgrp"><div class="flbl">Classe <span style="color:var(--txt3);font-size:10px;">(opcional)</span></div><select id="em-classe"><option value="">— Classe —</option><option value="economica">Econômica</option><option value="executiva">Executiva</option><option value="primeira">Primeira Classe</option><option value="premium_economy">Premium Economy</option></select></div>
+        </div>
         <div id="em-preview" style="display:none;margin:12px 0;padding:13px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border);">
           <div class="flbl" style="margin-bottom:9px;">Pré-visualização</div>
           <div class="mgrid" style="grid-template-columns:repeat(4,1fr);" id="em-prev-vals"></div>
         </div>
+        <!-- Referência de mercado — alimentada pelo HistoricoCotacoes.referenciaMercado() -->
+        <div id="em-referencia" style="display:none;margin:0 0 12px 0;"></div>
         <button class="bprimary" style="width:100%;padding:12px;" id="btn-save-em">✦ Registrar Emissão</button>
       </div>
     </div>
@@ -1363,12 +1455,12 @@ const MercadoEngine={
 const Store=(()=>{
   const KEY='milesarb_v4';
   const defaultEst=()=>{const o={};PROGRAMS.forEach(p=>{o[p.id]={pontos:0,custoMedio:0,totalInvestido:0}});return o;};
-  const def=()=>({emissoes:[],compras:[],vendas:[],transferencias:[],despesas:[],estoque:defaultEst(),audit:[],calcForm:{programa:'azul',tripType:'ida',pontos:'',taxas:'',cpm:'',mercado:'',lucroDesejado:'30',desconto:'35'},settings:{sheetsUrl:SHEETS_URL,theme:'dark'},mercado:{cotacoes:[],historico:[],promocoes:[]},_syncTs:0});
+  const def=()=>({emissoes:[],compras:[],vendas:[],transferencias:[],despesas:[],estoque:defaultEst(),audit:[],historico_cotacoes:[],simulacoes:[],calcForm:{programa:'azul',tripType:'ida',pontos:'',taxas:'',cpm:'',mercado:'',lucroDesejado:'30',desconto:'35'},settings:{sheetsUrl:SHEETS_URL,theme:'dark'},mercado:{cotacoes:[],historico:[],promocoes:[]},_syncTs:0});
   let s=def();
   let _saveDebounce=null;
 
   function _loadLocal(){
-    try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);s={...def(),...p};_fixEstoque();_fixMercado();}}catch(e){s=def();}
+    try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);s={...def(),...p};_fixEstoque();_fixMercado();_fixHistoricoCotacoes();_fixSimulacoes();}}catch(e){s=def();}
   }
   function _fixEstoque(){
     if(!s.estoque||Object.keys(s.estoque).length<PROGRAMS.length){
@@ -1376,6 +1468,8 @@ const Store=(()=>{
     }
   }
   function _fixMercado(){if(!s.mercado)s.mercado={cotacoes:[],historico:[],promocoes:[]};}
+  function _fixHistoricoCotacoes(){if(!Array.isArray(s.historico_cotacoes))s.historico_cotacoes=[];}
+  function _fixSimulacoes(){if(!Array.isArray(s.simulacoes))s.simulacoes=[];}
 
   function _saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
 
@@ -1641,6 +1735,310 @@ const SheetsAPI={
 };
 
 // ═══════════════════════════════════════════════════════════════
+// HISTÓRICO DE COTAÇÕES — Módulo modular de inteligência de preços
+// ─────────────────────────────────────────────────────────────
+// "Cotação" aqui = uma passagem precificada com milhas (emissão).
+// Armazena os dados que permitem análise de preços por rota/classe/cia.
+//
+// Arquitetura:
+//   • Persistência local  → Store.get().historico_cotacoes  (localStorage)
+//   • Persistência remota → SheetsAPI.send('historico_cotacoes', …) (Google Sheets)
+//   • Todas as operações são fire-and-forget e nunca lançam exceções para o caller.
+// ═══════════════════════════════════════════════════════════════
+const HistoricoCotacoes = {
+
+  // ── SCHEMA ──────────────────────────────────────────────────
+  // Campos espelhados na planilha "historico_cotacoes":
+  //   id              string    timestamp único (Date.now() + random)
+  //   origem          string    IATA de origem  (ex: "GRU") — pode ser vazio
+  //   destino         string    IATA de destino (ex: "LIS") — pode ser vazio
+  //   companhia_aerea string    programaId do sistema (azul, smiles, latam …)
+  //   classe          string    economica | executiva | primeira | premium_economy | ''
+  //   milhas_utilizadas number  pontos usados na emissão
+  //   valor_taxas     number    taxas aeroportuárias (R$)
+  //   valor_final     number    valor cobrado do cliente (R$)
+  //   data_cotacao    string    YYYY-MM-DD — data da emissão
+  //   criado_em       string    ISO timestamp da inserção no sistema
+  //   programa_nome   string    nome legível do programa (Azul, Smiles …)
+  //   trip_type       string    ida | ida_volta
+  //   cpm             number    custo por milheiro usado
+  //   lucro           number    lucro líquido da emissão
+  //   margem          number    margem %
+  //   origem_registro string    FORMULARIO | CALCULADORA
+  // ────────────────────────────────────────────────────────────
+
+  // _construir: monta o objeto canônico de uma cotação a partir de uma emissão
+  _construir(emissaoEntry, camposRota){
+    const prog = progById(emissaoEntry.programa);
+    return {
+      id:               String(Date.now()) + '-' + Math.floor(Math.random()*9999),
+      origem:           (camposRota.origem    || '').toUpperCase().trim(),
+      destino:          (camposRota.destino   || '').toUpperCase().trim(),
+      companhia_aerea:  emissaoEntry.programa || '',
+      classe:           camposRota.classe     || '',
+      milhas_utilizadas: +(emissaoEntry.pontos  || 0),
+      valor_taxas:      +(emissaoEntry.taxas    || 0),
+      valor_final:      +(emissaoEntry.cobrado  || 0),
+      data_cotacao:     emissaoEntry.data       || today(),
+      criado_em:        new Date().toISOString(),
+      // Campos auxiliares para análises futuras (não quebram nada se ausentes)
+      programa_nome:    prog.name || emissaoEntry.programa,
+      trip_type:        emissaoEntry.tripType  || 'ida',
+      cpm:              +(emissaoEntry.cpm      || 0),
+      lucro:            +(emissaoEntry.lucro    || 0),
+      margem:           +(emissaoEntry.margem   || 0),
+      origem_registro:  camposRota.origemRegistro || 'FORMULARIO',
+    };
+  },
+
+  // registrar: ponto de entrada público — chamado por saveEmissao e saveFromCalc.
+  // Fire-and-forget: nunca lança exceção, nunca bloqueia o fluxo principal.
+  registrar(emissaoEntry, camposRota){
+    // Executa em microtask para não atrasar o save principal
+    Promise.resolve().then(()=>{
+      try{
+        const cot = this._construir(emissaoEntry, camposRota || {});
+        // 1. Persiste localmente (síncrono, dentro do Store já debounced)
+        Store.update(s=>{
+          if(!Array.isArray(s.historico_cotacoes)) s.historico_cotacoes=[];
+          s.historico_cotacoes.unshift(cot);
+          // Limitar a 2.000 registros para não sobrecarregar o localStorage
+          if(s.historico_cotacoes.length>2000) s.historico_cotacoes=s.historico_cotacoes.slice(0,2000);
+        });
+        // 2. Persiste na planilha (assíncrono, fila própria do SheetsAPI)
+        SheetsAPI.send('historico_cotacoes', cot);
+      } catch(err){
+        // Falha silenciosa — o sistema principal não é afetado
+        console.warn('[HistoricoCotacoes] registrar falhou:', err.message);
+      }
+    }).catch(err=>{
+      console.warn('[HistoricoCotacoes] microtask falhou:', err.message);
+    });
+  },
+
+  // ── CONSULTAS ───────────────────────────────────────────────
+  // buscar: retorna cotações filtradas por qualquer combinação de campos.
+  // Todos os filtros são opcionais — omitir = não filtrar por aquele campo.
+  //
+  // Exemplo de uso futuro:
+  //   HistoricoCotacoes.buscar({ origem:'GRU', destino:'LIS', classe:'executiva' })
+  //   HistoricoCotacoes.buscar({ companhia:'azul', limite:50 })
+  buscar(filtros){
+    try{
+      filtros = filtros || {};
+      let lista = [...(Store.get().historico_cotacoes || [])];
+
+      if(filtros.origem)
+        lista = lista.filter(c => c.origem.toUpperCase() === filtros.origem.toUpperCase());
+
+      if(filtros.destino)
+        lista = lista.filter(c => c.destino.toUpperCase() === filtros.destino.toUpperCase());
+
+      if(filtros.classe)
+        lista = lista.filter(c => c.classe === filtros.classe);
+
+      if(filtros.companhia)
+        lista = lista.filter(c => c.companhia_aerea === filtros.companhia);
+
+      if(filtros.dataInicio)
+        lista = lista.filter(c => c.data_cotacao >= filtros.dataInicio);
+
+      if(filtros.dataFim)
+        lista = lista.filter(c => c.data_cotacao <= filtros.dataFim);
+
+      if(filtros.tripType)
+        lista = lista.filter(c => c.trip_type === filtros.tripType);
+
+      // Ordenação: mais recente primeiro por padrão
+      lista.sort((a,b)=>{
+        if(filtros.orderBy === 'valor_final')   return b.valor_final - a.valor_final;
+        if(filtros.orderBy === 'milhas')        return b.milhas_utilizadas - a.milhas_utilizadas;
+        if(filtros.orderBy === 'lucro')         return b.lucro - a.lucro;
+        // default: cronológico decrescente
+        return (b.data_cotacao||'').localeCompare(a.data_cotacao||'');
+      });
+
+      if(filtros.limite && filtros.limite > 0)
+        lista = lista.slice(0, filtros.limite);
+
+      return lista;
+    }catch(err){
+      console.warn('[HistoricoCotacoes] buscar falhou:', err.message);
+      return [];
+    }
+  },
+
+  // estatisticas: agregações prontas para inteligência de preços.
+  // Recebe os mesmos filtros de buscar() e retorna métricas calculadas.
+  estatisticas(filtros){
+    try{
+      const lista = this.buscar(filtros);
+      if(!lista.length) return null;
+
+      const vals   = lista.map(c=>c.valor_final).filter(v=>v>0);
+      const milhas = lista.map(c=>c.milhas_utilizadas).filter(v=>v>0);
+      const lucros = lista.map(c=>c.lucro);
+      const soma   = (arr)=>arr.reduce((a,b)=>a+b,0);
+      const media  = (arr)=>arr.length ? soma(arr)/arr.length : 0;
+
+      return {
+        total:           lista.length,
+        valor_medio:     media(vals),
+        valor_min:       vals.length ? Math.min(...vals) : 0,
+        valor_max:       vals.length ? Math.max(...vals) : 0,
+        milhas_media:    media(milhas),
+        lucro_medio:     media(lucros),
+        lucro_total:     soma(lucros),
+        // Distribuição por classe
+        por_classe: lista.reduce((acc,c)=>{
+          const k=c.classe||'nao_informado';
+          if(!acc[k]) acc[k]={count:0,valor_medio_acc:0};
+          acc[k].count++;
+          acc[k].valor_medio_acc+=c.valor_final;
+          return acc;
+        },{}),
+        // Distribuição por companhia
+        por_companhia: lista.reduce((acc,c)=>{
+          const k=c.companhia_aerea||'outro';
+          if(!acc[k]) acc[k]={count:0,lucro_total:0};
+          acc[k].count++;
+          acc[k].lucro_total+=c.lucro;
+          return acc;
+        },{}),
+      };
+    }catch(err){
+      console.warn('[HistoricoCotacoes] estatisticas falhou:', err.message);
+      return null;
+    }
+  },
+
+  // ── REFERÊNCIA DE MERCADO ───────────────────────────────────
+  // referenciaMercado: calcula média/min/max para origem+destino+classe
+  // usando apenas cotações dos últimos 6 meses. Mínimo 2 registros.
+  // Nunca lança exceção — retorna null se dados insuficientes.
+  referenciaMercado(origem, destino, classe, valorAtual){
+    try{
+      if(!origem || !destino) return null;
+
+      // Janela de 6 meses em YYYY-MM-DD (ISO string é sort-safe)
+      const d6 = new Date();
+      d6.setMonth(d6.getMonth() - 6);
+      const seisMesesAtras = d6.toISOString().slice(0,10);
+
+      const filtros = { origem, destino, dataInicio: seisMesesAtras };
+      if(classe) filtros.classe = classe;
+
+      const lista = this.buscar(filtros);
+      const vals  = lista.map(c => c.valor_final).filter(v => v > 0);
+
+      // Mínimo 2 cotações para uma referência significativa
+      if(vals.length < 2) return null;
+
+      const soma  = vals.reduce((a,b) => a+b, 0);
+      const media = soma / vals.length;
+      const menor = Math.min(...vals);
+      const maior = Math.max(...vals);
+
+      // Indicador visual por distância da média:
+      //   verde   → valorAtual ≤ 95% da média   (abaixo)
+      //   amarelo → valorAtual ≤ 110% da média  (próximo)
+      //   vermelho→ valorAtual > 110% da média  (acima)
+      let indicador = null, indicadorLabel = null;
+      if(valorAtual > 0){
+        const ratio = valorAtual / media;
+        if     (ratio <= 0.95){ indicador='green';  indicadorLabel='▼ Abaixo da média'; }
+        else if(ratio <= 1.10){ indicador='yellow'; indicadorLabel='≈ Próximo da média'; }
+        else                  { indicador='red';    indicadorLabel='▲ Acima da média'; }
+      }
+
+      return { media, menor, maior, total: vals.length, indicador, indicadorLabel, seisMesesAtras };
+    }catch(err){
+      console.warn('[HistoricoCotacoes] referenciaMercado falhou:', err.message);
+      return null;
+    }
+  },
+
+  // ── SUGESTÃO DE COMPANHIAS ──────────────────────────────────
+  // sugestaoCompanhias: agrupa cotações dos últimos 6 meses por companhia
+  // para a combinação origem+destino+classe e devolve ranking do mais barato
+  // ao mais caro.
+  //
+  // Parâmetros:
+  //   origem   string — IATA (ex: 'GRU')
+  //   destino  string — IATA (ex: 'LIS')
+  //   classe   string — 'economica' | '' | ...   (vazio = qualquer classe)
+  //
+  // Retorna null se dados insuficientes (menos de 2 companhias distintas
+  // OU menos de 2 cotações no total).
+  // Nunca lança exceção.
+  sugestaoCompanhias(origem, destino, classe){
+    try{
+      if(!origem || !destino) return null;
+
+      const d6 = new Date();
+      d6.setMonth(d6.getMonth() - 6);
+      const seisMesesAtras = d6.toISOString().slice(0,10);
+
+      const filtros = { origem, destino, dataInicio: seisMesesAtras };
+      if(classe) filtros.classe = classe;
+
+      const lista = this.buscar(filtros);
+      if(lista.length < 2) return null;
+
+      // Agrupar por companhia_aerea
+      const grupos = {};
+      lista.forEach(c => {
+        const cia = c.companhia_aerea || 'outro';
+        if(!grupos[cia]) grupos[cia] = { cia, valores: [], count: 0 };
+        if(c.valor_final > 0){
+          grupos[cia].valores.push(c.valor_final);
+          grupos[cia].count++;
+        }
+      });
+
+      // Calcular média por companhia e descartar cias com 0 registros válidos
+      const ranking = Object.values(grupos)
+        .filter(g => g.count > 0)
+        .map(g => {
+          const soma  = g.valores.reduce((a,b) => a+b, 0);
+          const media = soma / g.valores.length;
+          const menor = Math.min(...g.valores);
+          const maior = Math.max(...g.valores);
+          return { cia: g.cia, media, menor, maior, count: g.count };
+        })
+        .sort((a, b) => a.media - b.media);   // mais barato primeiro
+
+      // Precisamos de pelo menos 1 companhia com dados para sugerir
+      if(!ranking.length) return null;
+
+      return { ranking, total: lista.length, seisMesesAtras };
+    }catch(err){
+      console.warn('[HistoricoCotacoes] sugestaoCompanhias falhou:', err.message);
+      return null;
+    }
+  },
+
+  // exportarCSV: gera string CSV para download ou análise externa.
+  exportarCSV(filtros){
+    try{
+      const lista = this.buscar(filtros);
+      if(!lista.length) return '';
+      const cols = ['id','data_cotacao','origem','destino','companhia_aerea','programa_nome',
+                    'classe','trip_type','milhas_utilizadas','valor_taxas','valor_final',
+                    'cpm','lucro','margem','origem_registro','criado_em'];
+      const esc  = (v)=>typeof v==='string'?`"${v.replace(/"/g,'""')}"`:String(v??'');
+      const bom  = '\uFEFF';
+      const head = cols.join(';');
+      const rows = lista.map(c=>cols.map(col=>esc(c[col])).join(';'));
+      return bom + [head,...rows].join('\n');
+    }catch(err){
+      console.warn('[HistoricoCotacoes] exportarCSV falhou:', err.message);
+      return '';
+    }
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
 // HTML HELPERS
 // ═══════════════════════════════════════════════════════════════
 const H={
@@ -1709,6 +2107,113 @@ const Render={
     if(r.roi<30&&r.roi!==0)recs.push({c:'var(--gold)',b:'rgba(245,197,66,.05)',bl:'var(--gold)',t:'📉 ROI abaixo de 30%. Busque rotas mais valorizadas ou reduza o CPM.'});
     if(!f.mercado)recs.push({c:'var(--txt2)',b:'var(--bg3)',bl:'var(--border)',t:'→ Preencha os dados na <strong style="color:var(--gold);">Calculadora</strong> para ver recomendações.'});
     document.getElementById('sim-recs').innerHTML=recs.map(rec=>`<div style="padding:11px 13px;background:${rec.b};border-radius:var(--radius);border-left:3px solid ${rec.bl};margin-bottom:8px;font-size:12px;color:${rec.c};line-height:1.65;">${rec.t}</div>`).join('');
+  },
+  /* ── SIM RÁPIDO — resultado ao vivo ─────────── */
+  simRapido(){
+    const body = document.getElementById('sim-res-body');
+    const refEl = document.getElementById('sim-ref-mkt');
+    if(!body) return;
+
+    const milhas = +document.getElementById('sim-milhas')?.value || 0;
+    const cpm    = +document.getElementById('sim-cpm')?.value   || 0;
+    const taxas  = +document.getElementById('sim-taxas')?.value || 0;
+    const orig   = (document.getElementById('sim-orig')?.value  || '').toUpperCase().trim();
+    const dest   = (document.getElementById('sim-dest')?.value  || '').toUpperCase().trim();
+    const classe = document.getElementById('sim-classe')?.value || '';
+
+    // Sem dados mínimos — estado vazio
+    if(!milhas && !cpm){ body.innerHTML='<div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos ao lado para ver o resultado.</div>'; if(refEl)refEl.style.display='none'; return; }
+
+    const custoMilhas = (milhas/1000) * cpm;
+    const custoTotal  = custoMilhas + taxas;
+
+    // Três níveis de margem: baixa 8%, ideal 20%, alta 35%
+    const niveis = [
+      { label:'Margem Baixa',  pct:8,  cor:'var(--red)',  bg:'var(--reddim)',  bdr:'var(--redbdr)',  ind:'red'    },
+      { label:'Margem Ideal',  pct:20, cor:'var(--yel)',  bg:'var(--yeldim)',  bdr:'rgba(255,215,64,.25)', ind:'yellow' },
+      { label:'Margem Alta',   pct:35, cor:'var(--grn)',  bg:'var(--grndim)',  bdr:'var(--grnbdr)',  ind:'green'  },
+    ];
+    const niveisHtml = niveis.map(n => {
+      // Preço de venda para atingir esta margem: custo / (1 - margem%)
+      const venda  = n.pct < 100 ? custoTotal / (1 - n.pct/100) : 0;
+      const lucro  = venda - custoTotal;
+      return `<div style="background:${n.bg};border:1px solid ${n.bdr};border-radius:var(--radius);padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div>
+          <div style="font-size:9px;font-weight:800;color:${n.cor};letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;">${n.label} · ${n.pct}%</div>
+          <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:${n.cor};">${R$(venda)}</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:2px;">Lucro: ${R$(lucro)}</div>
+        </div>
+        <button onclick="App.simPreencherVenda(${venda.toFixed(2)})" style="background:${n.bg};border:1px solid ${n.bdr};border-radius:var(--radius);padding:5px 10px;font-size:10px;color:${n.cor};cursor:pointer;white-space:nowrap;">Usar ↗</button>
+      </div>`;
+    }).join('');
+
+    body.innerHTML = `
+      <div style="display:grid;gap:10px;margin-bottom:14px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+          ${H.mbox('Custo das Milhas', R$(custoMilhas), `${N(milhas)} pts × R$${cpm}/mil`, 'var(--txt1)', false)}
+          ${H.mbox('Custo Total',      R$(custoTotal),  'Milhas + Taxas',                  'var(--gold)', true)}
+        </div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Preço Sugerido por Nível de Margem</div>
+      <div style="display:grid;gap:8px;">${niveisHtml}</div>`;
+
+    // Referência de mercado da rota (se preenchida)
+    if(refEl){
+      if(orig && dest){
+        const ref = HistoricoCotacoes.referenciaMercado(orig, dest, classe, 0);
+        if(ref){
+          refEl.style.display='block';
+          refEl.innerHTML=`<div style="padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);margin-top:4px;">
+            <div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px;">📊 Referência ${orig} → ${dest}${classe?' · '+classe:''}</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+              <div style="text-align:center;"><div style="font-size:9px;color:var(--txt3);margin-bottom:3px;">Média</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--txt1);">${R$(ref.media)}</div></div>
+              <div style="text-align:center;"><div style="font-size:9px;color:var(--txt3);margin-bottom:3px;">Menor</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--grn);">${R$(ref.menor)}</div></div>
+              <div style="text-align:center;"><div style="font-size:9px;color:var(--txt3);margin-bottom:3px;">Maior</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--red);">${R$(ref.maior)}</div></div>
+            </div>
+            <div style="margin-top:7px;font-size:10px;color:var(--txt3);">Baseado em ${ref.total} cotações · últimos 6 meses</div>
+          </div>`;
+        } else {
+          refEl.style.display='block';
+          refEl.innerHTML=`<div style="padding:10px 13px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);margin-top:4px;font-size:11px;color:var(--txt3);">📊 Sem histórico de mercado para ${orig} → ${dest}${classe?' · '+classe:''}.</div>`;
+        }
+      } else { refEl.style.display='none'; }
+    }
+  },
+  /* ── SIM LIST — simulações salvas ───────────── */
+  simList(){
+    const el = document.getElementById('sim-saved-list');
+    if(!el) return;
+    const sims = [...(Store.get().simulacoes||[])];
+    if(!sims.length){ el.innerHTML='<div style="color:var(--txt3);font-size:12px;text-align:center;padding:20px 0;">Nenhuma simulação salva ainda.</div>'; return; }
+
+    el.innerHTML = sims.map(sim => {
+      const prog  = progById(sim.cia);
+      const ct    = sim.custoTotal || 0;
+      const v20   = ct>0 ? ct/(1-0.20) : 0;  // preço ideal pré-calculado para exibição
+      const rota  = [sim.origem, sim.destino].filter(Boolean).join(' → ') || '—';
+      const classe = sim.classe ? ` · ${sim.classe}` : '';
+      return `<div style="display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border);">
+        <div style="width:3px;height:40px;border-radius:2px;background:${prog.color};flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+            <span style="font-size:12px;font-weight:700;color:var(--txt1);">${prog.short}</span>
+            <span style="font-size:11px;color:var(--txt2);">${rota}${classe}</span>
+            <span style="font-size:10px;color:var(--txt3);margin-left:auto;">${sim.data||''}</span>
+          </div>
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--txt2);">
+            <span>${N(sim.milhas)} pts</span>
+            <span>CPM: ${R$(sim.cpm)}</span>
+            <span>Custo: <strong style="color:var(--gold);">${R$(ct)}</strong></span>
+            <span>Sugerido (20%): <strong style="color:var(--grn);">${R$(v20)}</strong></span>
+          </div>
+          ${sim.obs?`<div style="font-size:10px;color:var(--txt3);margin-top:2px;">${sim.obs}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+          <button onclick="App.simToEmissao('${sim.id}')" style="background:var(--grndim);border:1px solid var(--grnbdr);border-radius:var(--radius);padding:4px 9px;font-size:10px;color:var(--grn);cursor:pointer;white-space:nowrap;">✦ Gerar Cotação</button>
+          <button onclick="App.delSim('${sim.id}')" style="background:var(--reddim);border:1px solid var(--redbdr);border-radius:var(--radius);padding:4px 9px;font-size:10px;color:var(--red);cursor:pointer;">✕ Remover</button>
+        </div>
+      </div>`;
+    }).join('');
   },
   /* ── STOCK ──────────────────────────────────── */
   stock(){
@@ -2152,6 +2657,178 @@ const Render={
       document.getElementById('em-preview').style.display='block';
       document.getElementById('em-prev-vals').innerHTML=[H.mbox('Custo Total',R$(c.custo),'','var(--gold)',true),H.mbox('Lucro Líquido',R$(c.lucro),'',c.lucro>=0?'var(--grn)':'var(--red)',false),H.mbox('Margem',pct(c.margem),'',c.ind==='green'?'var(--grn)':c.ind==='yellow'?'var(--yel)':'var(--red)',false),H.mbox('ROI',pct(c.roi),'','var(--cyan)',false)].join('');
     } else document.getElementById('em-preview').style.display='none';
+    // Atualizar referência de mercado sempre que qualquer campo relevante mudar
+    Render.emReferencia();
+  },
+  /* ── SUGESTÃO DE COMPANHIAS (Emissão) ───────── */
+  emSugestao(){
+    const el = document.getElementById('em-sugestao');
+    if(!el) return;
+
+    const origem  = (document.getElementById('em-origem')?.value  || '').toUpperCase().trim();
+    const destino = (document.getElementById('em-destino')?.value || '').toUpperCase().trim();
+    const classe  = document.getElementById('em-classe')?.value   || '';
+
+    // Só ativa com rota completa
+    if(!origem || !destino){ el.style.display='none'; el.innerHTML=''; return; }
+
+    const sug = HistoricoCotacoes.sugestaoCompanhias(origem, destino, classe);
+
+    if(!sug){
+      el.style.display='block';
+      el.innerHTML=`<div style="padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;gap:9px;">
+        <span style="font-size:15px;opacity:.45;">✈</span>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px;">Melhores opções para essa rota</div>
+          <div style="font-size:11px;color:var(--txt3);">Sem histórico suficiente para sugestão automática · ${origem} → ${destino}${classe?' · '+classe:''}</div>
+        </div>
+      </div>`;
+      return;
+    }
+
+    const { ranking } = sug;
+    // Menor média global para a barra de referência
+    const menorMedia = ranking[0].media;
+    const maiorMedia = ranking[ranking.length-1].media;
+    const span       = maiorMedia - menorMedia || 1;  // evitar divisão por zero
+
+    const linhas = ranking.map((item, idx) => {
+      const prog      = progById(item.cia);
+      const isMelhor  = idx === 0;
+      const barW      = Math.max(12, Math.round(((item.media - menorMedia) / span) * 70) + 12); // 12–82%
+      const barColor  = isMelhor ? 'var(--grn)' : idx===1 ? 'var(--yel)' : 'var(--txt3)';
+
+      const sujestBadge = isMelhor
+        ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:99px;font-size:9px;font-weight:800;letter-spacing:.06em;color:var(--grn);background:var(--grndim);border:1px solid var(--grnbdr);">★ Sugestão do sistema</span>`
+        : '';
+
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);last-child:border-bottom:none;">
+        <!-- Cor do programa -->
+        <div style="width:3px;height:36px;border-radius:2px;background:${prog.color};flex-shrink:0;"></div>
+        <!-- Nome + badge -->
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+            <span style="font-size:12px;font-weight:700;color:var(--txt1);">${prog.short}</span>
+            ${sujestBadge}
+          </div>
+          <!-- Barra de preço relativo -->
+          <div style="height:4px;background:var(--bg2);border-radius:99px;overflow:hidden;max-width:160px;">
+            <div style="height:100%;width:${barW}%;background:${barColor};border-radius:99px;transition:width .4s;"></div>
+          </div>
+        </div>
+        <!-- Média -->
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:${isMelhor?'var(--grn)':'var(--txt1)'};">${R$(item.media)}</div>
+          <div style="font-size:10px;color:var(--txt3);">${item.count} emissão${item.count>1?'ões':''}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    el.style.display='block';
+    el.innerHTML=`
+      <div style="padding:13px 14px;background:var(--bg3);border:1px solid rgba(0,229,255,.18);border-radius:var(--radius);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span style="font-size:13px;">✈</span>
+            <span style="font-size:11px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.06em;">Melhores opções para essa rota</span>
+            <span style="font-size:10px;color:var(--txt3);">${origem} → ${destino}${classe?' · '+classe:''}</span>
+          </div>
+          <span style="font-size:10px;color:var(--txt3);">últimos 6 meses</span>
+        </div>
+        <div>${linhas}</div>
+        <div style="margin-top:8px;font-size:10px;color:var(--txt3);">Baseado em ${sug.total} cotação${sug.total>1?'ões':''} registradas · preço médio por emissão</div>
+      </div>`;
+  },
+  /* ── REFERÊNCIA DE MERCADO (Emissão) ────────── */
+  emReferencia(){
+    const el = document.getElementById('em-referencia');
+    if(!el) return;
+
+    const origem  = (document.getElementById('em-origem')?.value  || '').toUpperCase().trim();
+    const destino = (document.getElementById('em-destino')?.value || '').toUpperCase().trim();
+    const classe  = document.getElementById('em-classe')?.value   || '';
+    const cob     = +document.getElementById('em-cobrado')?.value || 0;
+
+    // Sem rota definida → esconder bloco silenciosamente
+    if(!origem || !destino){ el.style.display='none'; el.innerHTML=''; return; }
+
+    const ref = HistoricoCotacoes.referenciaMercado(origem, destino, classe, cob);
+
+    if(!ref){
+      // Dados insuficientes — mostrar aviso neutro
+      el.style.display='block';
+      el.innerHTML=`<div style="padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;gap:9px;">
+        <span style="font-size:16px;opacity:.5;">📊</span>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Referência de Mercado</div>
+          <div style="font-size:12px;color:var(--txt3);">Sem dados suficientes para referência de mercado.</div>
+          <div style="font-size:10px;color:var(--txt3);margin-top:2px;">${origem} → ${destino}${classe?' · '+classe:''} · últimos 6 meses · mínimo 2 cotações</div>
+        </div>
+      </div>`;
+      return;
+    }
+
+    // Cores e ícone do indicador visual
+    const indColor = ref.indicador==='green'?'var(--grn)':ref.indicador==='yellow'?'var(--yel)':'var(--red)';
+    const indBg    = ref.indicador==='green'?'rgba(0,200,83,.08)':ref.indicador==='yellow'?'rgba(255,215,64,.08)':'rgba(255,77,109,.08)';
+    const indBdr   = ref.indicador==='green'?'rgba(0,200,83,.25)':ref.indicador==='yellow'?'rgba(255,215,64,.25)':'rgba(255,77,109,.25)';
+
+    // Barra de posição: onde o valor atual cai entre menor e maior
+    let barraHtml = '';
+    if(cob > 0 && ref.maior > ref.menor){
+      const pct_pos = Math.min(100, Math.max(0, ((cob - ref.menor)/(ref.maior - ref.menor))*100));
+      const pct_med = Math.min(100, Math.max(0, ((ref.media - ref.menor)/(ref.maior - ref.menor))*100));
+      barraHtml = `
+        <div style="margin-top:10px;">
+          <div style="position:relative;height:6px;background:var(--bg2);border-radius:99px;overflow:visible;">
+            <!-- Faixa de gradiente -->
+            <div style="position:absolute;inset:0;border-radius:99px;background:linear-gradient(90deg,var(--grn),var(--yel),var(--red));opacity:.25;"></div>
+            <!-- Marcador da média -->
+            <div style="position:absolute;top:-3px;width:2px;height:12px;background:var(--txt3);border-radius:1px;left:calc(${pct_med.toFixed(1)}% - 1px);" title="Média"></div>
+            <!-- Marcador do valor atual -->
+            ${cob>0?`<div style="position:absolute;top:-4px;width:10px;height:10px;border-radius:50%;background:${indColor};border:2px solid var(--bg0);box-shadow:0 0 6px ${indColor};left:calc(${pct_pos.toFixed(1)}% - 5px);transition:left .3s;" title="Seu preço"></div>`:''}
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;">
+            <span style="font-size:10px;color:var(--txt3);">${R$(ref.menor)}</span>
+            <span style="font-size:10px;color:var(--txt3);">Menor · Médio · Maior</span>
+            <span style="font-size:10px;color:var(--txt3);">${R$(ref.maior)}</span>
+          </div>
+        </div>`;
+    }
+
+    // Rótulo do indicador (só aparece se há valor cobrado)
+    const indBadge = ref.indicadorLabel
+      ? `<span style="display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;color:${indColor};background:${indBg};border:1px solid ${indBdr};margin-left:8px;">${ref.indicadorLabel}</span>`
+      : '';
+
+    el.style.display='block';
+    el.innerHTML=`
+      <div style="padding:13px 14px;background:var(--bg3);border:1px solid ${ref.indicador?indBdr:'var(--border)'};border-radius:var(--radius);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span style="font-size:13px;">📊</span>
+            <span style="font-size:11px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.06em;">Referência de Mercado</span>
+            <span style="font-size:10px;color:var(--txt3);">${origem} → ${destino}${classe?' · '+classe:''}</span>
+          </div>
+          ${indBadge}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          <div style="background:var(--bg2);border-radius:var(--radius);padding:9px 11px;">
+            <div style="font-size:10px;color:var(--txt3);margin-bottom:3px;">Média</div>
+            <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--txt1);">${R$(ref.media)}</div>
+          </div>
+          <div style="background:var(--bg2);border-radius:var(--radius);padding:9px 11px;">
+            <div style="font-size:10px;color:var(--txt3);margin-bottom:3px;">Menor preço</div>
+            <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--grn);">${R$(ref.menor)}</div>
+          </div>
+          <div style="background:var(--bg2);border-radius:var(--radius);padding:9px 11px;">
+            <div style="font-size:10px;color:var(--txt3);margin-bottom:3px;">Maior preço</div>
+            <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--red);">${R$(ref.maior)}</div>
+          </div>
+        </div>
+        ${barraHtml}
+        <div style="margin-top:8px;font-size:10px;color:var(--txt3);">Baseado em ${ref.total} cotação${ref.total>1?'ões':''} · últimos 6 meses</div>
+      </div>`;
   },
   /* ── THEME ───────────────────────────────────── */
   updateThemeBtn(){
@@ -2160,7 +2837,7 @@ const Render={
   },
   /* ── ALL ─────────────────────────────────────── */
   all(){
-    Render.dashboard();Render.calc();Render.strat();Render.sim();Render.stock();
+    Render.dashboard();Render.calc();Render.strat();Render.sim();Render.simList();Render.stock();
     Render.hist('all','all');Render.compras();Render.vendas();Render.transfs();Render.operacoes();Render.auditoria();
     const now=new Date();Render.dre(now.getMonth()+1,now.getFullYear());Render.caixa();
     Render.updateThemeBtn();
@@ -2371,8 +3048,17 @@ const App={
     // Transferência
     document.getElementById('btn-save-transf').addEventListener('click',()=>App.saveTransf());
 
+    // Simulador rápido
+    const btnSaveSim=document.getElementById('btn-save-sim');
+    if(btnSaveSim)btnSaveSim.addEventListener('click',()=>App.saveSim());
+    const btnClearSims=document.getElementById('btn-clear-sims');
+    if(btnClearSims)btnClearSims.addEventListener('click',()=>App.clearAllSims());
+
     // Emissão manual
     ['em-pontos','em-cpm','em-taxas','em-cobrado'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>Render.emPreview());});
+    // Campos de rota: atualizar sugestão de companhias E referência de mercado
+    ['em-origem','em-destino'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{Render.emSugestao();Render.emReferencia();});});
+    const emCl=document.getElementById('em-classe');if(emCl)emCl.addEventListener('change',()=>{Render.emSugestao();Render.emReferencia();});
     document.getElementById('btn-save-em').addEventListener('click',()=>App.saveEmissao());
 
     // History
@@ -2524,7 +3210,7 @@ const App={
 
   populateSelects(){
     const opts=PROGRAMS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-    ['cp-prog','vd-prog','em-prog','tf-orig','tf-dest'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+    ['cp-prog','vd-prog','em-prog','tf-orig','tf-dest','sim-cia'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
     // Filter history
     const filtOpts='<option value="all">Todos os programas</option>'+opts;
     const fp=document.getElementById('filt-prog');if(fp)fp.innerHTML=filtOpts;
@@ -2588,8 +3274,96 @@ const App={
     });
     SheetsAPI.send('emissoes',entry);
     AuditLog.registrar(AuditLog.TIPOS.EMISSAO, {...entry, origem:'CALCULADORA'});
+    // Histórico de cotações — fire-and-forget, sem campos de rota (calculadora não tem esses campos)
+    HistoricoCotacoes.registrar(entry, {origemRegistro:'CALCULADORA'});
     Render.dashboard();Render.hist('all','all');Render.stock();
     App.notify('✓ Emissão salva!','ok');
+  },
+
+  // ─── SIMULADOR RÁPIDO ──────────────────────────────────────
+  // simCalc: disparado a cada input — atualiza display e referência
+  simCalc(){
+    Render.simRapido();
+  },
+
+  // simPreencherVenda: clique em "Usar ↗" preenche o campo cobrado da emissão
+  // (útil se o usuário quiser ir direto para a emissão com o preço sugerido)
+  simPreencherVenda(val){
+    // Navega para emissão e preenche cobrado, se já não estiver lá
+    App.nav('emissao');
+    const el=document.getElementById('em-cobrado');
+    if(el){el.value=val.toFixed(2);Render.emPreview();}
+  },
+
+  // saveSim: salva o estado atual do formulário de simulação
+  saveSim(){
+    const milhas = +document.getElementById('sim-milhas')?.value || 0;
+    const cpm    = +document.getElementById('sim-cpm')?.value   || 0;
+    const taxas  = +document.getElementById('sim-taxas')?.value || 0;
+    if(!milhas || !cpm){App.notify('Preencha Milhas e Custo das Milhas antes de salvar.','er');return;}
+    const custoTotal = (milhas/1000)*cpm + taxas;
+    const entry = {
+      id:      String(Date.now()),
+      data:    today(),
+      origem:  (document.getElementById('sim-orig')?.value  || '').toUpperCase().trim(),
+      destino: (document.getElementById('sim-dest')?.value  || '').toUpperCase().trim(),
+      cia:     document.getElementById('sim-cia')?.value    || 'azul',
+      classe:  document.getElementById('sim-classe')?.value || '',
+      milhas, cpm, taxas, custoTotal,
+      obs:     document.getElementById('sim-obs')?.value    || '',
+    };
+    Store.update(s=>{
+      if(!Array.isArray(s.simulacoes))s.simulacoes=[];
+      s.simulacoes.unshift(entry);
+      // Manter no máximo 100 simulações
+      if(s.simulacoes.length>100)s.simulacoes=s.simulacoes.slice(0,100);
+    });
+    Render.simList();
+    App.notify('✓ Simulação salva!','ok');
+  },
+
+  // simToEmissao: pré-preenche o formulário de Registrar Emissão e navega
+  // O salvamento real (com HistoricoCotacoes.registrar) acontece pelo saveEmissao() normal
+  simToEmissao(id){
+    const sim = (Store.get().simulacoes||[]).find(s=>s.id===id);
+    if(!sim){App.notify('Simulação não encontrada.','er');return;}
+    App.nav('emissao');
+    // Companhia / programa
+    const progEl=document.getElementById('em-prog');
+    if(progEl)progEl.value=sim.cia||'azul';
+    // Campos numéricos
+    const map={'em-pontos':sim.milhas,'em-cpm':sim.cpm,'em-taxas':sim.taxas};
+    Object.entries(map).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v||'';});
+    // Campos de rota (alimentam o HistoricoCotacoes)
+    const orig=document.getElementById('em-orig')||document.getElementById('em-origem');
+    if(orig)orig.value=sim.origem||'';
+    const dest=document.getElementById('em-dest')||document.getElementById('em-destino');
+    if(dest)dest.value=sim.destino||'';
+    const cl=document.getElementById('em-classe');
+    if(cl)cl.value=sim.classe||'';
+    // Observação
+    const obs=document.getElementById('em-obs');
+    if(obs)obs.value=sim.obs||'';
+    // Atualizar preview e sugestões
+    Render.emPreview();
+    Render.emSugestao();
+    Render.emReferencia();
+    App.notify('✓ Formulário preenchido — revise e salve a emissão.','ok');
+  },
+
+  // delSim: remove uma simulação salva
+  delSim(id){
+    Store.update(s=>{if(Array.isArray(s.simulacoes))s.simulacoes=s.simulacoes.filter(x=>x.id!==id);});
+    Render.simList();
+    App.notify('Simulação removida.','');
+  },
+
+  // clearAllSims: apaga todas as simulações
+  clearAllSims(){
+    if(!confirm('Remover todas as simulações salvas?'))return;
+    Store.update(s=>{s.simulacoes=[];});
+    Render.simList();
+    App.notify('Simulações limpas.','');
   },
 
   clearCalc(){
@@ -2626,8 +3400,18 @@ const App={
     });
     SheetsAPI.send('emissoes',entry);
     AuditLog.registrar(AuditLog.TIPOS.EMISSAO, {...entry, origem:'FORMULARIO'});
-    ['em-pontos','em-cpm','em-taxas','em-cobrado','em-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    // Histórico de cotações — lê os campos opcionais de rota/classe do formulário
+    HistoricoCotacoes.registrar(entry, {
+      origem:          (document.getElementById('em-origem')?.value  || '').toUpperCase().trim(),
+      destino:         (document.getElementById('em-destino')?.value || '').toUpperCase().trim(),
+      classe:          document.getElementById('em-classe')?.value   || '',
+      origemRegistro:  'FORMULARIO',
+    });
+    ['em-pontos','em-cpm','em-taxas','em-cobrado','em-obs','em-origem','em-destino'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const emClasse=document.getElementById('em-classe');if(emClasse)emClasse.value='';
     document.getElementById('em-preview').style.display='none';
+    const emRef=document.getElementById('em-referencia');if(emRef){emRef.style.display='none';emRef.innerHTML='';}
+    const emSug=document.getElementById('em-sugestao');if(emSug){emSug.style.display='none';emSug.innerHTML='';}
     Render.dashboard();Render.hist('all','all');Render.stock();
     App.notify('✓ Emissão registrada!','ok');
   },
