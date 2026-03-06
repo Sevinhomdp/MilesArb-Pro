@@ -235,31 +235,197 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 .login-sub{font-size:12px;color:var(--txt2);margin-bottom:26px}
 .login-err{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
 /* ═══════ RESPONSIVIDADE MOBILE ══════════════════════════════════ */
+
+/* ──────────────────────────────────────────────────────────────────
+   MOBILE  ≤ 768 px
+   Regras de precedência:
+     1. Sidebar deslizante + overlay
+     2. KPI grids: 4→2col, 3→2col, 2→1col
+     3. Formulários: fr2/fr3 → 1col; inputs altura touch (≥48px)
+     4. Tabelas: scroll horizontal via wrapper .tbl-scroll
+     5. Grids de 2 colunas inline (dashboard, strat, dre, caixa…) → 1col
+     6. Cenário table (.srow/.shdr) → 2col compacto
+     7. Twocol → 1col
+     8. Metric grids 4col → 2col
+     9. Botões primários: largura total
+    10. Notificação: topo da tela
+──────────────────────────────────────────────────────────────────── */
 @media(max-width:768px){
+
+  /* 1 — ROOT & LAYOUT */
   :root{--sidebar-w:0px}
-  #sidebar{position:fixed;left:-230px;width:230px;z-index:100;transition:left .25s ease;box-shadow:4px 0 20px rgba(0,0,0,.4)}
-  #sidebar.open{left:0}
   #layout{flex-direction:column}
-  #content{height:100vh}
-  .ph{padding:12px 16px;flex-wrap:wrap;gap:8px}
-  .ptitle{font-size:16px}
-  .pb{padding:14px 16px 30px}
-  .kgrid.k4{grid-template-columns:repeat(2,1fr)}
-  .kgrid.k3{grid-template-columns:repeat(2,1fr)}
-  .kgrid.k2{grid-template-columns:1fr}
-  .frow.fr2,.frow.fr3{grid-template-columns:1fr}
-  .dtbl{font-size:11px}
-  .dtbl th,.dtbl td{padding:7px 6px;white-space:nowrap}
-  #stock-cards{grid-template-columns:1fr!important}
-  .mbox{min-width:100%}
-  #cloud-status{bottom:12px;right:12px;font-size:10px;padding:4px 10px}
-  .logo-area{padding:14px 12px 10px}
-  /* Mobile menu toggle button */
-  #mobile-menu-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:16px;color:var(--txt1);position:fixed;top:14px;left:14px;z-index:200;}
-  #mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+  #content{height:100vh;height:100dvh}
+
+  /* 2 — SIDEBAR DESLIZANTE */
+  #sidebar{
+    position:fixed;left:-250px;width:250px;
+    z-index:100;transition:left .25s ease;
+    box-shadow:4px 0 24px rgba(0,0,0,.55)
+  }
+  #sidebar.open{left:0}
+  .logo-area{padding:14px 13px 10px}
+  .nv{padding:10px 12px;font-size:13px}
+  .sidebar-foot{font-size:9px}
+
+  /* 3 — MOBILE MENU BUTTON & OVERLAY */
+  #mobile-menu-btn{
+    display:flex;align-items:center;justify-content:center;
+    width:40px;height:40px;
+    background:var(--bg2);border:1px solid var(--border);
+    border-radius:10px;cursor:pointer;font-size:18px;
+    color:var(--txt1);position:fixed;top:11px;left:11px;z-index:200
+  }
+  #mobile-overlay{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.55);z-index:99
+  }
   #mobile-overlay.open{display:block}
+
+  /* 4 — PAGE CHROME */
+  .ph{
+    padding:11px 12px 11px 58px;/* recua para o hamburger */
+    flex-wrap:wrap;gap:8px;min-height:54px;
+    align-items:center
+  }
+  .ptitle{font-size:17px}
+  .psub{font-size:10px}
+  .pb{padding:14px 12px 32px}
+
+  /* 5 — CARDS */
+  .card{padding:14px 13px 16px;border-radius:12px}
+
+  /* 6 — KPI GRIDS */
+  .kgrid.k4{grid-template-columns:repeat(2,1fr);gap:10px}
+  .kgrid.k3{grid-template-columns:repeat(2,1fr);gap:10px}
+  .kgrid.k2{grid-template-columns:1fr;gap:10px}
+  .kcard{padding:13px 14px}
+  .kv{font-size:18px}
+
+  /* 7 — METRIC BOXES */
+  .mbox{min-width:100%}
+  /* mgrid 4col → 2col (calc-m1, calc-m2, calc-pricing, em-prev-vals) */
+  .mgrid[style*="repeat(4"]{grid-template-columns:repeat(2,1fr)!important}
+
+  /* 8 — FORMULÁRIOS */
+  .frow.fr2,.frow.fr3{grid-template-columns:1fr}
+  /* Input touch-friendly: mínimo 48px de altura, sem zoom iOS (font>=16px) */
+  input,select,textarea{
+    font-size:16px!important;
+    padding:13px 14px!important;
+    border-radius:10px
+  }
+  .iwrap input{padding:13px 40px 13px 14px!important}
+  .isuf{right:13px;font-size:11px}
+  .flbl{font-size:11px;letter-spacing:.07em}
+
+  /* 9 — BOTÕES */
+  .bprimary{
+    display:block;width:100%;
+    padding:14px;font-size:14px;
+    border-radius:10px;text-align:center
+  }
+
+  /* 10 — PROGRAM BUTTONS & TRIP TYPE */
+  /* pgrid 3col (calc) → 2col */
+  #calc-prog-btns.pgrid{grid-template-columns:repeat(2,1fr)!important}
+  .tgrid{grid-template-columns:1fr 1fr}
+  .tbtn{padding:11px;font-size:12px}
+
+  /* 11 — TABELAS: scroll horizontal */
+  .dtbl{font-size:11px}
+  .dtbl th,.dtbl td{padding:8px 7px;white-space:nowrap}
+  /* Wrappers gerados pelo JS (overflow-x:auto já presentes),
+     mas garantimos também via ID para tabelas com wrapper div */
+  #hist-table,#compras-list,#vendas-list,
+  #transf-list,#aud-table,#ops-table{
+    overflow-x:auto;-webkit-overflow-scrolling:touch
+  }
+
+  /* 12 — TWOCOL → 1 COLUNA */
+  .twocol{grid-template-columns:1fr!important}
+
+  /* 13 — GRIDS INLINE 2-COLUNAS (HTML style="") → 1 coluna
+     Usamos IDs dos containers-pai para sobrescrever style=""          */
+  #pg-dashboard .pb > div[style*="grid-template-columns:1fr 1fr"],
+  #pg-strat     .pb > div[style*="grid-template-columns:1fr 1fr"],
+  #pg-dre       .pb > div[style*="grid-template-columns:1fr 1fr"],
+  #pg-caixa     .pb > div[style*="grid-template-columns:1fr 1fr"],
+  #pg-hist      .pb > div[style*="grid-template-columns:1fr 1fr"],
+  #pg-operacoes .pb > div[style*="grid-template-columns:1fr 1fr"],
+  #pg-mercado   .pb > div[style*="grid-template-columns:1fr 1fr"],
+  #pg-simop     .pb > div[style*="grid-template-columns:1fr 1fr"]{
+    grid-template-columns:1fr!important
+  }
+  /* Internos strat-cmp e strat-met */
+  #strat-cmp,#strat-met{grid-template-columns:1fr!important}
+
+  /* 14 — STOCK CARDS 3col → 1col */
+  #stock-cards{grid-template-columns:1fr!important;gap:12px}
+
+  /* 15 — MERCADO STATS 4col → 2col */
+  #mkt-chart-stats{grid-template-columns:repeat(2,1fr)!important;gap:8px}
+
+  /* 16 — CENÁRIO TABLE: compacto em 2 colunas */
+  .shdr{display:none}/* oculta cabeçalho de coluna — sem espaço */
+  .srow{
+    grid-template-columns:1fr 1fr!important;
+    row-gap:4px;column-gap:8px;
+    padding:10px 12px
+  }
+  .srow > span:first-child{
+    grid-column:1/-1;font-weight:700
+  }
+
+  /* 17 — FILTROS */
+  .filtbar{flex-direction:column;align-items:stretch;gap:8px}
+  .filtbar select{width:100%!important;font-size:15px!important;padding:11px 14px!important}
+
+  /* 18 — NOTIFICAÇÃO: topo da tela no mobile */
+  #notif{
+    bottom:auto;top:62px;
+    left:12px;right:12px;
+    max-width:none;
+    font-size:13px;padding:13px 16px
+  }
+
+  /* 19 — CLOUD STATUS */
+  #cloud-status{bottom:10px;right:10px;font-size:10px;padding:4px 10px}
+
+  /* 20 — MODAL: bottom sheet no mobile */
+  .moverlay{align-items:flex-end}
+  .mdl{
+    width:100%!important;max-width:100%!important;
+    margin:0;
+    border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    padding:22px 18px 32px
+  }
+
+  /* 21 — INDICADOR BADGE */
+  .indbadge{font-size:12px;padding:7px 12px}
+
+  /* 22 — THEME TOGGLE no header: menor */
+  .theme-toggle{padding:4px 10px;font-size:10px}
+
+  /* 23 — LOGIN */
+  .login-box{padding:26px 18px;border-radius:var(--radius-xl)}
+
+  /* 24 — DRE seletor mês/ano inline → coluna */
+  #pg-dre .pb > div:first-child{flex-direction:column;align-items:stretch;gap:10px}
+  #dre-mes,#dre-ano{width:100%!important}
+
+  /* 25 — PERFORMANCE BARS */
+  .perfbars{height:55px}
+
+  /* 26 — ESPAÇAMENTO GERAL */
+  .card+.card{margin-top:12px}
 }
-@media(min-width:769px){#mobile-menu-btn{display:none}#mobile-overlay{display:none!important}}
+
+/* Desktop: esconde os controles mobile */
+@media(min-width:769px){
+  #mobile-menu-btn{display:none}
+  #mobile-overlay{display:none!important}
+}
 
 /* ═══════ CLOUD STATUS ═══════════════════════════════════════════ */
 #cloud-status{
@@ -330,7 +496,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
     <div class="nav-sec-lbl">Arbitragem</div>
     <button class="nv" data-pg="calc"><span class="nv-ic">⟳</span>Calculadora</button>
     <button class="nv" data-pg="strat"><span class="nv-ic">⚖</span>Estratégias</button>
-    <button class="nv" data-pg="sim"><span class="nv-ic">◈</span>Simulador</button>
+    <button class="nv" data-pg="simop"><span class="nv-ic">◈</span>Simulador</button>
   </div>
   <div class="nav-sec">
     <div class="nav-sec-lbl">Operações</div>
@@ -432,6 +598,19 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
         </div>
       </div>
     </div>
+    <!-- ── CENÁRIOS (integrado da antiga aba Simulador) ──── -->
+    <div style="margin-top:20px;">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="sec">◈ Cenários de Mercado</div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:10px;">Variações sobre o preço de mercado preenchido acima.</div>
+        <div class="shdr"><div class="shd">Cenário</div><div class="shd">Preço Mercado</div><div class="shd">Você Cobra</div><div class="shd">Lucro Líquido</div><div class="shd">Margem</div></div>
+        <div id="sim-table"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card"><div class="sec">Alertas Automáticos</div><div id="sim-alerts"></div></div>
+        <div class="card"><div class="sec">Recomendações</div><div id="sim-recs"></div></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -452,103 +631,80 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
   </div>
 </div>
 
-<!-- ════ SIMULADOR ═══════════════════════════════════════════ -->
-<div class="pg" id="pg-sim">
-  <div class="ph"><div><div class="ptitle">Simulador de Emissão</div><div class="psub">Simule rapidamente antes de gerar uma cotação real</div></div></div>
+<!-- ════ SIMULADOR DE OPERAÇÕES ════════════════════════════ -->
+<div class="pg" id="pg-simop">
+  <div class="ph"><div><div class="ptitle">Simulador de Operações</div><div class="psub">Calcule sem alterar estoque, DRE ou histórico</div></div></div>
   <div class="pb">
 
-    <!-- ── SIMULADOR RÁPIDO ─────────────────────────────────── -->
-    <div class="twocol" style="margin-bottom:20px;">
-      <!-- Formulário de entrada -->
-      <div class="card">
-        <div class="sec">⚡ Simulação Rápida</div>
-        <!-- Rota -->
-        <div class="frow fr3" style="margin-bottom:13px;">
-          <div class="fgrp">
-            <div class="flbl">Origem</div>
-            <input type="text" id="sim-orig" placeholder="GRU" maxlength="5" style="padding:9px 12px;text-transform:uppercase;" oninput="App.simCalc()">
-          </div>
-          <div class="fgrp">
-            <div class="flbl">Destino</div>
-            <input type="text" id="sim-dest" placeholder="LIS" maxlength="5" style="padding:9px 12px;text-transform:uppercase;" oninput="App.simCalc()">
-          </div>
-          <div class="fgrp">
-            <div class="flbl">Classe</div>
-            <select id="sim-classe" onchange="App.simCalc()">
-              <option value="">— Classe —</option>
-              <option value="economica">Econômica</option>
-              <option value="executiva">Executiva</option>
-              <option value="primeira">Primeira Classe</option>
-              <option value="premium_economy">Premium Economy</option>
-            </select>
-          </div>
-        </div>
-        <!-- Companhia -->
-        <div class="fgrp" style="margin-bottom:13px;">
-          <div class="flbl">Companhia Aérea</div>
-          <select id="sim-cia" onchange="App.simCalc()"></select>
-        </div>
-        <!-- Números -->
-        <div class="frow fr3">
-          <div class="fgrp">
-            <div class="flbl">Milhas Necessárias</div>
-            <div class="iwrap"><input type="number" id="sim-milhas" placeholder="30000" min="0" oninput="App.simCalc()"><span class="isuf">pts</span></div>
-          </div>
-          <div class="fgrp">
-            <div class="flbl">Custo das Milhas</div>
-            <div class="iwrap"><input type="number" id="sim-cpm" placeholder="18,00" min="0" step="0.01" oninput="App.simCalc()"><span class="isuf">R$/mil</span></div>
-          </div>
-          <div class="fgrp">
-            <div class="flbl">Taxas</div>
-            <div class="iwrap"><input type="number" id="sim-taxas" placeholder="280,00" min="0" step="0.01" oninput="App.simCalc()"><span class="isuf">R$</span></div>
-          </div>
-        </div>
-        <!-- Observação -->
-        <div class="fgrp" style="margin-top:4px;margin-bottom:13px;">
-          <div class="flbl">Observação <span style="color:var(--txt3);font-size:10px;">(opcional)</span></div>
-          <input type="text" id="sim-obs" placeholder="ex: Família, ida e volta…" style="padding:9px 12px;" oninput="App.simCalc()">
-        </div>
-        <button class="bprimary" style="width:100%;padding:11px;" id="btn-save-sim">💾 Salvar Simulação</button>
-      </div>
+    <!-- ── TABS ────────────────────────────────────────────── -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+      <button class="tbtn active" id="sop-tab-compra"  onclick="App.sopTab('compra')" >↓ Compra de Milhas</button>
+      <button class="tbtn"        id="sop-tab-venda"   onclick="App.sopTab('venda')"  >↑ Venda de Milhas</button>
+      <button class="tbtn"        id="sop-tab-transf"  onclick="App.sopTab('transf')" >⇄ Transferência</button>
+    </div>
 
-      <!-- Painel de resultados ao vivo -->
-      <div id="sim-result-panel">
-        <div class="card" style="margin-bottom:14px;" id="sim-res-main">
-          <div class="sec">Resultado da Simulação</div>
-          <div id="sim-res-body" style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">
-            Preencha os campos ao lado para ver o resultado.
+    <!-- ── TAB: COMPRA ─────────────────────────────────────── -->
+    <div id="sop-panel-compra">
+      <div class="twocol">
+        <div class="card">
+          <div class="sec">Simular Compra de Milhas</div>
+          <div class="frow fr2">
+            <div class="fgrp"><div class="flbl">Programa</div><select id="sop-cp-prog"></select></div>
+            <div class="fgrp"><div class="flbl">Quantidade de Pontos</div><div class="iwrap"><input type="number" id="sop-cp-pontos" placeholder="50000" oninput="App.sopCalcCompra()"><span class="isuf">pts</span></div></div>
+          </div>
+          <div class="frow fr2">
+            <div class="fgrp"><div class="flbl">Valor Total Pago</div><div class="iwrap"><input type="number" id="sop-cp-total" placeholder="1.425,00" oninput="App.sopCalcCompra()"><span class="isuf">R$</span></div></div>
+            <div class="fgrp"><div class="flbl">Taxas Adicionais</div><div class="iwrap"><input type="number" id="sop-cp-taxa" placeholder="0,00" oninput="App.sopCalcCompra()"><span class="isuf">R$</span></div></div>
+          </div>
+          <div class="frow fr2">
+            <div class="fgrp"><div class="flbl">Parcelas</div><div class="iwrap"><input type="number" id="sop-cp-parc" value="1" min="1" oninput="App.sopCalcCompra()"><span class="isuf">x</span></div></div>
+            <div class="fgrp"><div class="flbl">CPM Calculado <span style="color:var(--txt2);font-size:10px;">(auto)</span></div><div class="iwrap"><input type="number" id="sop-cp-cpm" placeholder="—" readonly style="background:var(--bg3);cursor:not-allowed;"><span class="isuf">R$/mil</span></div></div>
           </div>
         </div>
-        <!-- Referência de mercado para a rota simulada -->
-        <div id="sim-ref-mkt" style="display:none;"></div>
+        <div id="sop-res-compra"><div class="card"><div class="sec">Resultado</div><div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos para ver o resultado.</div></div></div>
       </div>
     </div>
 
-    <!-- ── SIMULAÇÕES SALVAS ─────────────────────────────────── -->
-    <div class="card" style="margin-bottom:20px;">
-      <div class="sec" style="justify-content:space-between;">
-        <span>📋 Simulações Salvas</span>
-        <button id="btn-clear-sims" style="font-size:10px;color:var(--red);background:none;border:none;cursor:pointer;padding:0 4px;">Limpar tudo</button>
-      </div>
-      <div id="sim-saved-list">
-        <div style="color:var(--txt3);font-size:12px;text-align:center;padding:20px 0;">Nenhuma simulação salva ainda.</div>
+    <!-- ── TAB: VENDA ──────────────────────────────────────── -->
+    <div id="sop-panel-venda" style="display:none;">
+      <div class="twocol">
+        <div class="card">
+          <div class="sec">Simular Venda de Milhas</div>
+          <div class="frow fr2">
+            <div class="fgrp"><div class="flbl">Programa</div><select id="sop-vd-prog" onchange="App.sopCalcVenda()"></select></div>
+            <div class="fgrp"><div class="flbl">Quantidade de Pontos</div><div class="iwrap"><input type="number" id="sop-vd-pontos" placeholder="50000" oninput="App.sopCalcVenda()"><span class="isuf">pts</span></div></div>
+          </div>
+          <div class="frow fr2">
+            <div class="fgrp"><div class="flbl">Valor Total da Venda</div><div class="iwrap"><input type="number" id="sop-vd-total" placeholder="1.250,00" oninput="App.sopCalcVenda()"><span class="isuf">R$</span></div></div>
+            <div class="fgrp"><div class="flbl">Valor por Milheiro <span style="color:var(--txt2);font-size:10px;">(auto)</span></div><div class="iwrap"><input type="number" id="sop-vd-vpm" placeholder="—" readonly style="background:var(--bg3);cursor:not-allowed;"><span class="isuf">R$/mil</span></div></div>
+          </div>
+        </div>
+        <div id="sop-res-venda"><div class="card"><div class="sec">Resultado</div><div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos para ver o resultado.</div></div></div>
       </div>
     </div>
 
-    <!-- ── CENÁRIOS DE MERCADO (existente — lê da Calculadora) ── -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="sec">◈ Cenários de Mercado</div>
-      <div style="font-size:11px;color:var(--txt3);margin-bottom:10px;">Baseado nos dados preenchidos na <strong style="color:var(--gold);">Calculadora</strong>.</div>
-      <div class="shdr"><div class="shd">Cenário</div><div class="shd">Preço Mercado</div><div class="shd">Você Cobra</div><div class="shd">Lucro Líquido</div><div class="shd">Margem</div></div>
-      <div id="sim-table"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="card"><div class="sec">Alertas Automáticos</div><div id="sim-alerts"></div></div>
-      <div class="card"><div class="sec">Recomendações</div><div id="sim-recs"></div></div>
+    <!-- ── TAB: TRANSFERÊNCIA ──────────────────────────────── -->
+    <div id="sop-panel-transf" style="display:none;">
+      <div class="twocol">
+        <div class="card">
+          <div class="sec">Simular Transferência de Pontos</div>
+          <div class="frow fr2">
+            <div class="fgrp"><div class="flbl">Programa Origem</div><select id="sop-tf-orig"></select></div>
+            <div class="fgrp"><div class="flbl">Programa Destino</div><select id="sop-tf-dest"></select></div>
+          </div>
+          <div class="frow fr3">
+            <div class="fgrp"><div class="flbl">Milhas a Enviar</div><div class="iwrap"><input type="number" id="sop-tf-pontos" placeholder="10000" oninput="App.sopCalcTransf()"><span class="isuf">pts</span></div></div>
+            <div class="fgrp"><div class="flbl">Bônus de Transferência</div><div class="iwrap"><input type="number" id="sop-tf-bonus" placeholder="0" min="0" oninput="App.sopCalcTransf()"><span class="isuf">%</span></div></div>
+            <div class="fgrp"><div class="flbl">Milhas Recebidas <span style="color:var(--txt2);font-size:10px;">(auto)</span></div><div class="iwrap"><input type="number" id="sop-tf-recebe" placeholder="—" readonly style="background:var(--bg3);cursor:not-allowed;"><span class="isuf">pts</span></div></div>
+          </div>
+        </div>
+        <div id="sop-res-transf"><div class="card"><div class="sec">Resultado</div><div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos para ver o resultado.</div></div></div>
+      </div>
     </div>
 
   </div>
 </div>
+
 
 <!-- ════ COMPRAR MILHAS ══════════════════════════════════════ -->
 <div class="pg" id="pg-compra">
@@ -601,12 +757,31 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
         </div>
         <div class="frow fr3">
           <div class="fgrp"><div class="flbl">Quantidade de Pontos</div><div class="iwrap"><input type="number" id="vd-pontos" placeholder="50000"><span class="isuf">pts</span></div></div>
-          <div class="fgrp"><div class="flbl">Valor por Milheiro</div><div class="iwrap"><input type="number" id="vd-vpm" placeholder="25,00"><span class="isuf">R$/mil</span></div></div>
-          <div class="fgrp"><div class="flbl">Valor Total</div><div class="iwrap"><input type="number" id="vd-total" placeholder="Auto"><span class="isuf">R$</span></div></div>
+          <div class="fgrp"><div class="flbl">Valor Total <span style="color:var(--cyan);font-size:10px;">★ Principal</span></div><div class="iwrap"><input type="number" id="vd-total" placeholder="1.250,00"><span class="isuf">R$</span></div></div>
+          <div class="fgrp"><div class="flbl">Valor/Milheiro <span style="color:var(--txt2);font-size:10px;">(auto)</span></div><div class="iwrap"><input type="number" id="vd-vpm" placeholder="—" readonly style="background:var(--bg3);cursor:not-allowed;"><span class="isuf">R$/mil</span></div></div>
         </div>
         <div class="frow fr2">
           <div class="fgrp"><div class="flbl">Parcelas do Recebimento</div><div class="iwrap"><input type="number" id="vd-parcelas" placeholder="1" min="1" value="1"><span class="isuf">x</span></div></div>
           <div class="fgrp"><div class="flbl">Valor por Parcela</div><div class="iwrap"><input type="number" id="vd-vparc" placeholder="Auto" readonly style="background:var(--bg3);cursor:not-allowed;"><span class="isuf">R$</span></div></div>
+        </div>
+        <!-- Data de recebimento (item 5) -->
+        <div class="frow fr3" style="margin-bottom:13px;">
+          <div class="fgrp">
+            <div class="flbl">Tipo de Recebimento</div>
+            <select id="vd-rec-tipo" onchange="App.onVdRecTipo()">
+              <option value="avista">À vista</option>
+              <option value="dias">Em X dias</option>
+              <option value="parcelado">Parcelado (já configurado)</option>
+            </select>
+          </div>
+          <div class="fgrp" id="vd-rec-data-grp">
+            <div class="flbl">Data de Recebimento</div>
+            <input type="date" id="vd-rec-data" style="padding:9px 12px;">
+          </div>
+          <div class="fgrp" id="vd-rec-dias-grp" style="display:none;">
+            <div class="flbl">Prazo (dias)</div>
+            <div class="iwrap"><input type="number" id="vd-rec-dias" placeholder="30" min="1" oninput="App.onVdDias()"><span class="isuf">d</span></div>
+          </div>
         </div>
         <div class="frow fr2">
           <div class="fgrp"><div class="flbl">Status do Pagamento</div><select id="vd-status"><option value="pendente">⏳ Aguardando Recebimento</option><option value="recebido">✅ Recebido</option></select></div>
@@ -635,9 +810,13 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
           <div class="fgrp"><div class="flbl">Programa de Destino</div><select id="tf-dest"></select></div>
         </div>
         <div class="frow fr3">
-          <div class="fgrp"><div class="flbl">Pontos Origem</div><div class="iwrap"><input type="number" id="tf-orig-pts" placeholder="10000"><span class="isuf">pts</span></div></div>
-          <div class="fgrp"><div class="flbl">Pontos Destino</div><div class="iwrap"><input type="number" id="tf-dest-pts" placeholder="10000"><span class="isuf">pts</span></div></div>
+          <div class="fgrp"><div class="flbl">Pontos Origem</div><div class="iwrap"><input type="number" id="tf-orig-pts" placeholder="10000" oninput="App.onTfBonus()"><span class="isuf">pts</span></div></div>
+          <div class="fgrp"><div class="flbl">Bônus Transferência</div><div class="iwrap"><input type="number" id="tf-bonus" placeholder="0" min="0" oninput="App.onTfBonus()"><span class="isuf">%</span></div></div>
           <div class="fgrp"><div class="flbl">Taxa da Transferência</div><div class="iwrap"><input type="number" id="tf-taxa" placeholder="0,00"><span class="isuf">R$</span></div></div>
+        </div>
+        <div class="frow fr2">
+          <div class="fgrp"><div class="flbl">Pontos Destino <span style="color:var(--txt2);font-size:10px;">(calculado)</span></div><div class="iwrap"><input type="number" id="tf-dest-pts" placeholder="10000" readonly style="background:var(--bg3);cursor:not-allowed;"><span class="isuf">pts</span></div></div>
+          <div id="tf-bonus-preview" style="display:flex;align-items:flex-end;padding-bottom:4px;font-size:12px;color:var(--grn);"></div>
         </div>
         <div class="fgrp" style="margin-bottom:13px;"><div class="flbl">Observações</div><input type="text" id="tf-obs" placeholder="ex: Transferência Livelo → Smiles" style="padding:9px 12px;"></div>
         <button class="bprimary" style="width:100%;padding:12px;" id="btn-save-transf">⇄ Registrar Transferência</button>
@@ -1042,18 +1221,17 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 const PROGRAMS=[
-  {id:'azul',     name:'Azul Tudo Azul',   short:'Azul',      color:'#2979FF'},
-  {id:'latam',    name:'LATAM Pass',        short:'LATAM',     color:'#E53935'},
-  {id:'smiles',   name:'Smiles (Gol)',      short:'Smiles',    color:'#FF6D00'},
-  {id:'livelo',   name:'Livelo',            short:'Livelo',    color:'#9C27B0'},
-  {id:'esfera',   name:'Esfera',            short:'Esfera',    color:'#00897B'},
-  {id:'tudoazul', name:'TudoAzul',          short:'TudoAzul',  color:'#1565C0'},
-  {id:'multiplus',name:'Multiplus',         short:'Multiplus', color:'#1A237E'},
-  {id:'lifemiles',name:'LifeMiles (Avianca)',short:'LifeMiles', color:'#B71C1C'},
-  {id:'tap',      name:'TAP Miles&Go',      short:'TAP',       color:'#00695C'},
-  {id:'flyingbl', name:'Flying Blue (AF/KL)',short:'FlyingBlue',color:'#01579B'},
-  {id:'c6atomos', name:'C6 Átomos',         short:'C6',        color:'#FFB300'},
-  {id:'outro',    name:'Outro Programa',    short:'Outro',     color:'#546E7A'},
+  {id:'azul',     name:'Azul Tudo Azul',    short:'Azul',       color:'#2979FF'},
+  {id:'latam',    name:'LATAM Pass',         short:'LATAM',      color:'#E53935'},
+  {id:'smiles',   name:'Smiles (Gol)',       short:'Smiles',     color:'#FF6D00'},
+  {id:'livelo',   name:'Livelo',             short:'Livelo',     color:'#9C27B0'},
+  {id:'esfera',   name:'Esfera',             short:'Esfera',     color:'#00897B'},
+  {id:'c6atomos', name:'C6 Átomos',          short:'C6',         color:'#FFB300'},
+  {id:'multiplus',name:'Multiplus',          short:'Multiplus',  color:'#1A237E'},
+  {id:'lifemiles',name:'LifeMiles (Avianca)',short:'LifeMiles',  color:'#B71C1C'},
+  {id:'tap',      name:'TAP Miles&Go',       short:'TAP',        color:'#00695C'},
+  {id:'flyingbl', name:'Flying Blue (AF/KL)',short:'FlyingBlue', color:'#01579B'},
+  {id:'outro',    name:'Outro Programa',     short:'Outro',      color:'#546E7A'},
 ];
 const SCENARIOS=[{label:'Queda 20%',delta:-20},{label:'Queda 10%',delta:-10},{label:'Atual ★',delta:0},{label:'Alta 10%',delta:10},{label:'Alta 20%',delta:20},{label:'Alta 30%',delta:30}];
 const IND={green:{e:'🟢',l:'Altamente Lucrativo',cls:'green'},yellow:{e:'🟡',l:'Margem Apertada',cls:'yellow'},red:{e:'🔴',l:'Não Compensa Emitir',cls:'red'}};
@@ -1091,8 +1269,8 @@ const Engine={
           maxM=mil>0?((vc*(1-ld/100))-tx)/mil:0,
           beM=mil>0?(vc-tx)/mil:0,
           vi=mkt*0.55,
-          // Preço de venda das milhas: usa cotação atual do Mercado; fallback R$25/mil
-          vmPreco=MercadoEngine.getLatestPrice(f.programa)||25,
+          // Preço de venda das milhas: usa cotação atual do Mercado (sem fallback fixo)
+          vmPreco=MercadoEngine.getLatestPrice(f.programa)||0,
           vm=mil*vmPreco,
           ind=mg>=20?'green':mg>=8?'yellow':'red';
     return{mil,custoPontos:cp,custoTotal:ct,valorCobrado:vc,lucroLiquido:ll,margemPct:mg,roi,valorRealMil:vrm,maxMilheiro:maxM,breakEvenMil:beM,valorIdeal:vi,venderMilhas:vm,melhorOpcao:ll>vm?'emitir':'vender',indicador:ind,competitivo:vc<mkt&&mkt>0,precoMercado:mkt};
@@ -1419,7 +1597,7 @@ const MercadoEngine={
     return vals.length?Math.max(...vals):null;
   },
   getMarketValue(progId,pontos){
-    const price=this.getLatestPrice(progId)||25;
+    const price=this.getLatestPrice(progId)||0;
     return(pontos/1000)*price;
   },
   getSummary(){
@@ -1463,7 +1641,18 @@ const Store=(()=>{
     try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);s={...def(),...p};_fixEstoque();_fixMercado();_fixHistoricoCotacoes();_fixSimulacoes();}}catch(e){s=def();}
   }
   function _fixEstoque(){
-    if(!s.estoque||Object.keys(s.estoque).length<PROGRAMS.length){
+    // Migrar dados do programa removido "tudoazul" para "azul" (one-time)
+    if(s.estoque?.tudoazul){
+      const ta=s.estoque.tudoazul;
+      if((ta.pontos||0)>0){
+        const az=s.estoque.azul=s.estoque.azul||{pontos:0,custoMedio:0,totalInvestido:0};
+        az.pontos=(az.pontos||0)+(ta.pontos||0);
+        az.totalInvestido=(az.totalInvestido||0)+(ta.totalInvestido||0);
+        az.custoMedio=az.pontos>0?az.totalInvestido/(az.pontos/1000):0;
+      }
+      delete s.estoque.tudoazul;
+    }
+    if(!s.estoque||Object.keys(s.estoque).filter(k=>PROGRAMS.find(p=>p.id===k)).length<PROGRAMS.length){
       const ne=defaultEst();PROGRAMS.forEach(p=>{if(s.estoque&&s.estoque[p.id])ne[p.id]=s.estoque[p.id]});s.estoque=ne;
     }
   }
@@ -2070,11 +2259,13 @@ const Render={
   strat(){
     const f=Store.get().calcForm, r=Engine.calc(f);
     const eB=r.melhorOpcao==='emitir';
+    const vmPrecoAtual=MercadoEngine.getLatestPrice(f.programa);
+    const vmNote=vmPrecoAtual?`R$${vmPrecoAtual.toFixed(2)}/mil (mercado)`:'Sem cotação cadastrada';
     document.getElementById('strat-cmp').innerHTML=`
       <div class="cmpcard ${!eB?'winner-b':''}">${!eB?`<div style="font-size:9px;color:var(--cyan);font-weight:800;letter-spacing:.06em;margin-bottom:7px;">✓ MELHOR OPÇÃO</div>`:''}
         <div style="font-size:12px;color:var(--txt2);margin-bottom:9px;">💸 Vender Milhas Direto</div>
-        <div style="font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--cyan);">${R$(r.venderMilhas)}</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:5px;">~R$25/mil no mercado</div></div>
+        <div style="font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--cyan);">${vmPrecoAtual?R$(r.venderMilhas):'—'}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:5px;">${vmNote}</div></div>
       <div class="cmpcard ${eB?'winner':''}">${eB?`<div style="font-size:9px;color:var(--grn);font-weight:800;letter-spacing:.06em;margin-bottom:7px;">✓ MELHOR OPÇÃO</div>`:''}
         <div style="font-size:12px;color:var(--txt2);margin-bottom:9px;">✈ Emitir e Revender</div>
         <div style="font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--grn);">${R$(r.lucroLiquido)}</div>
@@ -2221,7 +2412,7 @@ const Render={
     document.getElementById('stock-cards').innerHTML=PROGRAMS.map(p=>{
       const e=est[p.id]||{pontos:0,custoMedio:0};
       const val=(e.pontos/1000)*(e.custoMedio||0);
-      const mktPrice=MercadoEngine.getLatestPrice(p.id)||25;
+      const mktPrice=MercadoEngine.getLatestPrice(p.id)||0;
       const hasMktData=MercadoEngine.getLatestPrice(p.id)!==null;
       const vmkt=(e.pontos/1000)*mktPrice;
       const valUp=e.custoMedio>0?((mktPrice/e.custoMedio*100)-100):0;
@@ -2243,7 +2434,7 @@ const Render={
     }).join('');
     const tp=Object.values(est).reduce((a,e)=>a+(e.pontos||0),0);
     const tv=Object.values(est).reduce((a,e)=>a+(e.pontos/1000)*(e.custoMedio||0),0);
-    const tm=PROGRAMS.reduce((a,p)=>a+((est[p.id]?.pontos||0)/1000)*(MercadoEngine.getLatestPrice(p.id)||25),0);
+    const tm=PROGRAMS.reduce((a,p)=>a+((est[p.id]?.pontos||0)/1000)*(MercadoEngine.getLatestPrice(p.id)||0),0);
     const tcm=tp>0?tv/(tp/1000):0;
     const hasMkt=PROGRAMS.some(p=>MercadoEngine.getLatestPrice(p.id)!==null);
     document.getElementById('stock-sum').innerHTML=[H.kcard('Total de Pontos',N(tp)+'pts','todos programas','✦','c'),H.kcard('Capital Investido',R$(tv),'custo de aquisição','💰','o'),H.kcard('Valor de Mercado',R$(tm),hasMkt?'Baseado em cotações reais':'~R$25/mil (estimado)','📈','g'),H.kcard('CPM Médio',R$(tcm),'média ponderada','⟳','p')].join('');
@@ -2331,8 +2522,10 @@ const Render={
     const receberRows=[];
     pendentes.forEach(v=>{
       const parc=v.parcelas||1,receb=v.parcelasRecebidas||0,vp=(v.valorTotal||0)/parc;
+      const recDt=v.dataRecebimento||v.data||'—';
       if(parc===1){
-        receberRows.push(`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(v.programa).name}</div><div style="font-size:10px;color:var(--txt2);">${v.data} · ${v.canal||'—'}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--grn);font-weight:600;">${R$(vp)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.openRecvModal(${v.id})">✓ Confirmar</button></div></div>`);
+        receberRows.push(`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(v.programa).name}</div><div style="font-size:10px;color:var(--txt2);">${v.data} · ${v.canal||'—'}</div>${recDt&&recDt!==v.data?`<div style="font-size:10px;color:var(--yel);">📅 Receber em: ${recDt}</div>`:''}
+        </div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--grn);font-weight:600;">${R$(vp)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.openRecvModal(${v.id})">✓ Confirmar</button></div></div>`);
       } else {
         for(let i=receb;i<parc;i++){
           receberRows.push(`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(v.programa).name} <span style="color:var(--cyan);">Parcela ${i+1}/${parc}</span></div><div style="font-size:10px;color:var(--txt2);">${v.data} · ${v.canal||'—'}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--grn);font-weight:600;">${R$(vp)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.confirmParcRecv(${v.id})">✓ Confirmar</button></div></div>`);
@@ -3033,17 +3226,29 @@ const App={
     document.getElementById('btn-save-compra').addEventListener('click',()=>App.saveCompra());
     document.getElementById('btn-clear-compra').addEventListener('click',()=>App.clearCompra());
 
-    // Venda
-    ['vd-pontos','vd-vpm'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{const p=+document.getElementById('vd-pontos').value||0,v=+document.getElementById('vd-vpm').value||0;if(p&&v){const t=document.getElementById('vd-total');if(t)t.value=(p/1000*v).toFixed(2);}});});
-    document.getElementById('btn-save-venda').addEventListener('click',()=>App.saveVenda());
-    // Venda parcelada: calcular valor por parcela
-    ['vd-total','vd-pontos','vd-vpm','vd-parcelas'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{
-      const pts=+document.getElementById('vd-pontos').value||0,vpm2=+document.getElementById('vd-vpm').value||0;
-      const tot=+document.getElementById('vd-total').value||(pts/1000*vpm2);
-      const parc2=Math.max(1,+document.getElementById('vd-parcelas').value||1);
+    // Venda — total é o campo principal; vpm é auto-calculado
+    ['vd-pontos','vd-total'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.addEventListener('input',()=>{
+        const p=+document.getElementById('vd-pontos').value||0;
+        const t=+document.getElementById('vd-total').value||0;
+        const vpmEl=document.getElementById('vd-vpm');
+        if(p&&t&&vpmEl) vpmEl.value=(t/(p/1000)).toFixed(2);
+        else if(vpmEl) vpmEl.value='';
+        // recalcular parcela
+        const parc2=Math.max(1,+document.getElementById('vd-parcelas').value||1);
+        const vpEl=document.getElementById('vd-vparc');
+        if(vpEl&&t)vpEl.value=(t/parc2).toFixed(2);
+      });
+    });
+    const vdParcEl=document.getElementById('vd-parcelas');
+    if(vdParcEl)vdParcEl.addEventListener('input',()=>{
+      const t=+document.getElementById('vd-total').value||0;
+      const parc2=Math.max(1,+vdParcEl.value||1);
       const vpEl=document.getElementById('vd-vparc');
-      if(vpEl&&tot)vpEl.value=(tot/parc2).toFixed(2);
-    });});
+      if(vpEl&&t)vpEl.value=(t/parc2).toFixed(2);
+    });
+    document.getElementById('btn-save-venda').addEventListener('click',()=>App.saveVenda());
 
     // Transferência
     document.getElementById('btn-save-transf').addEventListener('click',()=>App.saveTransf());
@@ -3053,6 +3258,17 @@ const App={
     if(btnSaveSim)btnSaveSim.addEventListener('click',()=>App.saveSim());
     const btnClearSims=document.getElementById('btn-clear-sims');
     if(btnClearSims)btnClearSims.addEventListener('click',()=>App.clearAllSims());
+
+    // Transferência — bônus auto
+    const tfBonusEl=document.getElementById('tf-bonus');
+    if(tfBonusEl)tfBonusEl.addEventListener('input',()=>App.onTfBonus());
+    const tfOrigPtsEl=document.getElementById('tf-orig-pts');
+    if(tfOrigPtsEl)tfOrigPtsEl.addEventListener('input',()=>App.onTfBonus());
+
+    // Venda recebimento — inicializar data
+    const vdRecEl=document.getElementById('vd-rec-data');
+    if(vdRecEl&&!vdRecEl.value)vdRecEl.value=today();
+    App.onVdRecTipo();
 
     // Emissão manual
     ['em-pontos','em-cpm','em-taxas','em-cobrado'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>Render.emPreview());});
@@ -3174,6 +3390,7 @@ const App={
     document.getElementById('sidebar')?.classList.remove('open');
     document.getElementById('mobile-overlay')?.classList.remove('open');
     if(pg==='dashboard')setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),80);
+    if(pg==='simop'){App.sopTab('compra');}
     if(pg==='auditoria'){
       const mfEl2=document.getElementById('aud-mes-filt');
       if(mfEl2&&!mfEl2.value)mfEl2.value=new Date().toISOString().slice(0,7);
@@ -3210,7 +3427,7 @@ const App={
 
   populateSelects(){
     const opts=PROGRAMS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-    ['cp-prog','vd-prog','em-prog','tf-orig','tf-dest','sim-cia'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+    ['cp-prog','vd-prog','em-prog','tf-orig','tf-dest','sim-cia','sop-cp-prog','sop-vd-prog','sop-tf-orig','sop-tf-dest'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
     // Filter history
     const filtOpts='<option value="all">Todos os programas</option>'+opts;
     const fp=document.getElementById('filt-prog');if(fp)fp.innerHTML=filtOpts;
@@ -3366,6 +3583,115 @@ const App={
     App.notify('Simulações limpas.','');
   },
 
+
+  // ── TRANSFERÊNCIA BÔNUS ─────────────────────────────────────
+  onTfBonus(){
+    const pts  = +document.getElementById('tf-orig-pts')?.value || 0;
+    const bns  = +document.getElementById('tf-bonus')?.value    || 0;
+    const recv = Math.round(pts * (1 + bns / 100));
+    const el   = document.getElementById('tf-dest-pts');
+    if(el) el.value = recv || '';
+    const pre  = document.getElementById('tf-bonus-preview');
+    if(pre && pts){
+      const bonus = recv - pts;
+      pre.innerHTML = bonus>0
+        ? `<span>+${N(bonus)} pts bônus</span>`
+        : `<span style="color:var(--txt3);">Sem bônus</span>`;
+    }
+  },
+
+  // ── VENDA — DATA DE RECEBIMENTO ─────────────────────────────
+  onVdRecTipo(){
+    const tipo = document.getElementById('vd-rec-tipo')?.value || 'avista';
+    const dataGrp = document.getElementById('vd-rec-data-grp');
+    const diasGrp = document.getElementById('vd-rec-dias-grp');
+    if(dataGrp) dataGrp.style.display = tipo==='dias' ? 'none' : 'flex';
+    if(diasGrp) diasGrp.style.display = tipo==='dias' ? 'flex' : 'none';
+    if(tipo==='avista'){
+      const dt=document.getElementById('vd-rec-data');
+      if(dt&&!dt.value)dt.value=today();
+    }
+  },
+  onVdDias(){
+    const dias = +document.getElementById('vd-rec-dias')?.value || 0;
+    const vdData = document.getElementById('vd-data')?.value || today();
+    if(dias>0){
+      const d=new Date(vdData+'T12:00:00');
+      d.setDate(d.getDate()+dias);
+      const recEl=document.getElementById('vd-rec-data');
+      if(recEl)recEl.value=d.toISOString().slice(0,10);
+    }
+  },
+
+  // ── SIMULADOR DE OPERAÇÕES ───────────────────────────────────
+  sopTab(tab){
+    ['compra','venda','transf'].forEach(t=>{
+      const panel=document.getElementById('sop-panel-'+t);
+      const btn  =document.getElementById('sop-tab-'+t);
+      if(panel)panel.style.display = t===tab?'block':'none';
+      if(btn){btn.classList.toggle('active',t===tab);}
+    });
+  },
+  sopCalcCompra(){
+    const pts   = +document.getElementById('sop-cp-pontos')?.value || 0;
+    const total = +document.getElementById('sop-cp-total')?.value  || 0;
+    const taxa  = +document.getElementById('sop-cp-taxa')?.value   || 0;
+    const parc  = Math.max(1,+document.getElementById('sop-cp-parc')?.value||1);
+    const custoTotal = total + taxa;
+    const cpm = pts>0 ? custoTotal/(pts/1000) : 0;
+    const cpmEl=document.getElementById('sop-cp-cpm');
+    if(cpmEl)cpmEl.value=cpm>0?cpm.toFixed(2):'';
+    const res=document.getElementById('sop-res-compra');
+    if(!res)return;
+    if(!pts||!total){res.innerHTML=`<div class="card"><div class="sec">Resultado</div><div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos para ver o resultado.</div></div>`;return;}
+    const vparcela=custoTotal/parc;
+    res.innerHTML=`<div class="card">
+      <div class="sec">Resultado da Simulação</div>
+      ${[['Pontos Comprados',N(pts)+' pts'],['Custo Total',R$(custoTotal)],['CPM Calculado',R$(cpm)+'/mil'],['Por Parcela',R$(vparcela)+'×'+parc]].map(([l,v])=>`<div class="irw"><span class="ilbl">${l}</span><span class="ival">${v}</span></div>`).join('')}
+      <div style="margin-top:12px;padding:11px;background:var(--cyandim);border:1px solid var(--cyanglow);border-radius:var(--radius);font-size:12px;color:var(--txt1);">
+        💡 Custo por milha: <strong style="color:var(--gold);font-family:var(--font-mono);">R$${(cpm/1000).toFixed(4)}</strong>
+        — Para lucrar 20% revendendo, cobrar no mínimo <strong style="color:var(--grn);font-family:var(--font-mono);">${R$(custoTotal/0.8)}</strong>.
+      </div>
+    </div>`;
+  },
+  sopCalcVenda(){
+    const prog  = document.getElementById('sop-vd-prog')?.value||'azul';
+    const pts   = +document.getElementById('sop-vd-pontos')?.value||0;
+    const total = +document.getElementById('sop-vd-total')?.value||0;
+    const vpmEl = document.getElementById('sop-vd-vpm');
+    const vpm   = pts>0&&total>0 ? total/(pts/1000) : 0;
+    if(vpmEl)vpmEl.value=vpm>0?vpm.toFixed(2):'';
+    const res=document.getElementById('sop-res-venda');
+    if(!res)return;
+    if(!pts||!total){res.innerHTML=`<div class="card"><div class="sec">Resultado</div><div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos para ver o resultado.</div></div>`;return;}
+    const custoMedio=Store.get().estoque[prog]?.custoMedio||0;
+    const custoTotal=(pts/1000)*custoMedio;
+    const lucro=total-custoTotal;
+    const margem=total>0?(lucro/total)*100:0;
+    const indCol=margem>=20?'var(--grn)':margem>=8?'var(--yel)':'var(--red)';
+    res.innerHTML=`<div class="card">
+      <div class="sec">Resultado da Simulação</div>
+      ${[['Pontos',N(pts)+' pts'],['Valor Total',R$(total)],['Valor/Milheiro',R$(vpm)+'/mil'],['Custo Estimado',R$(custoTotal)],['Lucro Estimado','<span style="color:'+indCol+';font-weight:700;">'+R$(lucro)+'</span>'],['Margem','<span style="color:'+indCol+';">'+margem.toFixed(2)+'%</span>']].map(([l,v])=>`<div class="irw"><span class="ilbl">${l}</span><span class="ival">${v}</span></div>`).join('')}
+      ${custoMedio===0?'<div style="margin-top:10px;padding:9px;background:var(--yeldim);border-radius:var(--radius);font-size:11px;color:var(--yel);">⚠ Custo médio não cadastrado para este programa — lucro estimado pode estar incorreto.</div>':''}
+    </div>`;
+  },
+  sopCalcTransf(){
+    const pts   = +document.getElementById('sop-tf-pontos')?.value || 0;
+    const bonus = +document.getElementById('sop-tf-bonus')?.value  || 0;
+    const recv  = Math.round(pts * (1 + bonus/100));
+    const recEl = document.getElementById('sop-tf-recebe');
+    if(recEl)recEl.value=recv||'';
+    const res=document.getElementById('sop-res-transf');
+    if(!res)return;
+    if(!pts){res.innerHTML=`<div class="card"><div class="sec">Resultado</div><div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos para ver o resultado.</div></div>`;return;}
+    const bonusPts=recv-pts;
+    res.innerHTML=`<div class="card">
+      <div class="sec">Resultado da Simulação</div>
+      ${[['Milhas Enviadas',N(pts)+' pts'],['Bônus',bonus+'%'],['Milhas Bônus','<span style="color:var(--grn);font-weight:700;">+'+N(bonusPts)+'</span>'],['Total Recebido','<span style="font-weight:700;">'+N(recv)+' pts</span>']].map(([l,v])=>`<div class="irw"><span class="ilbl">${l}</span><span class="ival">${v}</span></div>`).join('')}
+      ${bonus>0?`<div style="margin-top:10px;padding:9px;background:var(--grndim);border:1px solid var(--grnbdr);border-radius:var(--radius);font-size:11px;color:var(--grn);">🎁 Com ${bonus}% de bônus você recebe <strong>${N(recv)}</strong> pontos — <strong>${N(bonusPts)}</strong> extras!</div>`:''}
+    </div>`;
+  },
+
   clearCalc(){
     Store.update(s=>{s.calcForm.pontos='';s.calcForm.taxas='';s.calcForm.cpm='';s.calcForm.mercado='';});
     ['f-pontos','f-taxas','f-cpm','f-mercado'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -3453,15 +3779,24 @@ const App={
   clearCompra(){['cp-pontos','cp-total','cp-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const cpmEl=document.getElementById('cp-cpm');if(cpmEl)cpmEl.value='';const taxaEl=document.getElementById('cp-taxa');if(taxaEl)taxaEl.value='';const el=document.getElementById('cp-parcelas');if(el)el.value='1';const el2=document.getElementById('cp-pgpagas');if(el2)el2.value='0';},
 
   saveVenda(){
-    const prog=document.getElementById('vd-prog').value,pt=+document.getElementById('vd-pontos').value||0,vpm=+document.getElementById('vd-vpm').value||0,total=+document.getElementById('vd-total').value||(pt/1000*vpm);
+    const prog=document.getElementById('vd-prog').value,pt=+document.getElementById('vd-pontos').value||0;
+    const total=+document.getElementById('vd-total').value||0;
+    const vpm=pt>0&&total>0?total/(pt/1000):+document.getElementById('vd-vpm').value||0;
     const parc=Math.max(1,+document.getElementById('vd-parcelas')?.value||1);
     if(!pt){App.notify('Informe a quantidade de pontos.','er');return;}
-    if(!total){App.notify('Informe o valor total ou o valor por milheiro.','er');return;}
+    if(!total){App.notify('Informe o valor total da venda.','er');return;}
+    // Data de recebimento
+    const recTipo=document.getElementById('vd-rec-tipo')?.value||'avista';
+    const recData=recTipo==='dias'?(()=>{
+      const dias=+document.getElementById('vd-rec-dias')?.value||0;
+      const base=document.getElementById('vd-data')?.value||today();
+      const d=new Date(base+'T12:00:00');d.setDate(d.getDate()+dias);return d.toISOString().slice(0,10);
+    })():document.getElementById('vd-rec-data')?.value||today();
     // Congelar custo unitário ANTES de alterar o estoque — garante que o lucro nunca mude
     const custoUnitarioVenda = Store.get().estoque[prog]?.custoMedio||0;
     const custoTotalVenda    = (pt/1000)*custoUnitarioVenda;
     const lucroVenda         = total - custoTotalVenda;
-    const entry={id:Date.now(),data:document.getElementById('vd-data').value||today(),programa:prog,pontos:pt,valorPorMil:vpm,valorTotal:total,
+    const entry={id:Date.now(),data:document.getElementById('vd-data').value||today(),dataRecebimento:recData,tipoRecebimento:recTipo,programa:prog,pontos:pt,valorPorMil:vpm,valorTotal:total,
       // Custo congelado no momento da venda — imutável
       custoUnitarioVenda,custoTotalVenda,lucroVenda,
       parcelas:parc,parcelasRecebidas:document.getElementById('vd-status').value==='recebido'?parc:0,status:document.getElementById('vd-status').value,canal:document.getElementById('vd-canal').value.trim(),obs:document.getElementById('vd-obs').value.trim()};
@@ -3482,16 +3817,16 @@ const App={
         origem:'AUTO',
       });
     }
-    ['vd-pontos','vd-vpm','vd-total','vd-canal','vd-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['vd-pontos','vd-total','vd-canal','vd-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';document.getElementById('vd-vpm')&&(document.getElementById('vd-vpm').value='');const rdEl=document.getElementById('vd-rec-data');if(rdEl)rdEl.value=today();});
     Render.vendas();Render.stock();Render.dashboard();Render.caixa();
     App.notify('✓ Venda registrada!','ok');
   },
 
   saveTransf(){
-    const orig=document.getElementById('tf-orig').value,dest=document.getElementById('tf-dest').value,oPts=+document.getElementById('tf-orig-pts').value||0,dPts=+document.getElementById('tf-dest-pts').value||oPts,taxa=+document.getElementById('tf-taxa').value||0;
+    const orig=document.getElementById('tf-orig').value,dest=document.getElementById('tf-dest').value,oPts=+document.getElementById('tf-orig-pts').value||0,bonus=+document.getElementById('tf-bonus')?.value||0,dPts=Math.round(oPts*(1+bonus/100)),taxa=+document.getElementById('tf-taxa').value||0;
     if(!oPts){App.notify('Informe os pontos de origem.','er');return;}
     if(orig===dest){App.notify('Origem e destino devem ser diferentes.','er');return;}
-    const entry={id:Date.now(),data:today(),programaOrigem:orig,programaDestino:dest,pontosOrigem:oPts,pontosDestino:dPts,taxa,obs:document.getElementById('tf-obs').value.trim()};
+    const entry={id:Date.now(),data:today(),programaOrigem:orig,programaDestino:dest,pontosOrigem:oPts,pontosDestino:dPts,bonus,taxa,obs:document.getElementById('tf-obs').value.trim()};
     Store.update(s=>{
       const eo=s.estoque[orig], ed=s.estoque[dest];
       // 1. Consumir milhas da origem — subtrai custo proporcional do totalInvestido
@@ -3510,7 +3845,7 @@ const App={
       origem:'FORMULARIO',
       obs: `${progById(entry.programaOrigem).name} → ${progById(entry.programaDestino).name}: ${N(entry.pontosOrigem)} pts`,
     });
-    ['tf-orig-pts','tf-dest-pts','tf-taxa','tf-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['tf-orig-pts','tf-dest-pts','tf-taxa','tf-obs','tf-bonus'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';const bp=document.getElementById('tf-bonus-preview');if(bp)bp.innerHTML='';});
     Render.transfs();Render.stock();Render.dashboard();
     App.notify('✓ Transferência registrada!','ok');
   },
