@@ -455,6 +455,38 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 .twocol{display:grid;grid-template-columns:360px 1fr;gap:20px;align-items:start}
 .gap16{display:flex;flex-direction:column;gap:16px}
 .divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+
+/* ═══ SCORE SYSTEM ═════════════════════════════════════════════ */
+.score-badge{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-radius:var(--radius);border:1px solid;margin-bottom:14px;transition:all var(--transition);}
+.score-badge.sc-low{background:var(--grndim);border-color:var(--grnbdr);}
+.score-badge.sc-moderate{background:var(--yeldim);border-color:rgba(255,215,64,.25);}
+.score-badge.sc-high{background:var(--reddim);border-color:var(--redbdr);}
+.score-num{font-family:var(--font-mono);font-size:28px;font-weight:700;line-height:1;}
+.score-badge.sc-low .score-num{color:var(--grn);}
+.score-badge.sc-moderate .score-num{color:var(--yel);}
+.score-badge.sc-high .score-num{color:var(--red);}
+.score-bar{height:5px;border-radius:99px;background:var(--bg3);flex:1;overflow:hidden;margin:0 10px;}
+.score-bar-fill{height:100%;border-radius:99px;transition:width .4s ease;}
+.sc-low   .score-bar-fill{background:var(--grn);}
+.sc-moderate .score-bar-fill{background:var(--yel);}
+.sc-high  .score-bar-fill{background:var(--red);}
+.score-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;}
+.sc-low  .score-lbl{color:var(--grn);}
+.sc-moderate .score-lbl{color:var(--yel);}
+.sc-high .score-lbl{color:var(--red);}
+.score-btn{font-size:11px;padding:5px 10px;background:var(--bg3);border:1px solid var(--bordermd);border-radius:var(--radius);color:var(--txt1);cursor:pointer;white-space:nowrap;transition:all var(--transition);}
+.score-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.score-breakdown-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.score-breakdown-tbl th{text-align:left;color:var(--txt2);font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:6px 0;border-bottom:1px solid var(--border);}
+.score-breakdown-tbl td{padding:7px 0;border-bottom:1px solid var(--border);vertical-align:middle;}
+.score-breakdown-tbl td:nth-child(2),.score-breakdown-tbl td:nth-child(3){text-align:right;font-family:var(--font-mono);}
+.sbr{height:4px;border-radius:99px;background:var(--bg3);width:60px;display:inline-block;overflow:hidden;vertical-align:middle;margin-left:6px;}
+.sbr-fill{height:100%;border-radius:99px;}
+.score-wt-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.score-wt-row:last-child{border-bottom:none;}
+.score-wt-lbl{flex:1;font-size:12px;color:var(--txt1);}
+.score-wt-inp{width:60px;text-align:right;padding:5px 8px;font-size:12px;}
+.score-wt-pct{font-size:11px;color:var(--txt3);width:30px;text-align:right;}
 </style>
 </head>
 <body>
@@ -751,6 +783,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
           <div class="fgrp"><div class="flbl">Taxa de Serviço (opcional)</div><div class="iwrap"><span class="ipfx">R$</span><input type="number" id="cp-taxa" placeholder="0" min="0" step="0.01"></div></div>
           <div class="fgrp"><div class="flbl">Observações</div><input type="text" id="cp-obs" placeholder="ex: Compra promoção Amex Double" style="padding:9px 12px;"></div>
         </div>
+        <div id="score-badge-cp" style="display:none;"></div>
         <div style="display:flex;gap:9px;">
           <button class="bprimary" style="flex:1;" id="btn-save-compra">↓ Registrar Compra</button>
           <button class="bsecond" id="btn-clear-compra">Limpar</button>
@@ -808,6 +841,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
           <div class="fgrp"><div class="flbl">Plataforma / Canal</div><input type="text" id="vd-canal" placeholder="ex: Passaredo, WhatsApp" style="padding:9px 12px;"></div>
         </div>
         <div class="fgrp" style="margin-bottom:13px;"><div class="flbl">Observações</div><input type="text" id="vd-obs" placeholder="ex: Cliente João, pagamento PIX" style="padding:9px 12px;"></div>
+        <div id="score-badge-vd" style="display:none;"></div>
         <button class="bprimary" style="width:100%;padding:12px;" id="btn-save-venda">↑ Registrar Venda</button>
       </div>
       <div class="card" style="margin-top:16px;">
@@ -842,6 +876,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
           <div class="fgrp"><div class="flbl">Vencimento dos Pontos <span style="color:var(--txt3);font-size:10px;">(opcional)</span></div><input type="date" id="tf-venc" style="padding:9px 12px;"></div>
           <div class="fgrp"><div class="flbl">Observações</div><input type="text" id="tf-obs" placeholder="ex: Transferência Livelo → Smiles" style="padding:9px 12px;"></div>
         </div>
+        <div id="score-badge-tf" style="display:none;"></div>
         <button class="bprimary" style="width:100%;padding:12px;" id="btn-save-transf">⇄ Registrar Transferência</button>
       </div>
       <div class="card" style="margin-top:16px;">
@@ -886,6 +921,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
         </div>
         <!-- Referência de mercado — alimentada pelo HistoricoCotacoes.referenciaMercado() -->
         <div id="em-referencia" style="display:none;margin:0 0 12px 0;"></div>
+        <div id="score-badge-em" style="display:none;"></div>
         <button class="bprimary" style="width:100%;padding:12px;" id="btn-save-em">✦ Registrar Emissão</button>
       </div>
     </div>
@@ -1082,6 +1118,15 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
         </div>
       </div>
       <div class="card">
+        <div class="sec">⚖ Score de Risco — Pesos por Operação</div>
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:14px;">Ajuste os pesos de cada fator (0–100). A soma de cada operação deve ser exatamente <strong>100%</strong>.</div>
+        <div id="score-weights-body"></div>
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+          <button class="bprimary" style="flex:1;" onclick="App.saveScoreWeights()">💾 Salvar Pesos</button>
+          <button class="bsecond" onclick="App.recalcHistoricalScores()">🔄 Recalcular Histórico</button>
+        </div>
+      </div>
+      <div class="card">
         <div class="sec">Dados do Sistema</div>
         <div style="display:flex;gap:10px;">
           <button class="bdanger" id="btn-backup">⤓ Exportar Backup</button>
@@ -1237,6 +1282,21 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
   </div>
 </div>
 
+
+<!-- ══════ MODAL: Score Breakdown ═══════════════════════════════ -->
+<div class="moverlay" id="modal-score">
+  <div class="mdl" style="width:560px;">
+    <div class="mhdr">
+      <div class="mtitle">🎯 Score de Risco — Breakdown</div>
+      <button class="mclose" onclick="App.closeModal('modal-score')">✕</button>
+    </div>
+    <div id="modal-score-body"></div>
+    <div style="margin-top:18px;display:flex;gap:9px;justify-content:flex-end;">
+      <button class="bsecond" onclick="App.closeModal('modal-score')">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div id="notif"></div>
 <div id="cloud-status" class="idle" title="Status da sincronização com Google Planilhas">
   <span id="cloud-dot"></span>
@@ -1363,6 +1423,213 @@ const Engine={
   },
 
   // ── HELPERS DE CONTABILIDADE DE ESTOQUE ──────────────────────────
+
+  // ══════════════════════════════════════════════════════════════
+  // SCORE SYSTEM — configuração, normalizadores e cálculo de risco
+  // ══════════════════════════════════════════════════════════════
+
+  // Pesos default (soma=100 por operação) e mapa de liquidez dos programas
+  ScoreConfig:{
+    liquidez:{azul:10,latam:15,smiles:12,livelo:10,esfera:8,c6atomos:7,multiplus:7,lifemiles:6,tap:6,flyingbl:6,outro:6},
+    weights:{
+      emissao:     {margem:25,roi:20,spread:15,prazo:10,liquidez:10,volatilidade:10,expiracao:10},
+      venda:       {margem:30,spread:25,prazo:10,liquidez:15,volatilidade:10,parcelamento:10},
+      compra:      {spread:35,liquidez:15,roi:20,volatilidade:10,expiracao:10,parcelamento:10},
+      transferencia:{bonus:30,custoEfetivo:25,liquidez:15,volatilidade:10,expiracao:10,taxas:10}
+    }
+  },
+
+  // util
+  _clamp(v,a,b){return Math.max(a,Math.min(b,v));},
+
+  // Normalizadores — todos retornam 0‒100
+  _normMargem(m){
+    if(m>=40)return 100;
+    if(m>=30)return 80+(m-30)*2;
+    if(m>=20)return 60+(m-20);
+    if(m>=10)return 30+(m-10)*3;
+    return this._clamp(Math.round(m*3),0,30);
+  },
+  _normROI(r){
+    if(r>=100)return 100;
+    if(r>=70)return 85+(r-70)*(15/30);
+    if(r>=50)return 70+(r-50)*(15/20);
+    if(r>=30)return 50+(r-30)*(20/20);
+    return this._clamp(Math.round((r/30)*50),0,50);
+  },
+  _normSpread(sp){
+    if(sp>=15)return 100;
+    if(sp>=10)return 80+(sp-10)*(20/5);
+    if(sp>=5) return 60+(sp-5)*(20/5);
+    if(sp>=0) return 20+sp*(40/5);
+    return this._clamp(Math.round(20+sp*(20/5)),0,20);
+  },
+  _normPrazo(days){
+    if(days<=7) return 100;
+    if(days<=15)return 80;
+    if(days<=30)return 50;
+    if(days<=60)return 30;
+    return 0;
+  },
+  _normLiquidez(liq){
+    return this._clamp(Math.round((liq/15)*100),0,100);
+  },
+  _normVolatilidade(vol){
+    if(vol<=3) return 100;
+    if(vol<=8) return Math.round(70+(8-vol)*(30/5));
+    if(vol<=15)return Math.round(40+(15-vol)*(30/7));
+    return this._clamp(Math.round(40-(vol-15)*2),0,40);
+  },
+  _normExpiracao(pct){
+    if(pct<=0)  return 100;
+    if(pct<=10) return Math.round(80+(10-pct)*2);
+    if(pct<=25) return Math.round(40+(25-pct)*(40/15));
+    return this._clamp(Math.round(40-(pct-25)*1.5),0,40);
+  },
+  _normBonus(b){
+    if(b<=0)   return 50;
+    if(b<=50)  return 50+b*(30/50);
+    if(b<=100) return 80+(b-50)*(20/50);
+    return 100;
+  },
+  _parcelPenalty(n){
+    // n = número de parcelas. 1 = sem penalidade. >1 = penalidade até 25 pts
+    if(n<=1)return 0;
+    if(n<=3)return 10;
+    if(n<=6)return 18;
+    return 25;
+  },
+  // Custo efetivo normalizado para transferência (CPM após bônus vs mercado)
+  _normCustoEfetivo(custoEfetivo, precoMercado){
+    if(!precoMercado||precoMercado<=0)return 60; // neutro
+    const sp=((precoMercado-custoEfetivo)/precoMercado)*100;
+    return this._normSpread(sp);
+  },
+  // Taxa de transferência normalizada (% do valor)
+  _normTaxas(taxa, pontos, cpmo){
+    const valorRef=(pontos/1000)*(cpmo||0);
+    if(!valorRef||valorRef<=0||taxa<=0)return 100;
+    const pct=(taxa/valorRef)*100;
+    if(pct<=1) return 90;
+    if(pct<=5) return 70;
+    if(pct<=10)return 40;
+    return 10;
+  },
+
+  // _getWeights: pega pesos do Store (config) ou usa defaults
+  _getWeights(tipo){
+    const stored=Store.get().config?.scoreWeights?.[tipo];
+    const def=this.ScoreConfig.weights[tipo];
+    if(!stored)return def;
+    // Merge: stored pode ter subset
+    return {...def,...stored};
+  },
+
+  // Obter volatilidade via MercadoEngine (pode ser 0 se sem dados)
+  _getVol(progId){
+    return typeof MercadoEngine.getVolatilidade==='function'
+      ? MercadoEngine.getVolatilidade(progId) : 0;
+  },
+
+  // Obter % expiração via VencimentoEngine
+  _getExp(progId){
+    const s=Store.get();
+    const total=(s.estoque[progId]?.pontos)||0;
+    if(!total)return 0;
+    const d60=new Date();d60.setDate(d60.getDate()+60);
+    const exp60=(s.lotes[progId]||[]).filter(l=>l.vencimento&&new Date(l.vencimento+'T00:00:00')<=d60).reduce((a,l)=>a+(l.pontos||0),0);
+    return(exp60/total)*100;
+  },
+
+  // Dias até uma data ISO (string YYYY-MM-DD)
+  _diasAte(dataISO){
+    if(!dataISO)return 0;
+    const now=new Date();now.setHours(0,0,0,0);
+    const alvo=new Date(dataISO+'T00:00:00');
+    return Math.max(0,Math.ceil((alvo-now)/(86400000)));
+  },
+
+  // ── Calc functions ────────────────────────────────────────────
+  calcScoreEmissao({margem,roi,precoMercado,valorRealMil,prazoDias,progId,volPct,pctExpiracao}){
+    const w=this._getWeights('emissao');
+    const liq=this.ScoreConfig.liquidez[progId]||6;
+    const vol=volPct!=null?volPct:this._getVol(progId);
+    const exp=pctExpiracao!=null?pctExpiracao:this._getExp(progId);
+    const sp=precoMercado>0?((precoMercado-valorRealMil)/precoMercado)*100:0;
+    const mS=this._normMargem(margem||0);
+    const rS=this._normROI(roi||0);
+    const spS=this._normSpread(sp);
+    const pS=this._normPrazo(prazoDias||0);
+    const lS=this._normLiquidez(liq);
+    const vS=this._normVolatilidade(vol);
+    const eS=this._normExpiracao(exp);
+    const total=w.margem+w.roi+w.spread+w.prazo+w.liquidez+w.volatilidade+w.expiracao||100;
+    const raw=mS*(w.margem/total)+rS*(w.roi/total)+spS*(w.spread/total)+pS*(w.prazo/total)+lS*(w.liquidez/total)+vS*(w.volatilidade/total)+eS*(w.expiracao/total);
+    const score=this._clamp(Math.round(raw),0,100);
+    const scoreClass=score>=80?'low':score>=60?'moderate':'high';
+    return{score,scoreClass,scoreBreakdown:{margem:mS,roi:rS,spread:spS,prazo:pS,liquidez:lS,volatilidade:vS,expiracao:eS,pesos:w}};
+  },
+
+  calcScoreVenda({margem,precoMercado,valorRealMil,prazoDias,progId,parcelas,volPct}){
+    const w=this._getWeights('venda');
+    const liq=this.ScoreConfig.liquidez[progId]||6;
+    const vol=volPct!=null?volPct:this._getVol(progId);
+    const sp=precoMercado>0?((valorRealMil-precoMercado)/precoMercado)*100:0;
+    // Para venda: spread = quanto você cobrou ACIMA do mercado (positivo = bom para quem vende)
+    const spreadVenda=precoMercado>0?((valorRealMil/precoMercado)-1)*100:0;
+    const mS=this._normMargem(margem||0);
+    const spS=this._normSpread(spreadVenda);
+    const pS=this._normPrazo(prazoDias||0);
+    const lS=this._normLiquidez(liq);
+    const vS=this._normVolatilidade(vol);
+    const pp=this._parcelPenalty(parcelas||1);
+    const total=w.margem+w.spread+w.prazo+w.liquidez+w.volatilidade+w.parcelamento||100;
+    const raw=mS*(w.margem/total)+spS*(w.spread/total)+pS*(w.prazo/total)+lS*(w.liquidez/total)+vS*(w.volatilidade/total)+(100-pp)*(w.parcelamento/total);
+    const score=this._clamp(Math.round(raw),0,100);
+    const scoreClass=score>=80?'low':score>=60?'moderate':'high';
+    return{score,scoreClass,scoreBreakdown:{margem:mS,spread:spS,prazo:pS,liquidez:lS,volatilidade:vS,parcelamento:100-pp,pesos:w}};
+  },
+
+  calcScoreCompra({cpm,precoMercado,progId,parcelas,pctExpiracao,volPct}){
+    const w=this._getWeights('compra');
+    const liq=this.ScoreConfig.liquidez[progId]||6;
+    const vol=volPct!=null?volPct:this._getVol(progId);
+    const exp=pctExpiracao!=null?pctExpiracao:this._getExp(progId);
+    const sp=precoMercado>0?((precoMercado-cpm)/precoMercado)*100:0;
+    const roiPot=cpm>0?((precoMercado-cpm)/cpm)*100:0;
+    const spS=this._normSpread(sp);
+    const lS=this._normLiquidez(liq);
+    const rS=this._normROI(roiPot);
+    const vS=this._normVolatilidade(vol);
+    const eS=this._normExpiracao(exp);
+    const pp=this._parcelPenalty(parcelas||1);
+    const total=w.spread+w.liquidez+w.roi+w.volatilidade+w.expiracao+w.parcelamento||100;
+    const raw=spS*(w.spread/total)+lS*(w.liquidez/total)+rS*(w.roi/total)+vS*(w.volatilidade/total)+eS*(w.expiracao/total)+(100-pp)*(w.parcelamento/total);
+    const score=this._clamp(Math.round(raw),0,100);
+    const scoreClass=score>=80?'low':score>=60?'moderate':'high';
+    return{score,scoreClass,scoreBreakdown:{spread:spS,liquidez:lS,roi:rS,volatilidade:vS,expiracao:eS,parcelamento:100-pp,pesos:w}};
+  },
+
+  calcScoreTransferencia({bonus,pontosOrigem,custoMedioOrigem,progDest,taxa,pctExpiracao,volPct}){
+    const w=this._getWeights('transferencia');
+    const liq=this.ScoreConfig.liquidez[progDest]||6;
+    const vol=volPct!=null?volPct:this._getVol(progDest);
+    const exp=pctExpiracao!=null?pctExpiracao:this._getExp(progDest);
+    const precoMktDest=MercadoEngine.getLatestPrice(progDest)||0;
+    const custoEfetivo=bonus>0?custoMedioOrigem/(1+bonus/100):custoMedioOrigem;
+    const bS=this._normBonus(bonus||0);
+    const ceS=this._normCustoEfetivo(custoEfetivo,precoMktDest);
+    const lS=this._normLiquidez(liq);
+    const vS=this._normVolatilidade(vol);
+    const eS=this._normExpiracao(exp);
+    const tS=this._normTaxas(taxa||0,pontosOrigem||0,custoMedioOrigem||0);
+    const total=w.bonus+w.custoEfetivo+w.liquidez+w.volatilidade+w.expiracao+w.taxas||100;
+    const raw=bS*(w.bonus/total)+ceS*(w.custoEfetivo/total)+lS*(w.liquidez/total)+vS*(w.volatilidade/total)+eS*(w.expiracao/total)+tS*(w.taxas/total);
+    const score=this._clamp(Math.round(raw),0,100);
+    const scoreClass=score>=80?'low':score>=60?'moderate':'high';
+    return{score,scoreClass,scoreBreakdown:{bonus:bS,custoEfetivo:ceS,liquidez:lS,volatilidade:vS,expiracao:eS,taxas:tS,pesos:w}};
+  },
+
   // consumirEstoque: subtrai pts do estoque usando custo médio congelado no momento da operação.
   // Retorna o custo exato consumido (para ser congelado na operação).
   // Garante pontos>=0, totalInvestido>=0, custoMedio=0 quando pontos=0.
@@ -1429,6 +1696,7 @@ const AuditLog = {
     CANCELAMENTO:   'CANCELAMENTO',
     ALTERACAO:      'ALTERACAO',
     VERIFICACAO:    'VERIFICACAO',
+    CALC_SCORE:     'CALC_SCORE',
   },
 
   // Registrar uma operação no log de auditoria (append-only)
@@ -1705,6 +1973,14 @@ const MercadoEngine={
     const price=this.getLatestPrice(progId)||0;
     return(pontos/1000)*price;
   },
+  getVolatilidade(progId){
+    const hist=Store.get().mercado?.historico||[];
+    const vals=hist.filter(h=>h.programaId===progId&&h.categoria==='HOT').map(h=>h.valor).filter(v=>v>0);
+    if(vals.length<2)return 0;
+    const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+    const variance=vals.reduce((a,v)=>a+(v-mean)**2,0)/vals.length;
+    return mean>0?(Math.sqrt(variance)/mean)*100:0;
+  },
   getSummary(){
     const hist=Store.get().mercado?.historico||[];
     if(!hist.length)return null;
@@ -1738,12 +2014,18 @@ const MercadoEngine={
 const Store=(()=>{
   const KEY='milesarb_v4';
   const defaultEst=()=>{const o={};PROGRAMS.forEach(p=>{o[p.id]={pontos:0,custoMedio:0,totalInvestido:0}});return o;};
-  const def=()=>({emissoes:[],compras:[],vendas:[],transferencias:[],despesas:[],estoque:defaultEst(),lotes:{},audit:[],historico_cotacoes:[],simulacoes:[],calcForm:{programa:'azul',tripType:'ida',pontos:'',taxas:'',cpm:'',mercado:'',lucroDesejado:'30',desconto:'35'},settings:{sheetsUrl:SHEETS_URL,theme:'dark'},mercado:{cotacoes:[],historico:[],promocoes:[]},_syncTs:0});
+  const defaultScoreWeights=()=>({
+    emissao:{margem:25,roi:20,spread:15,prazo:10,liquidez:10,volatilidade:10,expiracao:10},
+    venda:{margem:30,spread:25,prazo:10,liquidez:15,volatilidade:10,parcelamento:10},
+    compra:{spread:35,liquidez:15,roi:20,volatilidade:10,expiracao:10,parcelamento:10},
+    transferencia:{bonus:30,custoEfetivo:25,liquidez:15,volatilidade:10,expiracao:10,taxas:10}
+  });
+  const def=()=>({emissoes:[],compras:[],vendas:[],transferencias:[],despesas:[],estoque:defaultEst(),lotes:{},audit:[],historico_cotacoes:[],simulacoes:[],config:{scoreWeights:defaultScoreWeights()},calcForm:{programa:'azul',tripType:'ida',pontos:'',taxas:'',cpm:'',mercado:'',lucroDesejado:'30',desconto:'35'},settings:{sheetsUrl:SHEETS_URL,theme:'dark'},mercado:{cotacoes:[],historico:[],promocoes:[]},_syncTs:0});
   let s=def();
   let _saveDebounce=null;
 
   function _loadLocal(){
-    try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);s={...def(),...p};_fixEstoque();_fixMercado();_fixHistoricoCotacoes();_fixSimulacoes();_fixLotes();}}catch(e){s=def();}
+    try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);s={...def(),...p};_fixEstoque();_fixMercado();_fixHistoricoCotacoes();_fixSimulacoes();_fixLotes();_fixConfig();}}catch(e){s=def();}
   }
   function _fixEstoque(){
     // Migrar dados do programa removido "tudoazul" para "azul" (one-time)
@@ -1764,6 +2046,12 @@ const Store=(()=>{
   function _fixMercado(){if(!s.mercado)s.mercado={cotacoes:[],historico:[],promocoes:[]};}
   function _fixHistoricoCotacoes(){if(!Array.isArray(s.historico_cotacoes))s.historico_cotacoes=[];}
   function _fixSimulacoes(){if(!Array.isArray(s.simulacoes))s.simulacoes=[];}
+  function _fixConfig(){
+    if(!s.config||typeof s.config!=='object')s.config={scoreWeights:defaultScoreWeights()};
+    if(!s.config.scoreWeights)s.config.scoreWeights=defaultScoreWeights();
+    const dw=defaultScoreWeights();
+    ['emissao','venda','compra','transferencia'].forEach(op=>{if(!s.config.scoreWeights[op])s.config.scoreWeights[op]={...dw[op]};});
+  }
   function _fixLotes(){if(!s.lotes||typeof s.lotes!=='object')s.lotes={};}
 
   function _saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
@@ -2664,7 +2952,7 @@ const Render={
   vendas(){
     const v=Store.get().vendas;
     if(!v.length){document.getElementById('vendas-list').innerHTML=H.emptyState('Nenhuma venda registrada','Preencha o formulário acima');return;}
-    document.getElementById('vendas-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Programa</th><th>Pontos</th><th>Valor/Mil</th><th>Total</th><th>Custo/Mil¹</th><th>Lucro¹</th><th>Canal</th><th>Status</th><th></th></tr></thead><tbody>${v.map(e=>{
+    document.getElementById('vendas-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Programa</th><th>Pontos</th><th>Valor/Mil</th><th>Total</th><th>Custo/Mil¹</th><th>Lucro¹</th><th>Score</th><th>Canal</th><th>Status</th><th></th></tr></thead><tbody>${v.map(e=>{
       const p=progById(e.programa),isPend=e.status==='pendente';
       // Lucro e custo congelados no momento da venda; fallback para vendas sem esses campos
       const lucro = e.lucroVenda!=null ? e.lucroVenda : null;
@@ -2678,6 +2966,7 @@ const Render={
         <td style="color:var(--grn);font-weight:600;">${R$(e.valorTotal)}</td>
         <td style="font-family:var(--font-mono);font-size:11px;color:var(--txt2);">${custoUnit!=null?R$(custoUnit)+'/mil':'—'}</td>
         <td style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:${lc};">${lucro!=null?R$(lucro):'—'}</td>
+        <td style="text-align:center;">${e.score!=null?`<span style="font-size:11px;font-family:var(--font-mono);font-weight:700;color:${e.scoreClass==='low'?'var(--grn)':e.scoreClass==='moderate'?'var(--yel)':'var(--red)'};">${e.score}</span>`:'<span style="color:var(--txt3);">—</span>'}</td>
         <td style="font-size:11px;">${e.canal||'—'}</td>
         <td>${isPend?`<button class="tag ty" style="cursor:pointer;border:none;" onclick="App.openRecvModal(${e.id})">⏳ Pendente</button>`:H.tag('✅ Recebido','g')}</td>
         <td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delVenda(${e.id})">✕</button></td>
@@ -2689,7 +2978,7 @@ const Render={
   transfs(){
     const t=Store.get().transferencias;
     if(!t.length){document.getElementById('transf-list').innerHTML=H.emptyState('Nenhuma transferência registrada','Preencha o formulário acima');return;}
-    document.getElementById('transf-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Pts Origem</th><th>Pts Destino</th><th>Taxa</th><th>Obs</th><th></th></tr></thead><tbody>${t.map(e=>{return`<tr><td style="color:var(--txt2);font-size:11px;">${e.data}</td><td>${progById(e.programaOrigem).short}</td><td>${progById(e.programaDestino).short}</td><td style="color:var(--red);">${N(e.pontosOrigem)}</td><td style="color:var(--grn);">${N(e.pontosDestino)}</td><td>${R$(e.taxa||0)}</td><td style="font-size:11px;color:var(--txt2);">${e.obs||'—'}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delTransf(${e.id})">✕</button></td></tr>`;}).join('')}</tbody></table></div>`;
+    document.getElementById('transf-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Pts Origem</th><th>Bônus</th><th>Pts Destino</th><th>Score</th><th>Taxa</th><th>Obs</th><th></th></tr></thead><tbody>${t.map(e=>{return`<tr><td style="color:var(--txt2);font-size:11px;">${e.data}</td><td>${progById(e.programaOrigem).short}</td><td>${progById(e.programaDestino).short}</td><td style="color:var(--red);">${N(e.pontosOrigem)}</td><td style="color:var(--cyan);font-size:11px;">${(e.bonus||0)>0?'+'+e.bonus+'%':'—'}</td><td style="color:var(--grn);">${N(e.pontosDestino)}</td><td style="text-align:center;">${e.score!=null?`<span style="font-size:11px;font-family:var(--font-mono);font-weight:700;color:${e.scoreClass==='low'?'var(--grn)':e.scoreClass==='moderate'?'var(--yel)':'var(--red)'};">${e.score}</span>`:'<span style="color:var(--txt3);">—</span>'}</td><td>${R$(e.taxa||0)}</td><td style="font-size:11px;color:var(--txt2);">${e.obs||'—'}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delTransf(${e.id})">✕</button></td></tr>`;}).join('')}</tbody></table></div>`;
   },
   /* ── DRE ────────────────────────────────────── */
   dre(mes,ano){
@@ -2977,6 +3266,7 @@ const Render={
             <th>Lucro Est.</th>
             <th>Parcelas</th>
             <th>Status</th>
+            <th>Score</th>
             <th>Obs</th>
           </tr>
         </thead>
@@ -3010,6 +3300,7 @@ const Render={
               <td style="text-align:right;">${lucroStr}</td>
               <td style="font-size:11px;color:var(--txt2);text-align:center;">${parcSt}</td>
               <td>${stTag}</td>
+              <td style="text-align:center;">${o.score!=null?`<span style="font-size:11px;font-family:var(--font-mono);font-weight:700;color:${o.scoreClass==='low'?'var(--grn)':o.scoreClass==='moderate'?'var(--yel)':'var(--red)'}">${o.score}</span>`:'<span style="color:var(--txt3);">—</span>'}</td>
               <td style="font-size:11px;color:var(--txt2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.obs||o.categoria||'—'}</td>
             </tr>`;
           }).join('')}
@@ -3423,7 +3714,10 @@ const App={
 
     // Compra
     // Compra: calcular CPM automaticamente a partir do valor total
-    ['cp-pontos','cp-total'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{const p=+document.getElementById('cp-pontos').value||0,t=+document.getElementById('cp-total').value||0;const cpmEl=document.getElementById('cp-cpm');if(p&&t&&cpmEl){cpmEl.value=(t/(p/1000)).toFixed(2);}else if(cpmEl)cpmEl.value='';});});
+    ['cp-pontos','cp-total'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{const p=+document.getElementById('cp-pontos').value||0,t=+document.getElementById('cp-total').value||0;const cpmEl=document.getElementById('cp-cpm');if(p&&t&&cpmEl){cpmEl.value=(t/(p/1000)).toFixed(2);}else if(cpmEl)cpmEl.value='';App.updateScoreBadgeCp();});});
+    // Score badge: programa e parcelas também atualizam
+    const cpProgEl=document.getElementById('cp-prog');if(cpProgEl)cpProgEl.addEventListener('change',()=>App.updateScoreBadgeCp());
+    const cpParcEl=document.getElementById('cp-parcelas');if(cpParcEl)cpParcEl.addEventListener('input',()=>App.updateScoreBadgeCp());
     document.getElementById('btn-save-compra').addEventListener('click',()=>App.saveCompra());
     document.getElementById('btn-clear-compra').addEventListener('click',()=>App.clearCompra());
 
@@ -3440,6 +3734,7 @@ const App={
         const parc2=Math.max(1,+document.getElementById('vd-parcelas').value||1);
         const vpEl=document.getElementById('vd-vparc');
         if(vpEl&&t)vpEl.value=(t/parc2).toFixed(2);
+        App.updateScoreBadgeVd();
       });
     });
     const vdParcEl=document.getElementById('vd-parcelas');
@@ -3448,7 +3743,10 @@ const App={
       const parc2=Math.max(1,+vdParcEl.value||1);
       const vpEl=document.getElementById('vd-vparc');
       if(vpEl&&t)vpEl.value=(t/parc2).toFixed(2);
+      App.updateScoreBadgeVd();
     });
+    const vdProgEl2=document.getElementById('vd-prog');if(vdProgEl2)vdProgEl2.addEventListener('change',()=>App.updateScoreBadgeVd());
+    const vdRecDataEl=document.getElementById('vd-rec-data');if(vdRecDataEl)vdRecDataEl.addEventListener('change',()=>App.updateScoreBadgeVd());
     document.getElementById('btn-save-venda').addEventListener('click',()=>App.saveVenda());
 
     // Transferência
@@ -3460,11 +3758,14 @@ const App={
     const btnClearSims=document.getElementById('btn-clear-sims');
     if(btnClearSims)btnClearSims.addEventListener('click',()=>App.clearAllSims());
 
-    // Transferência — bônus auto
+    // Transferência — bônus auto + score badge
     const tfBonusEl=document.getElementById('tf-bonus');
-    if(tfBonusEl)tfBonusEl.addEventListener('input',()=>App.onTfBonus());
+    if(tfBonusEl)tfBonusEl.addEventListener('input',()=>{App.onTfBonus();App.updateScoreBadgeTf();});
     const tfOrigPtsEl=document.getElementById('tf-orig-pts');
-    if(tfOrigPtsEl)tfOrigPtsEl.addEventListener('input',()=>App.onTfBonus());
+    if(tfOrigPtsEl)tfOrigPtsEl.addEventListener('input',()=>{App.onTfBonus();App.updateScoreBadgeTf();});
+    const tfOrigEl=document.getElementById('tf-orig');if(tfOrigEl)tfOrigEl.addEventListener('change',()=>App.updateScoreBadgeTf());
+    const tfDestEl=document.getElementById('tf-dest');if(tfDestEl)tfDestEl.addEventListener('change',()=>App.updateScoreBadgeTf());
+    const tfTaxaEl=document.getElementById('tf-taxa');if(tfTaxaEl)tfTaxaEl.addEventListener('input',()=>App.updateScoreBadgeTf());
 
     // Venda recebimento — inicializar data
     const vdRecEl=document.getElementById('vd-rec-data');
@@ -3472,7 +3773,8 @@ const App={
     App.onVdRecTipo();
 
     // Emissão manual
-    ['em-pontos','em-cpm','em-taxas','em-cobrado'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>Render.emPreview());});
+    ['em-pontos','em-cpm','em-taxas','em-cobrado'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{Render.emPreview();App.updateScoreBadgeEm();});});
+    const emProgEl=document.getElementById('em-prog');if(emProgEl)emProgEl.addEventListener('change',()=>App.updateScoreBadgeEm());
     // Campos de rota: atualizar sugestão de companhias E referência de mercado
     ['em-origem','em-destino'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{Render.emSugestao();Render.emReferencia();});});
     const emCl=document.getElementById('em-classe');if(emCl)emCl.addEventListener('change',()=>{Render.emSugestao();Render.emReferencia();});
@@ -3848,13 +4150,16 @@ const App={
     const vparcela=custoTotal/parc;
     const prog2 = document.getElementById('sop-cp-prog')?.value||'azul';
     const estAtual = Store.get().estoque[prog2]||{pontos:0,custoMedio:0,totalInvestido:0};
+    const mktSopCp = MercadoEngine.getLatestPrice(prog2)||0;
     const ptsAtual = estAtual.pontos||0;
     const invAtual = estAtual.totalInvestido||0;
     const novoPts  = ptsAtual + pts;
     const novoInv  = invAtual + custoTotal;
     const novoCpm  = novoPts>0 ? novoInv/(novoPts/1000) : cpm;
+    const srCp=Engine.calcScoreCompra({cpm,precoMercado:mktSopCp||0,progId:prog2,parcelas:parc});
     res.innerHTML=`<div class="card">
       <div class="sec">Resultado da Simulação</div>
+      ${App._scoreBadgeHTML(srCp,'sop-cp')}
       ${[['Pontos Comprados',N(pts)+' pts'],['Custo Total',R$(custoTotal)],['CPM Calculado',R$(cpm)+'/mil'],['Por Parcela',R$(vparcela)+'×'+parc]].map(([l,v])=>`<div class="irw"><span class="ilbl">${l}</span><span class="ival">${v}</span></div>`).join('')}
       <div style="margin-top:12px;padding:11px;background:var(--cyandim);border:1px solid var(--cyanglow);border-radius:var(--radius);font-size:12px;color:var(--txt1);">
         <div style="font-weight:700;color:var(--cyan);margin-bottom:6px;">📊 Impacto no Custo Médio</div>
@@ -3882,8 +4187,11 @@ const App={
     const lucro=total-custoTotal;
     const margem=total>0?(lucro/total)*100:0;
     const indCol=margem>=20?'var(--grn)':margem>=8?'var(--yel)':'var(--red)';
+    const mktSopVd=MercadoEngine.getLatestPrice(prog)||0;
+    const srVd=Engine.calcScoreVenda({margem,precoMercado:mktSopVd,valorRealMil:vpm,prazoDias:0,progId:prog,parcelas:1});
     res.innerHTML=`<div class="card">
       <div class="sec">Resultado da Simulação</div>
+      ${App._scoreBadgeHTML(srVd,'sop-vd')}
       ${[['Pontos',N(pts)+' pts'],['Valor Total',R$(total)],['Valor/Milheiro',R$(vpm)+'/mil'],['Custo Estimado',R$(custoTotal)],['Lucro Estimado','<span style="color:'+indCol+';font-weight:700;">'+R$(lucro)+'</span>'],['Margem','<span style="color:'+indCol+';">'+margem.toFixed(2)+'%</span>']].map(([l,v])=>`<div class="irw"><span class="ilbl">${l}</span><span class="ival">${v}</span></div>`).join('')}
       ${custoMedio===0?'<div style="margin-top:10px;padding:9px;background:var(--yeldim);border-radius:var(--radius);font-size:11px;color:var(--yel);">⚠ Custo médio não cadastrado para este programa — lucro estimado pode estar incorreto.</div>':''}
     </div>`;
@@ -3898,8 +4206,13 @@ const App={
     if(!res)return;
     if(!pts){res.innerHTML=`<div class="card"><div class="sec">Resultado</div><div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos para ver o resultado.</div></div>`;return;}
     const bonusPts=recv-pts;
+    const sopOrigTf=document.getElementById('sop-tf-orig')?.value||'azul';
+    const sopDestTf=document.getElementById('sop-tf-dest')?.value||'latam';
+    const sopCmoTf=Store.get().estoque[sopOrigTf]?.custoMedio||0;
+    const srTf=Engine.calcScoreTransferencia({bonus,pontosOrigem:pts,custoMedioOrigem:sopCmoTf,progDest:sopDestTf,taxa:0});
     res.innerHTML=`<div class="card">
       <div class="sec">Resultado da Simulação</div>
+      ${App._scoreBadgeHTML(srTf,'sop-tf')}
       ${[['Milhas Enviadas',N(pts)+' pts'],['Bônus',bonus+'%'],['Milhas Bônus','<span style="color:var(--grn);font-weight:700;">+'+N(bonusPts)+'</span>'],['Total Recebido','<span style="font-weight:700;">'+N(recv)+' pts</span>']].map(([l,v])=>`<div class="irw"><span class="ilbl">${l}</span><span class="ival">${v}</span></div>`).join('')}
       ${bonus>0?`<div style="margin-top:10px;padding:9px;background:var(--grndim);border:1px solid var(--grnbdr);border-radius:var(--radius);font-size:11px;color:var(--grn);">🎁 Com ${bonus}% de bônus você recebe <strong>${N(recv)}</strong> pontos — <strong>${N(bonusPts)}</strong> extras!</div>`:''}
     </div>`;
@@ -3924,8 +4237,11 @@ const App={
     const roi        = custoTotal>0 ? (lucro/custoTotal)*100 : 0;
     const col        = margem>=20?'var(--grn)':margem>=8?'var(--yel)':'var(--red)';
     const ind        = margem>=20?IND.green:margem>=8?IND.yellow:IND.red;
+    const mktSopEm=MercadoEngine.getLatestPrice(prog)||0;
+    const srEm=Engine.calcScoreEmissao({margem,roi,precoMercado:mktSopEm,valorRealMil:cobrado>0&&pts>0?cobrado/(pts/1000):0,prazoDias:0,progId:prog});
     res.innerHTML=`<div class="card">
       <div class="sec">Resultado da Simulação</div>
+      ${App._scoreBadgeHTML(srEm,'sop-em')}
       <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;padding:10px 13px;background:var(--bg3);border-radius:var(--radius);">
         <span style="font-size:16px;">${ind.e}</span>
         <span style="font-size:12px;font-weight:700;color:${col};">${ind.l}</span>
@@ -3941,6 +4257,217 @@ const App={
         ['ROI', '<span style="color:var(--cyan);">'+roi.toFixed(2)+'%</span>'],
       ].map(([l,v])=>`<div class="irw"><span class="ilbl">${l}</span><span class="ival">${v}</span></div>`).join('')}
     </div>`;
+  },
+
+
+  // ══════════════════════════════════════════════════════════
+  // SCORE SYSTEM — UI helpers
+  // ══════════════════════════════════════════════════════════
+
+  _scoreBadgeHTML(sr, domId){
+    // sr = {score, scoreClass, scoreBreakdown}
+    const cls = sr.scoreClass; // low | moderate | high
+    const labels = {low:'🟢 Baixo Risco — operação recomendada', moderate:'🟡 Risco Moderado — atenção aos fatores', high:'🔴 Alto Risco — verifique os fatores'};
+    return `<div class="score-badge sc-${cls}">
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <div style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;font-weight:700;">Score de Risco</div>
+        <div class="score-lbl">${labels[cls]||''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div>
+          <div class="score-bar" style="width:100px;"><div class="score-bar-fill" style="width:${sr.score}%;"></div></div>
+        </div>
+        <div class="score-num">${sr.score}<span style="font-size:13px;font-weight:400;color:var(--txt2);">/100</span></div>
+        <button class="score-btn" onclick="App.openScoreModal('${domId}')">Ver Detalhes →</button>
+      </div>
+    </div>`;
+  },
+
+  _renderScoreBadge(domId, sr){
+    const el=document.getElementById('score-badge-'+domId);
+    if(!el)return;
+    if(!sr){el.style.display='none';return;}
+    el.style.display='block';
+    el.innerHTML=this._scoreBadgeHTML(sr,domId);
+    el._lastScore=sr;
+  },
+
+  openScoreModal(domId){
+    const badges={em:'Emissão',cp:'Compra',vd:'Venda',tf:'Transferência'};
+    const el=document.getElementById('score-badge-'+domId);
+    const sr=el?._lastScore;
+    if(!sr){App.notify('Preencha os campos para ver o score.',''); return;}
+    const cls=sr.scoreClass;
+    const colMap={low:'var(--grn)',moderate:'var(--yel)',high:'var(--red)'};
+    const col=colMap[cls]||'var(--txt1)';
+    const bd=sr.scoreBreakdown||{};
+    const pesos=bd.pesos||{};
+    const fatoresLabel={margem:'Margem %',roi:'ROI %',spread:'Spread vs Mercado',prazo:'Prazo de Recebimento',liquidez:'Liquidez do Programa',volatilidade:'Volatilidade do Preço',expiracao:'Vencimento das Milhas',parcelamento:'Penalidade de Parcelamento',bonus:'Bônus de Transferência',custoEfetivo:'Custo Efetivo após Bônus',taxas:'Taxas de Transferência'};
+    const rows=Object.entries(bd).filter(([k])=>k!=='pesos').map(([k,v])=>{
+      const peso=pesos[k]||0;
+      const col2=v>=70?'var(--grn)':v>=45?'var(--yel)':'var(--red)';
+      return`<tr>
+        <td>${fatoresLabel[k]||k}</td>
+        <td><div style="display:inline-flex;align-items:center;gap:4px;"><span class="sbr"><span class="sbr-fill" style="width:${v}%;background:${col2};"></span></span>${v}</div></td>
+        <td>${peso}%</td>
+        <td style="color:${col2};font-weight:700;">${Math.round(v*peso/100)}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('modal-score-body').innerHTML=`
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 0 16px 0;border-bottom:1px solid var(--border);margin-bottom:14px;">
+        <div class="score-num" style="color:${col};font-size:36px;">${sr.score}</div>
+        <div><div style="font-size:13px;font-weight:700;color:${col};">${sr.scoreClass==='low'?'Baixo Risco':sr.scoreClass==='moderate'?'Risco Moderado':'Alto Risco'}</div><div style="font-size:11px;color:var(--txt2);margin-top:2px;">${badges[domId]||''} — Score 0–100</div></div>
+        <div class="score-bar" style="flex:1;height:8px;"><div class="score-bar-fill" style="width:${sr.score}%;"></div></div>
+      </div>
+      <table class="score-breakdown-tbl">
+        <thead><tr><th>Fator</th><th>Pontuação</th><th>Peso</th><th>Contrib.</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div style="margin-top:12px;padding:10px 12px;background:var(--bg3);border-radius:var(--radius);font-size:11px;color:var(--txt2);">
+        💡 Score = soma ponderada de cada fator normalizado (0–100). Maior score = menor risco percebido na operação.
+      </div>`;
+    document.getElementById('modal-score').classList.add('open');
+  },
+
+  updateScoreBadgeEm(){
+    const pt=+document.getElementById('em-pontos')?.value||0;
+    const cob=+document.getElementById('em-cobrado')?.value||0;
+    const cpm2=+document.getElementById('em-cpm')?.value||(Store.get().estoque[document.getElementById('em-prog')?.value||'azul']?.custoMedio||0);
+    const tx2=+document.getElementById('em-taxas')?.value||0;
+    const prog=document.getElementById('em-prog')?.value||'azul';
+    if(!pt||!cob){App._renderScoreBadge('em',null);return;}
+    const calc=Engine.calcEmissao({pontos:pt,cpm:cpm2,taxas:tx2,cobrado:cob});
+    const mkt=MercadoEngine.getLatestPrice(prog)||0;
+    const sr=Engine.calcScoreEmissao({margem:calc.margem,roi:calc.roi,precoMercado:mkt,valorRealMil:pt>0?cob/(pt/1000):0,prazoDias:0,progId:prog});
+    App._renderScoreBadge('em',sr);
+  },
+
+  updateScoreBadgeVd(){
+    const pt=+document.getElementById('vd-pontos')?.value||0;
+    const total=+document.getElementById('vd-total')?.value||0;
+    const parc=Math.max(1,+document.getElementById('vd-parcelas')?.value||1);
+    const prog=document.getElementById('vd-prog')?.value||'azul';
+    if(!pt||!total){App._renderScoreBadge('vd',null);return;}
+    const vpm=total/(pt/1000);
+    const cmo=Store.get().estoque[prog]?.custoMedio||0;
+    const custoTotal=(pt/1000)*cmo;
+    const lucro=total-custoTotal;
+    const margem=total>0?(lucro/total)*100:0;
+    const mkt=MercadoEngine.getLatestPrice(prog)||0;
+    const recData=document.getElementById('vd-rec-data')?.value||today();
+    const prazo=Engine._diasAte(recData);
+    const sr=Engine.calcScoreVenda({margem,precoMercado:mkt,valorRealMil:vpm,prazoDias:prazo,progId:prog,parcelas:parc});
+    App._renderScoreBadge('vd',sr);
+  },
+
+  updateScoreBadgeCp(){
+    const pt=+document.getElementById('cp-pontos')?.value||0;
+    const total=+document.getElementById('cp-total')?.value||0;
+    const parc=Math.max(1,+document.getElementById('cp-parcelas')?.value||1);
+    const prog=document.getElementById('cp-prog')?.value||'azul';
+    if(!pt||!total){App._renderScoreBadge('cp',null);return;}
+    const cpm=total/(pt/1000);
+    const mkt=MercadoEngine.getLatestPrice(prog)||0;
+    const sr=Engine.calcScoreCompra({cpm,precoMercado:mkt,progId:prog,parcelas:parc});
+    App._renderScoreBadge('cp',sr);
+  },
+
+  updateScoreBadgeTf(){
+    const oPts=+document.getElementById('tf-orig-pts')?.value||0;
+    const bonus=+document.getElementById('tf-bonus')?.value||0;
+    const taxa=+document.getElementById('tf-taxa')?.value||0;
+    const orig=document.getElementById('tf-orig')?.value||'azul';
+    const dest=document.getElementById('tf-dest')?.value||'latam';
+    if(!oPts){App._renderScoreBadge('tf',null);return;}
+    const cmo=Store.get().estoque[orig]?.custoMedio||0;
+    const sr=Engine.calcScoreTransferencia({bonus,pontosOrigem:oPts,custoMedioOrigem:cmo,progDest:dest,taxa});
+    App._renderScoreBadge('tf',sr);
+  },
+
+  // ─── Score Weights Settings ───────────────────────────────
+  renderScoreWeights(){
+    const el=document.getElementById('score-weights-body');
+    if(!el)return;
+    const s=Store.get();
+    const sw=s.config?.scoreWeights||{};
+    const ops=[
+      {key:'emissao',  label:'Emissão',       fields:['margem','roi','spread','prazo','liquidez','volatilidade','expiracao']},
+      {key:'venda',    label:'Venda',          fields:['margem','spread','prazo','liquidez','volatilidade','parcelamento']},
+      {key:'compra',   label:'Compra',         fields:['spread','liquidez','roi','volatilidade','expiracao','parcelamento']},
+      {key:'transferencia',label:'Transferência',fields:['bonus','custoEfetivo','liquidez','volatilidade','expiracao','taxas']},
+    ];
+    const fatorLabel={margem:'Margem',roi:'ROI',spread:'Spread',prazo:'Prazo',liquidez:'Liquidez',volatilidade:'Volatilidade',expiracao:'Vencimento',parcelamento:'Parcelamento',bonus:'Bônus',custoEfetivo:'Custo Efetivo',taxas:'Taxas'};
+    el.innerHTML=ops.map(op=>{
+      const w=sw[op.key]||Engine.ScoreConfig.weights[op.key]||{};
+      const total=op.fields.reduce((a,k)=>a+(+w[k]||0),0);
+      return`<div style="margin-bottom:16px;padding:14px;background:var(--bg3);border-radius:var(--radius);">
+        <div style="font-size:12px;font-weight:700;color:var(--txt1);margin-bottom:10px;">${op.label} <span style="font-size:10px;color:${total===100?'var(--grn)':'var(--red)'};">(Σ=${total}%)</span></div>
+        ${op.fields.map(k=>`<div class="score-wt-row">
+          <div class="score-wt-lbl">${fatorLabel[k]||k}</div>
+          <input class="score-wt-inp" type="number" min="0" max="100" value="${w[k]||0}" data-op="${op.key}" data-fator="${k}" oninput="App.onScoreWeightChange('${op.key}')">
+          <div class="score-wt-pct">%</div>
+        </div>`).join('')}
+      </div>`;
+    }).join('');
+  },
+
+  onScoreWeightChange(opKey){
+    // Live sum validation
+    const inputs=[...document.querySelectorAll(`.score-wt-inp[data-op="${opKey}"]`)];
+    const total=inputs.reduce((a,el)=>a+(+el.value||0),0);
+    // Visual feedback on sum label
+    const heading=document.querySelector(`[data-op="${opKey}"]`)?.closest('[style*="margin-bottom:16px"]')?.querySelector('span');
+    if(heading)heading.style.color=total===100?'var(--grn)':'var(--red)';
+  },
+
+  saveScoreWeights(){
+    const ops=['emissao','venda','compra','transferencia'];
+    const newWeights={};
+    let hasError=false;
+    ops.forEach(op=>{
+      const inputs=[...document.querySelectorAll(`.score-wt-inp[data-op="${op}"]`)];
+      const w={};
+      let sum=0;
+      inputs.forEach(el=>{w[el.dataset.fator]=+el.value||0;sum+=+el.value||0;});
+      if(sum!==100){App.notify(`Operação "${op}": pesos devem somar 100% (atual: ${sum}%).`,'er');hasError=true;}
+      newWeights[op]=w;
+    });
+    if(hasError)return;
+    Store.update(s=>{if(!s.config)s.config={};s.config.scoreWeights=newWeights;});
+    AuditLog.registrar(AuditLog.TIPOS.ALTERACAO,{obs:'Pesos do Score atualizados pelo usuário',tipo:'scoreWeights',novosValores:JSON.stringify(newWeights),origem:'SETTINGS'});
+    App.notify('✓ Pesos salvos! Novos scores serão calculados nas próximas operações.','ok');
+  },
+
+  recalcHistoricalScores(){
+    if(!confirm('Recalcular scores de todas as operações históricas? Isso atualiza os campos score/scoreClass/scoreBreakdown de todos os registros.'))return;
+    Store.update(s=>{
+      s.emissoes.forEach(e=>{
+        const mkt=MercadoEngine.getLatestPrice(e.programa)||0;
+        const sr=Engine.calcScoreEmissao({margem:e.margem||0,roi:e.roi||0,precoMercado:mkt,valorRealMil:e.pontos>0?(e.cobrado||0)/((e.pontos||1)/1000):0,prazoDias:0,progId:e.programa});
+        e.score=sr.score;e.scoreClass=sr.scoreClass;e.scoreBreakdown=sr.scoreBreakdown;
+      });
+      s.vendas.forEach(v=>{
+        const mkt=MercadoEngine.getLatestPrice(v.programa)||0;
+        const margem=v.valorTotal>0?((v.lucroVenda||0)/v.valorTotal)*100:0;
+        const sr=Engine.calcScoreVenda({margem,precoMercado:mkt,valorRealMil:v.valorPorMil||0,prazoDias:Engine._diasAte(v.dataRecebimento||today()),progId:v.programa,parcelas:v.parcelas||1});
+        v.score=sr.score;v.scoreClass=sr.scoreClass;v.scoreBreakdown=sr.scoreBreakdown;
+      });
+      s.compras.forEach(cp=>{
+        const mkt=MercadoEngine.getLatestPrice(cp.programa)||0;
+        const sr=Engine.calcScoreCompra({cpm:cp.custoPorMil||0,precoMercado:mkt,progId:cp.programa,parcelas:cp.parcelas||1});
+        cp.score=sr.score;cp.scoreClass=sr.scoreClass;cp.scoreBreakdown=sr.scoreBreakdown;
+      });
+      s.transferencias.forEach(tf=>{
+        const cmo=s.estoque[tf.programaOrigem]?.custoMedio||0;
+        const sr=Engine.calcScoreTransferencia({bonus:tf.bonus||0,pontosOrigem:tf.pontosOrigem||0,custoMedioOrigem:cmo,progDest:tf.programaDestino,taxa:tf.taxa||0});
+        tf.score=sr.score;tf.scoreClass=sr.scoreClass;tf.scoreBreakdown=sr.scoreBreakdown;
+      });
+    });
+    App.notify('✓ Scores históricos recalculados!','ok');
+    Render.operacoes&&Render.operacoes();
+    Render.compras&&Render.compras();
+    Render.vendas&&Render.vendas();
+    Render.transfs&&Render.transfs();
   },
 
   clearCalc(){
@@ -3964,11 +4491,13 @@ const App={
     const custoMilhasReal = (pt/1000)*custoMedioReal;
     const custoTotalReal  = custoMilhasReal+tx2;
     const calc=Engine.calcEmissao({pontos:pt,cpm:cpm2,taxas:tx2,cobrado:cob});
+    const mktEmissao=MercadoEngine.getLatestPrice(prog)||0;
+    const scoreEmissao=Engine.calcScoreEmissao({margem:calc.margem,roi:calc.roi,precoMercado:mktEmissao,valorRealMil:cob/(pt/1000),prazoDias:0,progId:prog});
     const entry={id:Date.now(),data:today(),programa:prog,tripType:document.getElementById('em-tipo').value,pontos:pt,
       cpm:cpm2,taxas:tx2,cobrado:cob,
       custo:calc.custo,lucro:calc.lucro,margem:calc.margem,roi:calc.roi,ind:calc.ind,
-      // Custo real congelado no momento da emissão — para relatórios precisos
       custoMilhasReal,custoTotalReal,
+      score:scoreEmissao.score,scoreClass:scoreEmissao.scoreClass,scoreBreakdown:scoreEmissao.scoreBreakdown,
       obs:document.getElementById('em-obs').value.trim()};
     Store.update(s=>{
       s.emissoes.unshift(entry);
@@ -3976,6 +4505,7 @@ const App={
       Engine.consumirEstoque(s.estoque[entry.programa], entry.pontos);
     });
     SheetsAPI.send('emissoes',entry);
+    AuditLog.registrar(AuditLog.TIPOS.CALC_SCORE,{id_operacao:entry.id,tipo:'emissao',score:scoreEmissao.score,scoreClass:scoreEmissao.scoreClass,breakdown:scoreEmissao.scoreBreakdown,origem:'FORMULARIO'});
     AuditLog.registrar(AuditLog.TIPOS.EMISSAO, {...entry, origem:'FORMULARIO'});
     // Histórico de cotações — lê os campos opcionais de rota/classe do formulário
     HistoricoCotacoes.registrar(entry, {
@@ -4003,7 +4533,9 @@ const App={
     if(!total&&!cpm2){App.notify('Informe o valor total ou CPM.','er');return;}
     const valorTotal=total||(pt/1000*cpm2);
     const cpVenc=document.getElementById('cp-venc')?.value||null;
-    const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),vencimento:cpVenc,programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal,taxa,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim()};
+    const mktCompra=MercadoEngine.getLatestPrice(prog)||0;
+    const scoreCompra=Engine.calcScoreCompra({cpm:cpm2,precoMercado:mktCompra,progId:prog,parcelas:parc});
+    const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),vencimento:cpVenc,programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal,taxa,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim(),score:scoreCompra.score,scoreClass:scoreCompra.scoreClass,scoreBreakdown:scoreCompra.scoreBreakdown};
     Store.update(s=>{
       s.compras.unshift(entry);
       VencimentoEngine.addLote(s, prog, pt, entry.data, cpVenc);
@@ -4014,6 +4546,7 @@ const App={
       Engine.normalizarEstoque(e);
     });
     SheetsAPI.send('compras',entry);
+    AuditLog.registrar(AuditLog.TIPOS.CALC_SCORE,{id_operacao:entry.id,tipo:'compra',score:scoreCompra.score,scoreClass:scoreCompra.scoreClass,breakdown:scoreCompra.scoreBreakdown,origem:'FORMULARIO'});
     AuditLog.registrar(AuditLog.TIPOS.COMPRA, {...entry, parcelas:parc, origem:'FORMULARIO'});
     // Registrar parcelas individuais no log
     for(let i=0;i<parc;i++){
@@ -4049,16 +4582,20 @@ const App={
     const custoUnitarioVenda = Store.get().estoque[prog]?.custoMedio||0;
     const custoTotalVenda    = (pt/1000)*custoUnitarioVenda;
     const lucroVenda         = total - custoTotalVenda;
+    const mktVenda=MercadoEngine.getLatestPrice(prog)||0;
+    const prazoVenda=Engine._diasAte(recData);
+    const margemVenda=total>0?((lucroVenda/total)*100):0;
+    const scoreVenda=Engine.calcScoreVenda({margem:margemVenda,precoMercado:mktVenda,valorRealMil:vpm,prazoDias:prazoVenda,progId:prog,parcelas:parc});
     const entry={id:Date.now(),data:document.getElementById('vd-data').value||today(),dataRecebimento:recData,tipoRecebimento:recTipo,programa:prog,pontos:pt,valorPorMil:vpm,valorTotal:total,
-      // Custo congelado no momento da venda — imutável
       custoUnitarioVenda,custoTotalVenda,lucroVenda,
-      parcelas:parc,parcelasRecebidas:document.getElementById('vd-status').value==='recebido'?parc:0,status:document.getElementById('vd-status').value,canal:document.getElementById('vd-canal').value.trim(),obs:document.getElementById('vd-obs').value.trim()};
+      parcelas:parc,parcelasRecebidas:document.getElementById('vd-status').value==='recebido'?parc:0,status:document.getElementById('vd-status').value,canal:document.getElementById('vd-canal').value.trim(),obs:document.getElementById('vd-obs').value.trim(),score:scoreVenda.score,scoreClass:scoreVenda.scoreClass,scoreBreakdown:scoreVenda.scoreBreakdown};
     Store.update(s=>{
       s.vendas.unshift(entry);
       VencimentoEngine.consumirFIFO(s, prog, pt);
       Engine.consumirEstoque(s.estoque[prog], pt);
     });
     SheetsAPI.send('vendas',entry);
+    AuditLog.registrar(AuditLog.TIPOS.CALC_SCORE,{id_operacao:entry.id,tipo:'venda',score:scoreVenda.score,scoreClass:scoreVenda.scoreClass,breakdown:scoreVenda.scoreBreakdown,origem:'FORMULARIO'});
     AuditLog.registrar(AuditLog.TIPOS.VENDA, {...entry, resultado:lucroVenda, origem:'FORMULARIO'});
     // Registrar parcelas de recebimento
     for(let i=0;i<parc;i++){
@@ -4080,7 +4617,9 @@ const App={
     if(!oPts){App.notify('Informe os pontos de origem.','er');return;}
     if(orig===dest){App.notify('Origem e destino devem ser diferentes.','er');return;}
     const tfVenc=document.getElementById('tf-venc')?.value||null;
-    const entry={id:Date.now(),data:today(),vencimento:tfVenc,programaOrigem:orig,programaDestino:dest,pontosOrigem:oPts,pontosDestino:dPts,bonus,taxa,obs:document.getElementById('tf-obs').value.trim()};
+    const cmoTransf=Store.get().estoque[orig]?.custoMedio||0;
+    const scoreTransf=Engine.calcScoreTransferencia({bonus,pontosOrigem:oPts,custoMedioOrigem:cmoTransf,progDest:dest,taxa});
+    const entry={id:Date.now(),data:today(),vencimento:tfVenc,programaOrigem:orig,programaDestino:dest,pontosOrigem:oPts,pontosDestino:dPts,bonus,taxa,obs:document.getElementById('tf-obs').value.trim(),score:scoreTransf.score,scoreClass:scoreTransf.scoreClass,scoreBreakdown:scoreTransf.scoreBreakdown};
     Store.update(s=>{
       const eo=s.estoque[orig], ed=s.estoque[dest];
       // 1. Consumir milhas da origem (FIFO + custo médio)
@@ -4097,6 +4636,7 @@ const App={
       s.transferencias.unshift(entry);
     });
     SheetsAPI.send('transferencias',entry);
+    AuditLog.registrar(AuditLog.TIPOS.CALC_SCORE,{id_operacao:entry.id,tipo:'transferencia',score:scoreTransf.score,scoreClass:scoreTransf.scoreClass,breakdown:scoreTransf.scoreBreakdown,origem:'FORMULARIO'});
     AuditLog.registrar(AuditLog.TIPOS.TRANSFERENCIA, {
       ...entry, quantidade: entry.pontosOrigem, valorTotal: entry.taxa||0,
       origem:'FORMULARIO',
