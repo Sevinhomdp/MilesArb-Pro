@@ -348,7 +348,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
   /* 13 — GRIDS INLINE 2-COLUNAS (HTML style="") → 1 coluna
      Usamos IDs dos containers-pai para sobrescrever style=""          */
   #pg-dashboard .pb > div[style*="grid-template-columns:1fr 1fr"],
-  /* pg-strat removed — content merged into pg-calc */,
+  #pg-calc      .pb > div[style*="grid-template-columns:1fr 1fr"],
   #pg-dre       .pb > div[style*="grid-template-columns:1fr 1fr"],
   #pg-caixa     .pb > div[style*="grid-template-columns:1fr 1fr"],
   #pg-hist      .pb > div[style*="grid-template-columns:1fr 1fr"],
@@ -359,6 +359,10 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
   }
   /* Internos strat-cmp e strat-met */
   #strat-cmp,#strat-met{grid-template-columns:1fr!important}
+  /* Grids aninhados na análise estratégica do calc */
+  #calc-strat-section div[style*="grid-template-columns:1fr 1fr"]{
+    grid-template-columns:1fr!important
+  }
 
   /* 14 — STOCK CARDS 3col → 1col */
   #stock-cards{grid-template-columns:1fr!important;gap:12px}
@@ -419,6 +423,48 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 
   /* 26 — ESPAÇAMENTO GERAL */
   .card+.card{margin-top:12px}
+
+  /* 27 — TWOCOL interno (360px 1fr) já na regra 12, mas reforço */
+  .twocol{grid-template-columns:1fr!important}
+
+  /* 28 — Botões no ph (header) */
+  .ph .bsecond,.ph .bprimary{font-size:11px;padding:7px 11px}
+
+  /* 29 — Auditoria: filtros do header empilham */
+  #pg-auditoria .ph > div[style*="display:flex"]{
+    flex-direction:column;align-items:stretch;width:100%;gap:8px
+  }
+  #aud-tipo-filt,#aud-mes-filt{
+    width:100%!important;font-size:15px!important;padding:11px 14px!important
+  }
+  #pg-auditoria .ph .bprimary,#pg-auditoria .ph .bsecond{
+    width:100%;padding:11px 14px;font-size:13px;text-align:center
+  }
+
+  /* 30 — Dropdowns side-by-side (mês/ano DRE) */
+  div[style*="display:flex;gap:6px"] > select{flex:1;min-width:0}
+
+  /* 31 — Grids repeat(3) e repeat(4) inline */
+  #em-preview .mgrid[style*="repeat(4"]{grid-template-columns:repeat(2,1fr)!important}
+
+  /* 32 — Score badge: layout mais compacto */
+  .score-badge{flex-wrap:wrap;gap:8px}
+  .score-bar{flex-basis:100%;margin:0}
+  .score-btn{font-size:10px;padding:4px 8px}
+
+  /* 33 — Tabela score-breakdown */
+  .score-breakdown-tbl td,.score-breakdown-tbl th{font-size:11px;padding:5px 0}
+  .sbr{width:44px}
+
+  /* 34 — Prevenir overflow horizontal global */
+  #content,.pb{max-width:100%;overflow-x:hidden}
+
+  /* 35 — DRE mês/ano selects */
+  #dp-mes,#dp-ano{flex:1;min-width:0}
+  #dre-mes,#dre-ano{width:100%!important}
+
+  /* 36 — Estoque: grids inline repeat(3) */
+  #stock-cards{grid-template-columns:1fr!important}
 }
 
 /* Desktop: esconde os controles mobile */
