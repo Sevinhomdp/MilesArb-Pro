@@ -348,7 +348,7 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
   /* 13 — GRIDS INLINE 2-COLUNAS (HTML style="") → 1 coluna
      Usamos IDs dos containers-pai para sobrescrever style=""          */
   #pg-dashboard .pb > div[style*="grid-template-columns:1fr 1fr"],
-  #pg-calc      .pb > div[style*="grid-template-columns:1fr 1fr"],
+  /* pg-strat removed — content merged into pg-calc */,
   #pg-dre       .pb > div[style*="grid-template-columns:1fr 1fr"],
   #pg-caixa     .pb > div[style*="grid-template-columns:1fr 1fr"],
   #pg-hist      .pb > div[style*="grid-template-columns:1fr 1fr"],
@@ -359,10 +359,6 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
   }
   /* Internos strat-cmp e strat-met */
   #strat-cmp,#strat-met{grid-template-columns:1fr!important}
-  /* Grids aninhados na análise estratégica do calc */
-  #calc-strat-section div[style*="grid-template-columns:1fr 1fr"]{
-    grid-template-columns:1fr!important
-  }
 
   /* 14 — STOCK CARDS 3col → 1col */
   #stock-cards{grid-template-columns:1fr!important;gap:12px}
@@ -423,48 +419,6 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 
   /* 26 — ESPAÇAMENTO GERAL */
   .card+.card{margin-top:12px}
-
-  /* 27 — TWOCOL interno (360px 1fr) já na regra 12, mas reforço */
-  .twocol{grid-template-columns:1fr!important}
-
-  /* 28 — Botões no ph (header) */
-  .ph .bsecond,.ph .bprimary{font-size:11px;padding:7px 11px}
-
-  /* 29 — Auditoria: filtros do header empilham */
-  #pg-auditoria .ph > div[style*="display:flex"]{
-    flex-direction:column;align-items:stretch;width:100%;gap:8px
-  }
-  #aud-tipo-filt,#aud-mes-filt{
-    width:100%!important;font-size:15px!important;padding:11px 14px!important
-  }
-  #pg-auditoria .ph .bprimary,#pg-auditoria .ph .bsecond{
-    width:100%;padding:11px 14px;font-size:13px;text-align:center
-  }
-
-  /* 30 — Dropdowns side-by-side (mês/ano DRE) */
-  div[style*="display:flex;gap:6px"] > select{flex:1;min-width:0}
-
-  /* 31 — Grids repeat(3) e repeat(4) inline */
-  #em-preview .mgrid[style*="repeat(4"]{grid-template-columns:repeat(2,1fr)!important}
-
-  /* 32 — Score badge: layout mais compacto */
-  .score-badge{flex-wrap:wrap;gap:8px}
-  .score-bar{flex-basis:100%;margin:0}
-  .score-btn{font-size:10px;padding:4px 8px}
-
-  /* 33 — Tabela score-breakdown */
-  .score-breakdown-tbl td,.score-breakdown-tbl th{font-size:11px;padding:5px 0}
-  .sbr{width:44px}
-
-  /* 34 — Prevenir overflow horizontal global */
-  #content,.pb{max-width:100%;overflow-x:hidden}
-
-  /* 35 — DRE mês/ano selects */
-  #dp-mes,#dp-ano{flex:1;min-width:0}
-  #dre-mes,#dre-ano{width:100%!important}
-
-  /* 36 — Estoque: grids inline repeat(3) */
-  #stock-cards{grid-template-columns:1fr!important}
 }
 
 /* Desktop: esconde os controles mobile */
@@ -713,10 +667,11 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
 
     <!-- ── TABS ────────────────────────────────────────────── -->
     <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-      <button class="tbtn active" id="sop-tab-compra"  onclick="App.sopTab('compra')" >↓ Compra de Milhas</button>
-      <button class="tbtn"        id="sop-tab-venda"   onclick="App.sopTab('venda')"  >↑ Venda de Milhas</button>
-      <button class="tbtn"        id="sop-tab-transf"  onclick="App.sopTab('transf')" >⇄ Transferência</button>
-      <button class="tbtn"        id="sop-tab-emissao" onclick="App.sopTab('emissao')">✦ Emissão</button>
+      <button class="tbtn active" id="sop-tab-compra"       onclick="App.sopTab('compra')"       >↓ Compra de Milhas</button>
+      <button class="tbtn"        id="sop-tab-venda"        onclick="App.sopTab('venda')"        >↑ Venda de Milhas</button>
+      <button class="tbtn"        id="sop-tab-transf"       onclick="App.sopTab('transf')"       >⇄ Transferência</button>
+      <button class="tbtn"        id="sop-tab-emissao"      onclick="App.sopTab('emissao')"      >✦ Emissão</button>
+      <button class="tbtn"        id="sop-tab-custobenefit" onclick="App.sopTab('custobenefit')" >◈ Custo Benefício</button>
     </div>
 
     <!-- ── TAB: COMPRA ─────────────────────────────────────── -->
@@ -799,11 +754,56 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
       </div>
     </div>
 
+    <!-- ── TAB: CUSTO BENEFÍCIO ──────────────────────────── -->
+    <div id="sop-panel-custobenefit" style="display:none;">
+      <div class="card" style="margin-bottom:14px;">
+
+        <!-- Linha 1: 6 campos -->
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:14px;">
+          <div class="fgrp">
+            <div class="flbl">Milhas Compradas</div>
+            <input type="number" id="sop-cb-compradas" placeholder="39600" oninput="App.sopCalcCustoBenefit()" style="padding:9px 12px;width:100%;">
+          </div>
+          <div class="fgrp">
+            <div class="flbl">Saldo Bonificável</div>
+            <input type="number" id="sop-cb-bonificavel" placeholder="400" oninput="App.sopCalcCustoBenefit()" style="padding:9px 12px;width:100%;">
+          </div>
+          <div class="fgrp">
+            <div class="flbl">Saldo Seco</div>
+            <input type="number" id="sop-cb-seco" placeholder="500" oninput="App.sopCalcCustoBenefit()" style="padding:9px 12px;width:100%;">
+          </div>
+          <div class="fgrp">
+            <div class="flbl">Bônus (%)</div>
+            <input type="number" id="sop-cb-bonus" placeholder="70" min="0" oninput="App.sopCalcCustoBenefit()" style="padding:9px 12px;width:100%;">
+          </div>
+          <div class="fgrp">
+            <div class="flbl">Custo Compra (R$)</div>
+            <input type="number" id="sop-cb-custo" placeholder="1100,88" oninput="App.sopCalcCustoBenefit()" style="padding:9px 12px;width:100%;">
+          </div>
+          <div class="fgrp">
+            <div class="flbl">Taxas/Clubes (R$)</div>
+            <input type="number" id="sop-cb-taxas" placeholder="44,90" oninput="App.sopCalcCustoBenefit()" style="padding:9px 12px;width:100%;">
+          </div>
+        </div>
+
+        <!-- Linha 2: só o valor de venda, alinhado à esquerda -->
+        <div style="max-width:200px;">
+          <div class="fgrp">
+            <div class="flbl">Valor Total da Venda (R$)</div>
+            <input type="number" id="sop-cb-venda" placeholder="1300,00" oninput="App.sopCalcCustoBenefit()" style="padding:9px 12px;width:100%;">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Resultado -->
+      <div id="sop-res-custobenefit">
+        <div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos para ver o resultado.</div>
+      </div>
+    </div>
+
   </div>
 </div>
-
-
-<!-- ════ COMPRAR MILHAS ══════════════════════════════════════ -->
 <div class="pg" id="pg-compra">
   <div class="ph"><div><div class="ptitle">Comprar Milhas</div><div class="psub">Registre aquisições e atualize estoque automaticamente</div></div></div>
   <div class="pb">
@@ -1447,7 +1447,13 @@ const Engine={
         const restante=Math.max(0,parc-(v.parcelasRecebidas||0));
         return s+restante*((v.valorTotal||0)/parc);
       },0);
-    const aPagar=compras.reduce((s,c)=>{const rest=(c.parcelas||1)-(c.parcelasPagas||0),vp=(c.valorTotal||0)/(c.parcelas||1);return s+Math.max(0,rest)*vp;},0);
+    // ── MELHORIA 2: aPagar inclui taxa/clube da compra ──
+    const aPagar=compras.reduce((s,c)=>{
+      const rest=Math.max(0,(c.parcelas||1)-(c.parcelasPagas||0));
+      const invReal=c.investimentoReal!=null ? c.investimentoReal : (c.valorTotal||0)+(c.taxa||0);
+      const vp=invReal/(c.parcelas||1);
+      return s+rest*vp;
+    },0);
     return{aReceber,aPagar,saldo:aReceber-aPagar};
   },
   dashMetrics(s){
@@ -2992,7 +2998,7 @@ const Render={
   compras(){
     const c=Store.get().compras;
     if(!c.length){document.getElementById('compras-list').innerHTML=H.emptyState('Nenhuma compra registrada','Preencha o formulário acima para registrar');return;}
-    document.getElementById('compras-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Programa</th><th>Pontos</th><th>CPM</th><th>Total</th><th>Parcelas</th><th>Status</th><th></th></tr></thead><tbody>${c.map(e=>{const p=progById(e.programa),rest=Math.max(0,(e.parcelas||1)-(e.parcelasPagas||0));return`<tr><td style="color:var(--txt2);font-size:11px;">${e.data}</td><td>${p.short}</td><td>${N(e.pontos)}</td><td>${R$(e.custoPorMil||0)}/mil</td><td style="color:var(--gold);font-weight:600;">${R$(e.valorTotal)}</td><td>${H.tag(rest>0?`${rest}x restante`:'Quitado',rest>0?'y':'g')}</td><td style="font-size:11px;color:var(--txt2);">${e.obs||'—'}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delCompra(${e.id})">✕</button></td></tr>`;}).join('')}</tbody></table></div>`;
+    document.getElementById('compras-list').innerHTML=`<div style="overflow-x:auto;"><table class="dtbl"><thead><tr><th>Data</th><th>Programa</th><th>Pontos</th><th>CPM (c/taxas)</th><th>Valor Compra</th><th>Taxas/Clubes</th><th>Investimento Real</th><th>Parcelas</th><th>Status</th><th></th></tr></thead><tbody>${c.map(e=>{const p=progById(e.programa),rest=Math.max(0,(e.parcelas||1)-(e.parcelasPagas||0));const invReal=e.investimentoReal!=null?e.investimentoReal:(e.valorTotal||0)+(e.taxa||0);const hasTaxa=(e.taxa||0)>0;return`<tr><td style="color:var(--txt2);font-size:11px;">${e.data}</td><td>${p.short}</td><td>${N(e.pontos)}</td><td>${R$(e.custoPorMil||0)}/mil</td><td style="color:var(--txt1);">${R$(e.valorTotal)}</td><td style="color:${hasTaxa?'var(--yel)':'var(--txt3)'};">${hasTaxa?R$(e.taxa||0):'—'}</td><td style="color:var(--gold);font-weight:600;">${R$(invReal)}</td><td>${H.tag(rest>0?`${rest}x restante`:'Quitado',rest>0?'y':'g')}</td><td style="font-size:11px;color:var(--txt2);">${e.obs||'—'}</td><td><button class="bghst" style="font-size:11px;color:var(--red);" onclick="App.delCompra(${e.id})">✕</button></td></tr>`;}).join('')}</tbody></table></div>`;
   },
   /* ── VENDAS LIST ─────────────────────────────── */
   vendas(){
@@ -3030,6 +3036,8 @@ const Render={
   dre(mes,ano){
     const s=Store.get(), d=Engine.dre(s.emissoes,s.despesas,mes,ano);
     document.getElementById('dre-kpis').innerHTML=[H.kcard('Receita Total',R$(d.receita),`${d.em.length} emissões`,'📈','o'),H.kcard('Lucro Líquido',R$(d.lucroLiq),`Margem: ${pct(d.margemLiq)}`,'💰',d.lucroLiq>=0?'g':'r'),H.kcard('Margem Bruta',pct(d.margemBruta),'sobre receita','%','c'),H.kcard('Despesas',R$(d.totalDesp),'operacionais','💳','r')].join('');
+    // ── MELHORIA 2: taxas de compra do período ──
+    const taxasComprasMes=s.compras.filter(c=>{const dt=new Date(c.data||'');return dt.getMonth()+1==mes&&dt.getFullYear()==ano;}).reduce((a,c)=>a+(c.taxa||0),0);
     document.getElementById('dre-table').innerHTML=[
       {cls:'header',l:'RECEITAS',v:''},
       {cls:'sub',l:`Emissão de Passagens (${d.em.length}x)`,v:R$(d.receita)},
@@ -3040,7 +3048,8 @@ const Render={
       {cls:'total',l:'LUCRO BRUTO',v:R$(d.lucroBruto)},
       {cls:'header',l:`DESPESAS OPERACIONAIS`,v:''},
       ...d.dp.map(dp=>({cls:'sub',l:`${dp.descricao} (${dp.categoria})`,v:'-'+R$(dp.valor)})),
-      {cls:'sub',l:'Total Despesas Operacionais',v:'-'+R$(d.totalDesp)},
+      ...(taxasComprasMes>0?[{cls:'sub',l:'Taxas / Clubes de Compra de Milhas',v:'-'+R$(taxasComprasMes)}]:[]),
+      {cls:'sub',l:'Total Despesas Operacionais',v:'-'+R$(d.totalDesp+(taxasComprasMes>0&&!d.dp.length?taxasComprasMes:0))},
       {cls:`total profit`,l:'LUCRO LÍQUIDO',v:R$(d.lucroLiq)},
       {cls:'sub',l:'Margem Líquida',v:pct(d.margemLiq)},
     ].map(row=>`<div class="dre-row ${row.cls}"><span class="dre-lbl">${row.l}</span><span class="dre-val" style="color:${row.cls.includes('total')||row.cls.includes('profit')?d.lucroLiq>=0?'var(--gold)':'var(--red)':'var(--txt1)'};">${row.v}</span></div>`).join('');
@@ -3073,10 +3082,13 @@ const Render={
     const compPend=s.compras.filter(c=>((c.parcelas||1)-(c.parcelasPagas||0))>0);
     const pagarRows=[];
     compPend.forEach(cp=>{
-      const rest=Math.max(0,(cp.parcelas||1)-(cp.parcelasPagas||0)),vp=(cp.valorTotal||0)/(cp.parcelas||1);
+      // ── MELHORIA 2: parcela calculada sobre investimentoReal ──
+      const invReal=cp.investimentoReal!=null?cp.investimentoReal:(cp.valorTotal||0)+(cp.taxa||0);
+      const rest=Math.max(0,(cp.parcelas||1)-(cp.parcelasPagas||0)),vp=invReal/(cp.parcelas||1);
       const pagas=cp.parcelasPagas||0,total=cp.parcelas||1;
+      const hasTaxa=(cp.taxa||0)>0;
       for(let i=pagas;i<total;i++){
-        pagarRows.push(`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(cp.programa).name} <span style="color:var(--yel);">Fatura ${i+1}/${total}</span></div><div style="font-size:10px;color:var(--txt2);">${cp.data}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--red);">${R$(vp)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.confirmPagamento(${cp.id})">✓ Pago</button></div></div>`);
+        pagarRows.push(`<div class="irw"><div><div style="font-size:12px;color:var(--txt1);">${progById(cp.programa).name} <span style="color:var(--yel);">Fatura ${i+1}/${total}</span>${hasTaxa?` <span style="font-size:10px;color:var(--yel);">(incl. ${R$(cp.taxa||0)} taxas)</span>`:''}</div><div style="font-size:10px;color:var(--txt2);">${cp.data}</div></div><div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--font-mono);font-size:13px;color:var(--red);">${R$(vp)}</span><button class="tag ty" style="cursor:pointer;border:none;font-size:10px;" onclick="App.confirmPagamento(${cp.id})">✓ Pago</button></div></div>`);
       }
     });
     document.getElementById('caixa-pagar').innerHTML=pagarRows.length?`<div style="display:flex;flex-direction:column;gap:5px;">${pagarRows.join('')}</div>`:H.emptyState('Nenhum pagamento pendente','Todas as compras estão quitadas');
@@ -3279,6 +3291,8 @@ const Render={
 
     // KPIs sempre sobre todos os dados sem filtro de mês para contexto geral
     const totC=s.compras.reduce((a,c)=>a+(c.valorTotal||0),0);
+    // ── MELHORIA 2: capital investido inclui taxas/clubes ──
+    const totCReal=s.compras.reduce((a,c)=>a+(c.investimentoReal!=null?c.investimentoReal:(c.valorTotal||0)+(c.taxa||0)),0);
     const totV=s.vendas.reduce((a,v)=>a+(v.valorTotal||0),0);
     const totPtsC=s.compras.reduce((a,c)=>a+(c.pontos||0),0);
     const totPtsV=s.vendas.reduce((a,v)=>a+(v.pontos||0),0);
@@ -3287,9 +3301,9 @@ const Render={
       return a+(v.valorTotal||0)-((v.pontos/1000)*(est.custoMedio||0));
     },0);
     document.getElementById('ops-kpis').innerHTML=[
-      H.kcard('Capital Investido (C)',R$(totC),N(totPtsC)+' pts comprados','↓','r'),
+      H.kcard('Capital Investido (C)',R$(totCReal),`${N(totPtsC)} pts · Inclui taxas`,'↓','r'),
       H.kcard('Receita de Vendas (V)',R$(totV),N(totPtsV)+' pts vendidos','↑','g'),
-      H.kcard('Resultado Bruto (V−C)',R$(totV-totC),'vendas − compras','⟳',totV>=totC?'g':'r'),
+      H.kcard('Resultado Bruto (V−C)',R$(totV-totCReal),'vendas − capital investido','⟳',totV>=totCReal?'g':'r'),
       H.kcard('Operações no Filtro',ops.length,'itens exibidos','≡','c'),
     ].join('');
 
@@ -4174,7 +4188,7 @@ const App={
 
   // ── SIMULADOR DE OPERAÇÕES ───────────────────────────────────
   sopTab(tab){
-    ['compra','venda','transf','emissao'].forEach(t=>{
+    ['compra','venda','transf','emissao','custobenefit'].forEach(t=>{
       const panel=document.getElementById('sop-panel-'+t);
       const btn  =document.getElementById('sop-tab-'+t);
       if(panel)panel.style.display = t===tab?'block':'none';
@@ -4303,6 +4317,67 @@ const App={
         ['ROI', '<span style="color:var(--cyan);">'+roi.toFixed(2)+'%</span>'],
       ].map(([l,v])=>`<div class="irw"><span class="ilbl">${l}</span><span class="ival">${v}</span></div>`).join('')}
     </div>`;
+  },
+
+  // ── MELHORIA 1: SIMULADOR CUSTO BENEFÍCIO ────────────────
+  sopCalcCustoBenefit(){
+    const compradas   = +document.getElementById('sop-cb-compradas')?.value   || 0;
+    const bonificavel = +document.getElementById('sop-cb-bonificavel')?.value  || 0;
+    const seco        = +document.getElementById('sop-cb-seco')?.value         || 0;
+    const bonus       = +document.getElementById('sop-cb-bonus')?.value        || 0;
+    const custo       = +document.getElementById('sop-cb-custo')?.value        || 0;
+    const taxas       = +document.getElementById('sop-cb-taxas')?.value        || 0;
+    const venda       = +document.getElementById('sop-cb-venda')?.value        || 0;
+    const res         = document.getElementById('sop-res-custobenefit');
+    if(!res) return;
+
+    // Fórmula: (Compradas + Bonificável) × (1 + Bônus%) + Saldo Seco
+    const milhasGeradas     = (compradas + bonificavel) * (1 + bonus / 100) + seco;
+    const investimentoTotal = custo + taxas;
+    const cpmCompra         = milhasGeradas > 0 ? (investimentoTotal / milhasGeradas) * 1000 : 0;
+    const cpvVenda          = milhasGeradas > 0 && venda > 0 ? (venda / milhasGeradas) * 1000 : 0;
+    const lucroLiq          = venda - investimentoTotal;
+    const margem            = venda > 0 ? (lucroLiq / venda) * 100 : 0;
+    const roi               = investimentoTotal > 0 ? (lucroLiq / investimentoTotal) * 100 : 0;
+
+    if(!compradas && !bonificavel && !seco && !custo) {
+      res.innerHTML = `<div style="color:var(--txt3);font-size:12px;text-align:center;padding:24px 0;">Preencha os campos para ver o resultado.</div>`;
+      return;
+    }
+
+    const lucroCol = lucroLiq >= 0 ? 'var(--grn)' : 'var(--red)';
+
+    res.innerHTML = `
+      <div style="border-left:3px solid var(--gold);padding:18px 22px;background:var(--bg2);border-radius:var(--radius);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+
+          <!-- Linha 1 -->
+          <div style="padding:0 24px 18px 0;border-right:1px solid var(--border);">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--txt2);text-transform:uppercase;margin-bottom:6px;">Milhas Geradas</div>
+            <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--txt0);">${N(Math.round(milhasGeradas))}</div>
+          </div>
+          <div style="padding:0 0 18px 24px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--txt2);text-transform:uppercase;margin-bottom:6px;">Lucro Líquido</div>
+            <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:${lucroCol};">${venda > 0 ? R$(lucroLiq) : '—'}</div>
+          </div>
+
+          <!-- Linha 2 -->
+          <div style="padding:18px 24px 0 0;border-right:1px solid var(--border);border-top:1px solid var(--border);">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--txt2);text-transform:uppercase;margin-bottom:6px;">CPM Compra</div>
+            <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--txt0);">${cpmCompra > 0 ? R$(cpmCompra) : '—'}</div>
+          </div>
+          <div style="padding:18px 0 0 24px;border-top:1px solid var(--border);">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--txt2);text-transform:uppercase;margin-bottom:6px;">CPV Venda</div>
+            <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--txt0);">${cpvVenda > 0 ? R$(cpvVenda) : '—'}</div>
+          </div>
+
+        </div>
+        ${venda > 0 ? `<div style="display:flex;gap:20px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--txt2);">
+          <span>Invest.: <strong style="font-family:var(--font-mono);color:var(--gold);">${R$(investimentoTotal)}</strong></span>
+          <span>Margem: <strong style="font-family:var(--font-mono);color:${lucroCol};">${margem.toFixed(2)}%</strong></span>
+          <span>ROI: <strong style="font-family:var(--font-mono);color:${lucroCol};">${roi.toFixed(2)}%</strong></span>
+        </div>` : ''}
+      </div>`;
   },
 
 
@@ -4572,21 +4647,24 @@ const App={
   saveCompra(){
     const prog=document.getElementById('cp-prog').value,pt=+document.getElementById('cp-pontos').value||0;
     const total=+document.getElementById('cp-total').value||0;
-    const cpm2=pt>0&&total>0?total/(pt/1000):(+document.getElementById('cp-cpm').value||0);
-    const parc=+document.getElementById('cp-parcelas').value||1,pgpg=+document.getElementById('cp-pgpagas').value||0;
     const taxa=+document.getElementById('cp-taxa')?.value||0;
+    // ── MELHORIA 2: investimento real inclui taxas/clubes ──
+    const investimentoReal = total + taxa;
+    const cpm2=pt>0&&total>0 ? investimentoReal/(pt/1000) : (+document.getElementById('cp-cpm').value||0);
+    const parc=+document.getElementById('cp-parcelas').value||1,pgpg=+document.getElementById('cp-pgpagas').value||0;
     if(!pt){App.notify('Informe a quantidade de pontos.','er');return;}
     if(!total&&!cpm2){App.notify('Informe o valor total ou CPM.','er');return;}
     const valorTotal=total||(pt/1000*cpm2);
     const cpVenc=document.getElementById('cp-venc')?.value||null;
     const mktCompra=MercadoEngine.getLatestPrice(prog)||0;
     const scoreCompra=Engine.calcScoreCompra({cpm:cpm2,precoMercado:mktCompra,progId:prog,parcelas:parc});
-    const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),vencimento:cpVenc,programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal,taxa,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim(),score:scoreCompra.score,scoreClass:scoreCompra.scoreClass,scoreBreakdown:scoreCompra.scoreBreakdown};
+    const entry={id:Date.now(),data:document.getElementById('cp-data').value||today(),vencimento:cpVenc,programa:prog,pontos:pt,custoPorMil:cpm2,valorTotal,taxa,investimentoReal,parcelas:parc,parcelasPagas:pgpg,categoria:document.getElementById('cp-cat').value,obs:document.getElementById('cp-obs').value.trim(),score:scoreCompra.score,scoreClass:scoreCompra.scoreClass,scoreBreakdown:scoreCompra.scoreBreakdown};
     Store.update(s=>{
       s.compras.unshift(entry);
       VencimentoEngine.addLote(s, prog, pt, entry.data, cpVenc);
       const e=s.estoque[prog];
-      const novoTotal=e.pontos+pt, novoInv=e.totalInvestido+(pt/1000)*cpm2;
+      // ── MELHORIA 2: totalInvestido inclui taxa ──
+      const novoTotal=e.pontos+pt, novoInv=e.totalInvestido+investimentoReal;
       e.pontos=novoTotal; e.totalInvestido=novoInv;
       e.custoMedio=novoTotal>0?novoInv/(novoTotal/1000):0;
       Engine.normalizarEstoque(e);
