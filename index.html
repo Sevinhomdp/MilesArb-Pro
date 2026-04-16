@@ -2191,30 +2191,58 @@ const Store=(()=>{
         _saveLocal();
         const body=JSON.stringify({action:'saveState',state:s});
         await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body});
-      }catch(e){console.warn('Cloud push failed:',e.message);}
+        CloudUI.set('ok','Salvo ✓');
+      }catch(e){
+        CloudUI.set('error','Falha ao salvar');
+        console.warn('Cloud push failed:',e.message);
+      } finally {
+        _saveDebounce=null; // libera flag de pendência após push (com sucesso ou falha)
+      }
     },800);
   }
 
-  // Pull full state from Sheets
+  // Pull full state from Sheets — Sheets é a fonte única da verdade
   async function syncFromCloud(silent){
     try{
       if(!silent)CloudUI.set('syncing','Sincronizando...');
-      const url=SHEETS_URL+'?action=getState';
-      const res=await fetch(url,{method:'GET'});
+
+      // Cache-buster obrigatório: evita que o browser retorne resposta antiga
+      const url=SHEETS_URL+'?action=getState&_cb='+Date.now();
+      const res=await fetch(url,{
+        method:'GET',
+        cache:'no-store',          // força request real, ignora cache HTTP
+        headers:{'Cache-Control':'no-cache, no-store, must-revalidate',
+                 'Pragma':'no-cache'}
+      });
       const txt=await res.text();
       const data=JSON.parse(txt);
+
       if(data.status==='ok'&&data.state){
         const remote=data.state;
-        // Only update if remote is newer than local
-        if((remote._syncTs||0)>(s._syncTs||0)){
+
+        // ── CORREÇÃO PRINCIPAL ─────────────────────────────────────
+        // Removemos a comparação de _syncTs por timestamp, que é
+        // frágil: depende de relógios sincronizados entre dispositivos.
+        //
+        // Regra: Sheets é a fonte única da verdade.
+        // Só NÃO sobrescrevemos se há uma gravação local pendente
+        // (debounce em andamento), para não perder dados não enviados.
+        //
+        const hasPendingPush = _saveDebounce !== null;
+
+        if(!hasPendingPush){
+          // Nenhuma gravação local pendente: aplica o estado remoto
           s={...def(),...remote};
-          _fixEstoque();_fixMercado();
+          _fixEstoque();_fixMercado();_fixHistoricoCotacoes();_fixSimulacoes();_fixLotes();_fixConfig();
           _saveLocal();
           CloudUI.set('ok','Sincronizado ✓');
-          return true; // data changed
+          return true; // dados atualizados
+        } else {
+          // Há gravação local em andamento: aguarda o push terminar
+          // e marca como sincronizado sem sobrescrever
+          CloudUI.set('syncing','Salvando...');
+          return false;
         }
-        CloudUI.set('ok','Atualizado ✓');
-        return false;
       }
       if(data.status==='empty'){CloudUI.set('ok','Conectado ✓');return false;}
     }catch(e){
@@ -3969,7 +3997,7 @@ const App={
       }
     },1500);
 
-    // Poll for changes from other devices every 30 seconds
+    // Poll a cada 15s para pegar dados de outros dispositivos
     setInterval(async()=>{
       const changed=await Store.syncFromCloud(true);
       if(changed){
@@ -3977,7 +4005,19 @@ const App={
         App.notify('🔄 Dados sincronizados!','ok');
         setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),100);
       }
-    },30000);
+    },15000);
+
+    // Sincroniza ao voltar para a aba (ex: usuário estava no celular e volta ao PC)
+    document.addEventListener('visibilitychange',async()=>{
+      if(document.visibilityState==='visible'){
+        const changed=await Store.syncFromCloud(true);
+        if(changed){
+          Render.all();
+          App.notify('🔄 Dados atualizados!','ok');
+          setTimeout(()=>Render.chartProg(Engine.dashMetrics(Store.get()).porProg),100);
+        }
+      }
+    });
   },
 
   doLogin(){
