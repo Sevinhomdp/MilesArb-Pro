@@ -1217,23 +1217,76 @@ html.light .ty{border-color:rgba(176,122,0,.25)}
             4. Acesso: <em>"Qualquer pessoa"</em> — copie a URL gerada<br>
             5. Cole a URL acima e salve
           </div>
-          <div style="margin-top:12px;background:var(--bg0);border-radius:var(--radius);padding:12px;font-family:var(--font-mono);font-size:11px;color:var(--cyan);white-space:pre;overflow-x:auto;">function doPost(e){
+          <div style="margin-top:12px;background:var(--bg0);border-radius:var(--radius);padding:12px;font-family:var(--font-mono);font-size:11px;color:var(--cyan);white-space:pre;overflow-x:auto;">// ── COLE TODO ESTE CÓDIGO NO APPS SCRIPT ──────────────────
+
+// doGet: leitura do estado completo (usado pelo sistema para sincronizar)
+function doGet(e){
+  try{
+    var action=e.parameter.action;
+
+    // Leitura do estado completo
+    if(action==='getState'){
+      var ss=SpreadsheetApp.getActiveSpreadsheet();
+      var sh=ss.getSheetByName('_state');
+      if(!sh||sh.getLastRow()===0){
+        return out({status:'empty'});
+      }
+      var stateJson=sh.getRange(1,1).getValue();
+      return out({status:'ok',state:JSON.parse(stateJson)});
+    }
+
+    // Gravação de registro individual via GET (SheetsAPI.send)
+    var payload=e.parameter.payload;
+    if(payload){
+      var d=JSON.parse(decodeURIComponent(payload));
+      if(d.tipo==='_teste') return out({status:'ok',msg:'Conexão OK'});
+      appendRecord(d);
+      return out({status:'ok'});
+    }
+
+    return out({status:'ok',msg:'ping'});
+  }catch(err){
+    return out({status:'error',msg:err.toString()});
+  }
+}
+
+// doPost: gravação do estado completo (sincronização entre dispositivos)
+function doPost(e){
   try{
     var body=e.postData.contents;
     var d=JSON.parse(body);
-    if(d.tipo==='_teste'){
-      return ContentService.createTextOutput(JSON.stringify({status:'ok',msg:'Conexão estabelecida!'})).setMimeType(ContentService.MimeType.JSON);
+
+    // Salva estado completo na aba _state
+    if(d.action==='saveState'){
+      var ss=SpreadsheetApp.getActiveSpreadsheet();
+      var sh=ss.getSheetByName('_state')||ss.insertSheet('_state');
+      sh.clearContents();
+      sh.getRange(1,1).setValue(JSON.stringify(d.state));
+      return out({status:'ok'});
     }
-    var ss=SpreadsheetApp.getActiveSpreadsheet();
-    var sh=ss.getSheetByName(d.tipo)||ss.insertSheet(d.tipo);
-    var dados=d.dados||{};
-    dados.timestamp=d.ts||new Date().toISOString();
-    if(sh.getLastRow()===0)sh.appendRow(Object.keys(dados));
-    sh.appendRow(Object.values(dados));
-    return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
+
+    // Gravação de registro individual via POST
+    if(d.tipo==='_teste') return out({status:'ok',msg:'Conexão OK'});
+    appendRecord(d);
+    return out({status:'ok'});
   }catch(err){
-    return ContentService.createTextOutput(JSON.stringify({status:'error',msg:err.toString()})).setMimeType(ContentService.MimeType.JSON);
+    return out({status:'error',msg:err.toString()});
   }
+}
+
+// Helpers
+function appendRecord(d){
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var sh=ss.getSheetByName(d.tipo)||ss.insertSheet(d.tipo);
+  var dados=d.dados||{};
+  dados.timestamp=d.ts||new Date().toISOString();
+  if(sh.getLastRow()===0) sh.appendRow(Object.keys(dados));
+  sh.appendRow(Object.values(dados));
+}
+function out(obj){
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }</div>
         </div>
       </div>
@@ -2190,13 +2243,14 @@ const Store=(()=>{
         s._syncTs=Date.now();
         _saveLocal();
         const body=JSON.stringify({action:'saveState',state:s});
-        await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body});
-        CloudUI.set('ok','Salvo ✓');
+        const res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body});
+        if(res.ok)CloudUI.set('ok','Salvo ✓');
+        else CloudUI.set('error','Erro ao salvar');
       }catch(e){
-        CloudUI.set('error','Falha ao salvar');
+        CloudUI.set('error','Sem conexão');
         console.warn('Cloud push failed:',e.message);
-      } finally {
-        _saveDebounce=null; // libera flag de pendência após push (com sucesso ou falha)
+      }finally{
+        _saveDebounce=null; // libera flag — permite que syncFromCloud aplique dados remotos
       }
     },800);
   }
@@ -2205,46 +2259,40 @@ const Store=(()=>{
   async function syncFromCloud(silent){
     try{
       if(!silent)CloudUI.set('syncing','Sincronizando...');
-
-      // Cache-buster obrigatório: evita que o browser retorne resposta antiga
+      // Cache-bust via query param apenas — NÃO usar headers customizados
+      // pois causam CORS preflight OPTIONS que o Apps Script não responde
       const url=SHEETS_URL+'?action=getState&_cb='+Date.now();
-      const res=await fetch(url,{
-        method:'GET',
-        cache:'no-store',          // força request real, ignora cache HTTP
-        headers:{'Cache-Control':'no-cache, no-store, must-revalidate',
-                 'Pragma':'no-cache'}
-      });
+      const res=await fetch(url,{method:'GET',redirect:'follow'});
+      if(!res.ok){
+        CloudUI.set('error','Erro HTTP '+res.status);
+        console.warn('Cloud sync HTTP error:',res.status);
+        return false;
+      }
       const txt=await res.text();
-      const data=JSON.parse(txt);
-
+      let data;
+      try{data=JSON.parse(txt);}
+      catch(pe){
+        // Apps Script retornou HTML (ex: não tem doGet) — erro de configuração
+        CloudUI.set('error','Apps Script: sem doGet');
+        console.warn('Resposta não é JSON. Verifique se o Apps Script tem doGet implementado.\nResposta recebida:',txt.slice(0,200));
+        return false;
+      }
       if(data.status==='ok'&&data.state){
         const remote=data.state;
-
-        // ── CORREÇÃO PRINCIPAL ─────────────────────────────────────
-        // Removemos a comparação de _syncTs por timestamp, que é
-        // frágil: depende de relógios sincronizados entre dispositivos.
-        //
-        // Regra: Sheets é a fonte única da verdade.
-        // Só NÃO sobrescrevemos se há uma gravação local pendente
-        // (debounce em andamento), para não perder dados não enviados.
-        //
-        const hasPendingPush = _saveDebounce !== null;
-
+        const hasPendingPush=_saveDebounce!==null;
         if(!hasPendingPush){
-          // Nenhuma gravação local pendente: aplica o estado remoto
           s={...def(),...remote};
           _fixEstoque();_fixMercado();_fixHistoricoCotacoes();_fixSimulacoes();_fixLotes();_fixConfig();
           _saveLocal();
           CloudUI.set('ok','Sincronizado ✓');
-          return true; // dados atualizados
-        } else {
-          // Há gravação local em andamento: aguarda o push terminar
-          // e marca como sincronizado sem sobrescrever
-          CloudUI.set('syncing','Salvando...');
-          return false;
+          return true;
         }
+        CloudUI.set('syncing','Salvando...');
+        return false;
       }
       if(data.status==='empty'){CloudUI.set('ok','Conectado ✓');return false;}
+      CloudUI.set('error','Resposta inesperada');
+      console.warn('Resposta inesperada do Apps Script:',data);
     }catch(e){
       CloudUI.set('error','Sem conexão');
       console.warn('Cloud sync failed:',e.message);
@@ -3997,7 +4045,7 @@ const App={
       }
     },1500);
 
-    // Poll a cada 15s para pegar dados de outros dispositivos
+    // Poll a cada 15s para pegar mudanças de outros dispositivos
     setInterval(async()=>{
       const changed=await Store.syncFromCloud(true);
       if(changed){
@@ -4007,7 +4055,7 @@ const App={
       }
     },15000);
 
-    // Sincroniza ao voltar para a aba (ex: usuário estava no celular e volta ao PC)
+    // Sincroniza imediatamente ao voltar para esta aba (ex: saiu pro celular e voltou ao PC)
     document.addEventListener('visibilitychange',async()=>{
       if(document.visibilityState==='visible'){
         const changed=await Store.syncFromCloud(true);
